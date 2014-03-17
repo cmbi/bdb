@@ -2,7 +2,7 @@
 from __future__ import print_function
 from bdb_utils import get_raw_pdb_info, init_bdb_logger,\
 unique, write_whynot, PDB_LOGFORMAT
-from check_beq import check_beq, report_beq
+from check_beq import check_beq, determine_b_group, report_beq
 import argparse
 import logging
 import os
@@ -245,8 +245,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                               # anisotopic displacement parameters
                             useful = True
                             assume_iso = True
-                            message = "REFMAC: probably refinement without"\
-                                      " anisotropic description of motion"
+                            message = "REFMAC: probably full B-factors"
                             _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                                        "{1:s}.").format(pdb_id, message))
             else: # Now: not REFMAC
@@ -413,6 +412,8 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
     "format_date"  : PDB format date
     "format_vers"  : PDB format version
     "has_anisou"   : True if ANISOU records are present in the PDB file.
+    "nucleic_b"    : a string that indicates the B-factor type for the nucleic
+                     acid chain(s) in this PDB file (if present)
     "other_refinement_remarks"
                    : OTHER REFINEMENT REFMARKS in REMARK 3
                      as a single string.
@@ -423,9 +424,12 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
                      in the list could not be made.
     "prog_vers"    : a list with version of the
                      refinement programs(s) if not None
+    "protein_b"    : a string that indicates the B-factor type for the protein
+                     chain(s) in this PDB file (if present)
     "ref_prog"     : a list with refinement programs(s) if not None
     "refprog"      : the value of the refinement program record as a string.
-    "refprog_useful": True if this PDB file is useful
+    "refprog_useful"
+                   : True if this PDB file is useful
     "req_tlsanl"   : True if running TLSANL is required
     "tls_groups"   : number of TLS groups as integer. If not present: None.
     "tls_residual" : True if it is mentioned in the TLS details or elsewhere
@@ -436,13 +440,15 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
     pdb_id = pdb_xyz if pdb_id is None else pdb_id
     success = False
     greet(pdb_id)
-    #refprog = get_refprog(pdb_xyz)
     pdb_info = get_raw_pdb_info(pdb_xyz)
     pdb_info.pop("expdta", None)
     (prog, prog_inter, version) = (pdb_info["refprog"], None, None)
     prog_last = None
     (assume_iso, req_tlsanl) = (False, False)
-    reproduced = {"beq_identical": None, "correct_uij": None}
+    reproduced = {
+            "beq_identical": None,
+            "correct_uij": None
+            }
     if pdb_info["has_anisou"]: # save some time
         reproduced = check_beq(pdb_xyz, pdb_id)
         report_beq(pdb_id, reproduced)
@@ -452,6 +458,12 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
             # Any contra examples of residual ANISOU records?
             assume_iso = True
     pdb_info.update(reproduced)
+    b_group = {
+            "protein_b": None,
+            "nucleic_b": None,
+            }
+    b_group  = determine_b_group(pdb_xyz, pdb_id)
+    pdb_info.update(b_group)
     if prog:
         (prog, prog_inter, version) = parse_refprog(prog, pdb_id, global_files)
         prog_last = last_used(prog_inter, version)
