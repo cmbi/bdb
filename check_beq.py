@@ -16,6 +16,13 @@ _log = logging.getLogger("bdb")
 
 UF = 8*3.14159265359**2
 
+def b_equal(b1, b2, margin=0.01):
+    """Return True if the two B-factor values are equal within a margin.
+
+    Default margin: 0.01 Angstrom**2
+    """
+    return (b1 - margin) <= b2 <= (b1 + margin)
+
 def check_beq(pdb_xyz, pdb_id=None, verbose=False):
     """Determine if Beq values are the same as the reported B-factors.
 
@@ -47,7 +54,7 @@ def check_beq(pdb_xyz, pdb_id=None, verbose=False):
                 # Ueq = 1/3<u.u> == 1/3<|u|**2> = 1/3(U11+U22+U33)
                 beq = UF * sum(anisou[0:3]) / 3
                 b   = atom.get_bfactor()
-                if (b - margin) <= beq <= (b + margin):
+                if b_equal(b, beq, margin):
                     eq = eq + 1
                 elif check_combinations(anisou, b, margin, pdb_id):
                     """ e.g. 2a83, 2p6e, 2qik, 3bik, 3d95, 3d96, 3g5t
@@ -93,7 +100,7 @@ def check_combinations(anisou, b, margin, pdb_id=None):
         if c == (0, 1, 2): # we have already calculated this
             pass
         beq = UF * (anisou[c[0]] + anisou[c[1]] + anisou[c[2]])/3
-        if (b - margin) <= beq <= (b + margin):
+        if b_equal(b, beq, margin):
             reproduced = True
             _log.debug(("{0:" + PDB_LOGFORMAT + "} | B-factor could only be "\
                        "reproduced by combining non-standard Uij values "\
@@ -101,56 +108,149 @@ def check_combinations(anisou, b, margin, pdb_id=None):
             break
     return reproduced
 
-def is_backbone(atom):
-    """Return True if the atom is probably a backbone atom."""
-    return atom.get_name() in ['N', 'CA', 'C', 'O']
-
-def b_equal(b1, b2):
-    """Return True if the two B-factor values are equal within a margin.
-
-    Margin 0.02 Angstrom**2
-    """
-    margin = 0.02
-    return (b1 - margin) <= b2 <= (b1 + margin)
-
 def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
     """Determine the most likely B-factor parameterization.
 
-    Output can be one of the strings
-    overall (margin 0.02 Angstrom**2)
-    residue
-    two-back-and-side
-    individual
+    Return a dictionary with seperated output for protein and nucleic acid.
+    protein: None or output
+    nucleic: None or output
+
+    output can be one of the strings
+    overall           e.g. 1etu
+    residue_1ADP      e.g. the protein in 1hlz
+    residue_2ADP      e.g. the DNA in 1hlz
+    individual        most PDB files
+    (margin 0.01 Angstrom**2)
+
+    Warning: currently only the first protein and/or nucleid acid chains
+    encountered are taken into account. The same parameterization is assumed
+    for other chains (if they exist).
     """
-    # TODO take more atoms and residues into account,
-    #      current approach is rather greedy
-    # TODO filter out zero occupancy? (e.g. 1etu)
-    # TODO also check on chain level?
-    group = "individual"
-    margin = 0.02
+    group = {
+            "protein_b": None,
+            "nucleic_b": None,
+            }
+    margin = 0.01
     pdb_id = pdb_xyz if pdb_id is None else pdb_id
+    greet(pdb_id, mode="group")
+
     p = Bio.PDB.PDBParser(QUIET=not verbose)
     structure = p.get_structure(pdb_id, pdb_xyz)
-    residues = structure.get_residues()
+    chains = structure.get_chains()
+    for c in chains:
+        if is_protein_chain(c) and group["protein_b"] is None:
+            group["protein_b"] = determine_b_group_chain(c)
+        elif is_nucleic_chain(c) and group["nucleic_b"] is None:
+            group["nucleic_b"] = determine_b_group_chain(c)
+    _log.info(("{0:" + PDB_LOGFORMAT + "} | Most likely B-factor group type:"\
+               " {1:s}.").format(pdb_id, group))
+    return group
+
+def determine_b_group_chain(chain):
+    """Return the most likely B-factor group type for this chain.
+
+    Return a string
+
+    overall           e.g. 1etu
+    residue_1ADP      e.g. the protein in 1hlz
+    residue_2ADP      e.g. the DNA in 1hlz
+    individual        most PDB files
+    (margin 0.01 Angstrom**2)
+
+    Warning: the current approach is rather greedy as only the first four
+    residues of the chain are taken into account. A uniform parameterization
+    accross the chain is assumed.
+
+    Note: if only the first three residues would have been considered,
+    the approach would have been too greedy for 1hlz chain B
+    """
+    margin = 0.01
+    residues = chain.get_residues()
+    group = "individual"
     b_res = list()
     i = 0
-    max_res = 2
-    # 2 useful residues should be sufficient to make a decision
+    max_res = 4
+    # 4 useful residues should be sufficient to make a decision
+    while (i < max_res):
+        res = residues.next()
+        if res.get_id()[0] == " ": # Exclude HETATM and waters
+            b_atom = list()
+            for atom in res:
+                # Exclude hydrogens and zero occupancy (many in e.g. 1etu)
+                if not re.match("H", atom.get_name())\
+                        and atom.get_occupancy() > 0:
+                    b = atom.get_bfactor()
+                    _log.debug(("{0:" + PDB_LOGFORMAT + "} | {1:s} - B-factor"\
+                                ": {2:3.2f}").format(
+                                    chain.get_full_id()[0],
+                                    atom.get_full_id(),
+                                    b,
+                                    ))
+                    b_atom.append(b)
+            # Determine the B-factor type for this residue
+            if len(b_atom) > 1:
+                b_atom = sorted(b_atom)
+                if (b_atom[-1] - b_atom[0]) <= margin:
+                    group = "residue_1ADP"
+                elif len(b_atom) > 3 and \
+                        (b_atom[-1] - b_atom[-2]) <= margin and\
+                        (b_atom[1] - b_atom[0]) <= margin and\
+                        (b_atom[-2] - b_atom[1]) > margin:
+                    group = "residue_2ADP"
+                else:
+                    group = "individual"
+                b_res.append(b_atom)
+                i = i + 1 # useful atoms in this residue
+    if len(b_res) > max_res - 1 and b_equal(
+            b_res[0][0],
+            b_res[max_res - 1][0]
+            ):
+        group = "overall"
+    return group
+
+def determine_b_group_chain_greedy(chain):
+    """Return the most likely B-factor group type for this chain.
+
+    Return a string
+
+    Warning: the current approach is rather greedy as only the first four
+    residues of the chain are taken into account. A uniform parameterization
+    accross the chain is assumed.
+
+    Note: if only the first three residues would have been considered,
+    the approach would have been too greedy for 1hlz chain B
+
+    Warning: more atoms need to be compared. E.g. from 1kkl:
+    ATOM      1  N   GLU A 135      49.349  63.473  12.155  1.00 80.44
+    ATOM      2  CA  GLU A 135      50.791  63.168  12.411  1.00 80.45
+    ATOM      3  C   GLU A 135      50.998  61.654  12.472  1.00 79.50
+    ATOM      4  O   GLU A 135      50.236  60.900  11.876  1.00 79.31
+    ATOM      5  CB  GLU A 135      51.257  63.833  13.722  1.00 49.05
+    Individual B-factors, not 2 per residue
+    """
+    residues = chain.get_residues()
+    group = "individual"
+    b_res = list()
+    i = 0
+    max_res = 4
+    # 4 useful residues should be sufficient to make a decision
     while (i < max_res):
         res = residues.next()
         if res.get_id()[0] == " ": # Exclude HETATM and waters
             b_back = list()
             b_side = list()
             for atom in res:
-                if not re.match("H", atom.get_name()): # Exclude hydrogens
+                # Exclude hydrogens and zero occupancy (many in e.g. 1etu)
+                if not re.match("H", atom.get_name())\
+                        and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
                     _log.debug(("{0:" + PDB_LOGFORMAT + "} | {1:s} - B-factor"\
                                 ": {2:3.2f}").format(
-                                    pdb_id,
+                                    chain.get_full_id()[0],
                                     atom.get_full_id(),
                                     b,
                                     ))
-                    if is_backbone(atom):
+                    if is_heavy_backbone(atom):
                         b_back.append(atom.get_bfactor())
                         if len(b_back) > 1: # Whithin backbone
                             if not b_equal(b_back[0], b_back[1]):
@@ -167,7 +267,7 @@ def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
                     if len(b_back) > 0 and len(b_side) > 0:
                         # Between backbone and side-chain
                         if not b_equal(b_back[0], b_side[0]):
-                            group = "two-back-and-side"
+                            group = "two_back-and-side"
                             i = max_res
                             break;
                         else:
@@ -176,10 +276,11 @@ def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
             #b_back.extend(b_side)
             b_res.append(b_back)
             i = i + 1 # useful atoms in this residue
-    if len(b_res) > 1 and b_equal(b_res[0][0],b_res[1][0]):
+    if len(b_res) > max_res - 1 and b_equal(
+            b_res[0][0],
+            b_res[max_res - 1][0]
+            ):
         group = "overall"
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | Most likely B-factor group type:"\
-               " {1:s}.").format(pdb_id, group))
     return group
 
 def get_check_beq_parser():
@@ -251,6 +352,65 @@ def greet(pdb_id, mode=None):
     elif mode == "calc":
         _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                    "Calculating B-factors from Uiso values...").format(pdb_id))
+
+def has_amino_acid_backbone(residue):
+    """Return True if the residue's backbone looks like protein."""
+    for atom in ("N", "CA", "C", "O"):
+        if not atom in residue.child_dict:
+            return False
+    return True
+
+def has_sugar_phosphate_backbone(residue):
+    """Return True if the residue's backbone looks like nucleic acid."""
+    for atom in ("P", "OP1", "OP2", "O5'", "C5'", "C4'",
+                 "O4'", "C3'","O3'", "C2'", "C1'"):
+        if not atom in residue.child_dict:
+            return False
+    return True
+
+def is_heavy_backbone(atom):
+    """Return True if the atom looks like a backbone atom."""
+    return atom.get_name() in [
+            "N", "CA", "C", "O", # Protein
+            "P", "OP1", "OP2", "O5'", "C5'", "C4'",
+            "O4'", "C3'","O3'", "C2'", "O2'", "C1'", # DNA/RNA
+            ]
+
+def is_nucleic_chain(chain):
+    """Return True if the first 10 residues of the chain look like nucleotides.
+
+    It is assumed mixed protein and nucleic acid chains don't exist.
+    Therefore this approach is rather greedy.
+    """
+    residues = chain.get_residues()
+    check_max = 10
+    residues_checked = 0
+    residues.next() # The first residue does not contain the phosphate,
+                    # we rather start checking from the second residue
+    for res in residues:
+        if residues_checked < check_max \
+                and res.get_id()[0] == " ": # Exclude HETATM and waters
+            if not has_sugar_phosphate_backbone(res):
+                return False
+            residues_checked = residues_checked + 1
+    return True
+
+def is_protein_chain(chain):
+    """Return True if the first 10 residues of the chain look like amino acids.
+
+    It is assumed mixed protein and nucleic acid chains don't exist.
+    Therefore this approach is rather greedy.
+    """
+    residues = chain.get_residues()
+    check_max = 10
+    residues_checked = 0
+    for res in residues:
+        if residues_checked < check_max \
+                and res.get_id()[0] == " ": # Exclude HETATM and waters
+            if not has_amino_acid_backbone(res):
+                return False
+            residues_checked = residues_checked + 1
+    return True
 
 def multiply(structure):
     """Multiply B-factors with 8*pi**2."""
