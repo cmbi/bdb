@@ -142,8 +142,14 @@ def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
             group["protein_b"] = determine_b_group_chain(c)
         elif is_nucleic_chain(c) and group["nucleic_b"] is None:
             group["nucleic_b"] = determine_b_group_chain(c)
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | Most likely B-factor group type:"\
-               " {1:s}.").format(pdb_id, group))
+    _log.info(("{0:" + PDB_LOGFORMAT + "} | Most likely B-factor group type "\
+            " protein: {1:s} | nucleic acid: {2:s}.").format(
+                pdb_id,
+                group["protein_b"] if group["protein_b"] is not None else\
+                        "not present",
+                group["nucleic_b"] if group["nucleic_b"] is not None else\
+                        "not present",
+                ))
     return group
 
 def determine_b_group_chain(chain):

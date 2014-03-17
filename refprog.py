@@ -352,8 +352,9 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                         if has_anisou:
                             message = message + ". " + beq_mess
                     elif has_anisou:
-                        message = refprog[0] + ": probably full/mixed "\
-                                  "anisotropic refinement. " + beq_mess
+                        message = "{0:s}: probably full/mixed "\
+                                  "anisotropic refinement. ".format(
+                                          refprog[0]) + beq_mess
                     else: # Probably refinement without any type of
                           # anisotopic displacement parameters
                         useful = True
@@ -484,6 +485,12 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
                         pdb_id,
                         out_dir,
                         global_files)
+            else:
+                _log.info(("{0:" + PDB_LOGFORMAT + "} | {1:s}: probably full"\
+                            " B-factors.").format(
+                                pdb_id,
+                                " and ".join(prog_last)
+                                ))
         else: # we should not end up here under normal circumstances
             message = "Refinement program parse error"
             write_whynot(pdb_id, message, directory=out_dir)
