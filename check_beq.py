@@ -6,6 +6,7 @@ import argparse
 import Bio.PDB
 import itertools
 import logging
+import numpy
 import os
 import re
 import subprocess
@@ -15,13 +16,6 @@ import sys
 _log = logging.getLogger("bdb")
 
 UF = 8*3.14159265359**2
-
-def b_equal(b1, b2, margin=0.01):
-    """Return True if the two B-factor values are equal within a margin.
-
-    Default margin: 0.01 Angstrom**2
-    """
-    return (b1 - margin) <= b2 <= (b1 + margin)
 
 def check_beq(pdb_xyz, pdb_id=None, verbose=False):
     """Determine if Beq values are the same as the reported B-factors.
@@ -54,7 +48,7 @@ def check_beq(pdb_xyz, pdb_id=None, verbose=False):
                 # Ueq = 1/3<u.u> == 1/3<|u|**2> = 1/3(U11+U22+U33)
                 beq = UF * sum(anisou[0:3]) / 3
                 b   = atom.get_bfactor()
-                if b_equal(b, beq, margin):
+                if numpy.isclose(b, beq, atol=margin):
                     eq = eq + 1
                 elif check_combinations(anisou, b, margin, pdb_id):
                     """ e.g. 2a83, 2p6e, 2qik, 3bik, 3d95, 3d96, 3g5t
@@ -100,7 +94,7 @@ def check_combinations(anisou, b, margin, pdb_id=None):
         if c == (0, 1, 2): # we have already calculated this
             pass
         beq = UF * (anisou[c[0]] + anisou[c[1]] + anisou[c[2]])/3
-        if b_equal(b, beq, margin):
+        if numpy.isclose(b, beq, atol=margin):
             reproduced = True
             _log.debug(("{0:" + PDB_LOGFORMAT + "} | B-factor could only be "\
                        "reproduced by combining non-standard Uij values "\
@@ -196,21 +190,28 @@ def determine_b_group_chain(chain):
             # Determine the B-factor type for this residue
             if len(b_atom) > 1:
                 b_atom = sorted(b_atom)
-                if (b_atom[-1] - b_atom[0]) <= margin:
+                if numpy.isclose(b_atom[-1], b_atom[0], atol=margin):
                     group = "residue_1ADP"
                 elif len(b_atom) > 3 and \
-                        (b_atom[-1] - b_atom[-2]) <= margin and\
-                        (b_atom[1] - b_atom[0]) <= margin and\
-                        (b_atom[-2] - b_atom[1]) > margin:
+                        numpy.allclose(
+                                [b_atom[-1], b_atom[1]],
+                                [b_atom[-2], b_atom[0]],
+                                atol=margin,
+                                ) and \
+                        not numpy.isclose(
+                                b_atom[-2],
+                                b_atom[1],
+                                atol=margin,
+                                ):
                     group = "residue_2ADP"
                 else:
                     group = "individual"
                 b_res.append(b_atom)
                 i = i + 1 # useful atoms in this residue
-    if len(b_res) > max_res - 1 and b_equal(
+    if len(b_res) > max_res - 1 and numpy.isclose(
             b_res[0][0],
-            b_res[max_res - 1][0]
-            ):
+            b_res[-1][0],
+            atol=margin):
         group = "overall"
     return group
 
@@ -259,32 +260,45 @@ def determine_b_group_chain_greedy(chain):
                     if is_heavy_backbone(atom):
                         b_back.append(atom.get_bfactor())
                         if len(b_back) > 1: # Whithin backbone
-                            if not b_equal(b_back[0], b_back[1]):
+                            if not numpy.isclose(
+                                    b_back[0],
+                                    b_back[1],
+                                    atol=margin
+                                    ):
                                 #group = "individual"
                                 i = max_res # stop comparing residues...
                                 break; # or atoms
                     else:
                         b_side.append(atom.get_bfactor())
                         if len(b_side) > 1: # Whithin side-chain
-                            if not b_equal(b_side[0], b_side[1]):
+                            if not numpy.isclose(
+                                    b_side[0],
+                                    b_side[1],
+                                    atol=margin
+                                    ):
                                 #group = "individual"
                                 i = max_res
                                 break;
                     if len(b_back) > 0 and len(b_side) > 0:
                         # Between backbone and side-chain
-                        if not b_equal(b_back[0], b_side[0]):
-                            group = "two_back-and-side"
+                        if not numpy.isclose(
+                                b_back[0],
+                                b_side[0],
+                                atol=margin
+                                ):
+                            group = "residue_2ADP"
                             i = max_res
                             break;
                         else:
-                            group = "residue"
+                            group = "residue_1ADP"
                             break;
             #b_back.extend(b_side)
             b_res.append(b_back)
             i = i + 1 # useful atoms in this residue
-    if len(b_res) > max_res - 1 and b_equal(
+    if len(b_res) > max_res - 1 and numpy.isclose(
             b_res[0][0],
-            b_res[max_res - 1][0]
+            b_res[-1][0],
+            atol=margin
             ):
         group = "overall"
     return group
@@ -482,11 +496,6 @@ def report_beq(pdb_id, reproduced):
     else:
         _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                 "No ANISOU records.").format(pdb_id))
-
-def swear(pdb_id, message):
-    """Report problems."""
-    write_whynot(pdb_id, message)
-    _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
 
 if __name__ == "__main__":
     """Run Beq check or multiply Uiso with 8*pi^2."""
