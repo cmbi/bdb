@@ -407,6 +407,7 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
     "b_type"       : B VALUE TYPE. Can be "residual", "unverified" or None.
     "beq_identical": Percentage of Beq values (from ANISOU records) identical
                      to B-factor values (ATOM records). None without ANISOU.
+    "calpha_only"  : True if more than 75% of the atoms in the chain are ca.
     "correct_uij"  : False if a non-standard combination of the Uij values in
                      the ANISOU records was necessary to reproduce the
                      B-factors.
