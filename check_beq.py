@@ -106,16 +106,18 @@ def check_combinations(anisou, b, margin, pdb_id=None):
 def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
     """Determine the most likely B-factor parameterization.
 
-    Return a dictionary with separated output for protein and nucleic acid.
-    protein: None or output
-    nucleic: None or output
-    calpha_only: Boolean
+    Return a dictionary with separated output for protein and nucleic acid and
+    a Boolean that indicates if the structure is a calpha trace.
 
     output can be one of the strings
     overall           e.g. 1etu
     residue_1ADP      e.g. the protein in 1hlz
     residue_2ADP      e.g. the DNA in 1hlz
     individual        most PDB files
+    no_b-factors      e.g. 1mcb, 3zxa, 2yhx
+
+    or None if protein or nucleic acid are not present.
+
     (margin 0.01 Angstrom**2)
 
     Warning: currently only the first protein and/or nucleid acid chains
@@ -153,7 +155,7 @@ def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
                             pdb_id,
                             c.get_id()))
     _log.info(("{0:" + PDB_LOGFORMAT + "} | Most likely B-factor group type "\
-            " protein: {1:s} | nucleic acid: {2:s}.").format(
+               "protein: {1:s} | nucleic acid: {2:s}.").format(
                 pdb_id,
                 group["protein_b"] if group["protein_b"] is not None else\
                         "not present",
@@ -231,7 +233,10 @@ def determine_b_group_chain(chain):
             b_res[0][0],
             b_res[-1][0],
             atol=margin):
-        group = "overall"
+        if numpy.isclose(b_res[-1][-1], 0):
+            group = "no_b-factors"
+        else:
+            group = "overall"
     return group
 
 def determine_b_group_chain_greedy(chain):
