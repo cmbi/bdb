@@ -534,6 +534,7 @@ def filter_progs(pin, pv):
             "DM",              # density modification
             "FRODO",           # graphics
             "HKL-3000",        # data collection
+            "LAFIRE",          # uses CNS, Refmac5, phenix.refine or autoBUSTER
             "MOLPROBITY",      # validation
             "O",               # model building, graphics
             "OOPS",            # model building, graphics
