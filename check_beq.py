@@ -132,36 +132,41 @@ def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
     margin = 0.01
     pdb_id = pdb_xyz if pdb_id is None else pdb_id
     greet(pdb_id, mode="group")
-
-    p = Bio.PDB.PDBParser(QUIET=not verbose)
-    structure = p.get_structure(pdb_id, pdb_xyz)
-    chains = structure.get_chains()
-    for c in chains:
-        if is_protein_chain(c):
-            if group["protein_b"] is None:
-                group["protein_b"] = determine_b_group_chain(c)
-        elif is_nucleic_chain(c):
-            if group["nucleic_b"] is None:
-                group["nucleic_b"] = determine_b_group_chain(c)
-        elif is_calpha_trace(c):
-            if group["protein_b"] is None:
-                group["calpha_only"] = True
-                _log.info(("{0:" + PDB_LOGFORMAT + "} | Calpha-only chain(s) "\
-                            "present.").format(pdb_id))
-                group["protein_b"] = determine_b_group_chain(c)
-        else:
-            _log.error(("{0:" + PDB_LOGFORMAT + "} | Chain {1:s}: no protein "\
-                        "or nucleic acid chain found.").format(
-                            pdb_id,
-                            c.get_id()))
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | Most likely B-factor group type "\
-               "protein: {1:s} | nucleic acid: {2:s}.").format(
-                pdb_id,
-                group["protein_b"] if group["protein_b"] is not None else\
-                        "not present",
-                group["nucleic_b"] if group["nucleic_b"] is not None else\
-                        "not present",
-                ))
+    structure = None
+    try:
+        p = Bio.PDB.PDBParser(QUIET=not verbose)
+        structure = p.get_structure(pdb_id, pdb_xyz)
+    except (AttributeError, IndexError, ValueError, AssertionError,
+            Bio.PDB.PDBExceptions.PDBConstructionException):
+        _log.error(("{0:" + PDB_LOGFORMAT + "} | Biopython Error.").format(
+            pdb_id))
+    if structure is not None:
+        chains = structure.get_chains()
+        for c in chains:
+            if is_protein_chain(c):
+                if group["protein_b"] is None:
+                    group["protein_b"] = determine_b_group_chain(c)
+            elif is_nucleic_chain(c):
+                if group["nucleic_b"] is None:
+                    group["nucleic_b"] = determine_b_group_chain(c)
+            elif is_calpha_trace(c):
+                if group["protein_b"] is None:
+                    group["calpha_only"] = True
+                    _log.info(("{0:" + PDB_LOGFORMAT + "} | Calpha-only "\
+                               "chain(s) present.").format(pdb_id))
+                    group["protein_b"] = determine_b_group_chain(c)
+            else:
+                _log.error(("{0:" + PDB_LOGFORMAT + "} | Chain {1:s}: "\
+                            "no protein or nucleic acid chain found.").format(
+                                pdb_id, c.get_id()))
+        _log.info(("{0:" + PDB_LOGFORMAT + "} | Most likely B-factor group "\
+                   "type protein: {1:s} | nucleic acid: {2:s}.").format(
+                    pdb_id,
+                    group["protein_b"] if group["protein_b"] is not None else\
+                            "not present",
+                    group["nucleic_b"] if group["nucleic_b"] is not None else\
+                            "not present",
+                    ))
     return group
 
 def determine_b_group_chain(chain):
@@ -191,7 +196,14 @@ def determine_b_group_chain(chain):
     max_res = 4
     # 4 useful residues should be sufficient to make a decision
     while (i < max_res):
-        res = residues.next()
+        try:
+            res = residues.next()
+        except StopIteration:
+            # e.g. 1c0q
+            _log.warn(("{0:" + PDB_LOGFORMAT + "} | Chain {1:s} has less "\
+                       "than {2:d} useful residues composed of ATOMs.").format(
+                           chain.get_full_id()[0], chain.get_id(), max_res))
+            break;
         if res.get_id()[0] == " ": # Exclude HETATM and waters
             b_atom = list()
             for atom in res:
@@ -392,7 +404,8 @@ def greet(pdb_id, mode=None):
                    "Checking Beq values in ANISOU records...").format(pdb_id))
     elif mode == "group":
         _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-                   "Determining most likely B-factor model...").format(pdb_id))
+                   "Determining most likely B-factor group type...").
+                   format(pdb_id))
     elif mode == "calc":
         _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                    "Calculating B-factors from Uiso values...").format(pdb_id))
