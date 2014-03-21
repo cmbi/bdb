@@ -473,7 +473,7 @@ def write_whynot(pdb_id, reason, filename=None, directory="."):
     try:
         with open(os.path.join(directory, filename), "w") as whynot:
             whynot.write("COMMENT: " + reason + "\n" +\
-                         "BDB, " + pdb_id + "\n")
+                         "BDB," + pdb_id + "\n")
             return True
     except IOError as ex:
         _log.error(ex)
