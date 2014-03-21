@@ -9,6 +9,7 @@ import logging
 import numpy
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -495,24 +496,35 @@ def multiply(structure):
 
 def transfer_header_and_trailer(xyzin, xyzout):
     """Transfer header and trailer from xyzin to xyzout."""
+    transferred = False
     h, t = get_pdb_header_and_trailer(xyzin)
     records = list()
+    # Start with the header...
     records.extend(h)
     end = "END"
     try:
         with open(xyzout, "r") as pdb_out:
+            # ... then copy coordinates
             for coord in pdb_out:
+                # ... remember but skip END now
                 if re.search(r"^END\s*$", coord):
                     end = coord.rstrip("\n")
                 else:
                     records.append(coord.rstrip("\n"))
+        # ... then copy the trailer
         records.extend(t)
+        # ... and finally END
         records.append(end)
+        # write a new file
         with open(xyzout + "2", "w") as pdb_out:
             for record in records:
                 pdb_out.write("{0:s}\n".format(record))
+        # replace the old file with the new file
+        shutil.move(xyzout + "2", xyzout)
+        transferred = True
     except IOError as ex:
         _log.error(ex)
+    return transferred
 
 def write_multiplied(xyzin, xyzout, pdb_id=None, verbose=False):
     """Multiply the B-factors in the input PDB file with 8*pi^2."""
@@ -525,7 +537,7 @@ def write_multiplied(xyzin, xyzout, pdb_id=None, verbose=False):
     io.set_structure(structure)
     # Header and trailer records not present in this output file
     io.save(xyzout)
-    transfer_header_and_trailer(xyzin, xyzout)
+    return transfer_header_and_trailer(xyzin, xyzout)
 
 def report_beq(pdb_id, reproduced):
     """Report if Beqs are identical to B-factors."""

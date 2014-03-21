@@ -375,27 +375,51 @@ def get_raw_pdb_info(pdb_xyz):
             "tls_sum"                  : tls_sum
             }
 
+#class SingleLevelFilter(logging.Filter):
+#    def __init__(self, passlevel, reject):
+#        self.passlevel = passlevel
+#        self.reject = reject
+#
+#    def filter(self, record):
+#        if self.reject:
+#            return (record.levelno != self.passlevel)
+#        else:
+#            return (record.levelno == self.passlevel)
+
 def init_bdb_logger(pdb_id, root=".", global_log=False, append=False):
     """Configure logging for a single entry or globally."""
-    _log = logging.getLogger("bdb")
+    logger = logging.getLogger("bdb")
     if not global_log:
         log_name = pdb_id + ".log"
         out_dir = get_bdb_entry_outdir(root, pdb_id)
         log_file = os.path.join(out_dir, log_name)
     else:
         log_file = os.path.join(root, "bdb.log")
-    _file = logging.FileHandler(log_file, "a" if append else "w")
-    _log.addHandler(_file)
-    _cons = logging.StreamHandler()
-    _log.addHandler(_cons)
-    _formatter1 = logging.Formatter(
-            "%(asctime)s | %(levelname)-7s | %(message)s")
-    _formatter2 = logging.Formatter(
-            "%(message)s")
-    _log.setLevel(logging.INFO)
-    _file.setFormatter(_formatter1)
-    _cons.setFormatter(_formatter2)
-    return _log
+
+    # File logger
+    log_file = logging.FileHandler(log_file, "a" if append else "w")
+    logger.addHandler(log_file)
+    form1 = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s")
+    log_file.setFormatter(form1)
+
+    # Console logger stdout
+    stdout = logging.StreamHandler(sys.stdout)
+    #f1 = SingleLevelFilter(logging.ERR, False)
+    #stdout.addFilter(f1)
+    form2 = logging.Formatter("%(message)s")
+    stdout.setFormatter(form1)
+    logger.addHandler(stdout)
+
+    # Console logger stderr
+    #stderr = logging.StreamHandler(sys.stderr)
+    #f2 = SingleLevelFilter(logging.ERR, True)
+    #stderr.addFilter(f2)
+    #stderr.setFormatter(form1)
+    #logger.addHandler(stderr)
+
+    # Default log level
+    logger.setLevel(logging.INFO)
+    return logger
 
 def is_valid_directory(parser, arg):
     """ Check if directory exists."""

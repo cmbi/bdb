@@ -63,8 +63,9 @@ def get_argparser():
         description="Create a bdb entry")
     parser.add_argument(
         "-g", "--global_files",
-        help="Create and files with PDB-wide information."\
-             " WARNING: do not use in an embarassingly parallel setting!",
+        help="Create files with PDB-wide information. Useful for local bdb "\
+             "copies. "\
+             "WARNING: do not use in an embarassingly parallel setting!",
         action="store_true")
     parser.add_argument(
         "-v", "--verbose",
