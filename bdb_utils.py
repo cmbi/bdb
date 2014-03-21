@@ -407,7 +407,7 @@ def init_bdb_logger(pdb_id, root=".", global_log=False, append=False):
     #f1 = SingleLevelFilter(logging.ERR, False)
     #stdout.addFilter(f1)
     form2 = logging.Formatter("%(message)s")
-    stdout.setFormatter(form1)
+    stdout.setFormatter(form2)
     logger.addHandler(stdout)
 
     # Console logger stderr
