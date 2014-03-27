@@ -430,11 +430,13 @@ def is_valid_directory(parser, arg):
         return arg
 
 def is_valid_file(parser, arg):
-    """ Check if file exists."""
+    """ Check if file exists and is not empty."""
     if not os.path.isfile(arg):
-        parser.error('The file {} does not exist!'.format(arg))
+        parser.error("The file {} does not exist!".format(arg))
+    elif not os.stat(arg).st_size > 0:
+        parser.error("The file {} is empty!".format(arg))
     else:
-        # File exists so return the filename
+        # File exists and is not empty so return the filename
         return arg
 
 def is_valid_pdbid(parser, arg):
