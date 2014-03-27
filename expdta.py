@@ -37,14 +37,15 @@ def decide_expdta(expdta, pdb_id, out_dir=".", global_files=False):
             if global_files:
                 write_unsupported_expdta(expdta)
     elif len(expdta) > 1:
-        message = "Multiple experimental methods: " + " and ".join(expdta)
+        message = "Experimental method: multiple (" + " and ".join(expdta) +\
+                  ")"
         write_whynot(pdb_id, message, directory=out_dir)
         _log.warn(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").format(pdb_id,
                                                                message))
         if global_files:
             write_unsupported_expdta(expdta)
     else: # we should not end up here
-        message = "EXPDTA parse error"
+        message = "Experimental method: EXPDTA parse error"
         write_whynot(pdb_id, message, directory=out_dir)
         _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").format(pdb_id,
                                                                message))
@@ -55,7 +56,7 @@ def do_expdta(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
 
     Return a dictionary.
     "expdta_useful" : True if this PDB file is useful
-    "expdta" : a list with experimental method(s) if not None
+    "expdta"        : a list with experimental method(s) if not None
     """
     pdb_id = pdb_xyz if pdb_id is None else pdb_id
     success = False
@@ -69,12 +70,12 @@ def do_expdta(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
             if decide_expdta(expdta, pdb_id, out_dir, global_files):
                 success = True
         else: # we should not end up here
-            message = "EXPDTA parse error"
+            message = "Experimental method: EXPDTA parse error"
             write_whynot(pdb_id, message, directory=out_dir)
             _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").format(pdb_xyz,
                                                                     message))
     else:
-        message = "No EXPDTA record"
+        message = "Experimental method: no EXPDTA record"
         write_whynot(pdb_id, message, directory=out_dir)
         _log.warn(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").format(pdb_xyz,
                                                                message))
@@ -145,7 +146,7 @@ if __name__ == "__main__":
     _log = init_bdb_logger(pdb_id, global_log=True)
     if args.verbose:
         _log.setLevel(logging.DEBUG)
-    if do_expdta(args.xyzin, pdb_id)["useful"]:
+    if do_expdta(args.xyzin, pdb_id)["expdta_useful"]:
         sys.exit(0)
     else:
         sys.exit(1)
