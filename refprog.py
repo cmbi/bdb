@@ -472,7 +472,7 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
         pdb_info.update({
             "prog_inter": prog_inter,
             "prog_last" : prog_last,
-            "version"   : version
+            "prog_vers" : version
             })
         for p, i, v in zip(prog, prog_inter, version):
             _log.debug(("{0:" + PDB_LOGFORMAT + "} | Refinement program: "
