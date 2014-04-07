@@ -95,7 +95,7 @@ def greet(pdb_xyz):
     _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
                 "Creating bdb entry...").format(pdb_xyz))
 
-if __name__ == "__main__":
+def main():
     """Create a bdb entry.
 
     The bdb entry (.bdb) or WHY NOT (.whynot) file,
@@ -103,6 +103,7 @@ if __name__ == "__main__":
     using the given pdbid and the directory structure:
     BDB_ROOT/ab/1abc/1abc.(bdb|whynot|log|json)
     """
+    global _log
     parser = get_argparser()
     args = parser.parse_args()
     _log = init_bdb_logger(args.pdbid, args.bdb_root)
