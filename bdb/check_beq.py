@@ -31,7 +31,8 @@ def check_beq(pdb_xyz, pdb_id=None, verbose=False):
                    ANISOU records was necessary to reproduce the B-factors.
     """
     pdb_id = pdb_xyz if pdb_id is None else pdb_id
-    greet(pdb_id, mode="beq")
+    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
+               "Checking Beq values in ANISOU records...").format(pdb_id))
     margin = 0.015
     p = Bio.PDB.PDBParser(QUIET=not verbose)
     structure = p.get_structure(pdb_id, pdb_xyz)
@@ -132,7 +133,9 @@ def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
             }
     margin = 0.01
     pdb_id = pdb_xyz if pdb_id is None else pdb_id
-    greet(pdb_id, mode="group")
+    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
+                   "Determining most likely B-factor group type...").
+                   format(pdb_id))
     structure = None
     try:
         p = Bio.PDB.PDBParser(QUIET=not verbose)
@@ -398,19 +401,6 @@ def get_check_beq_parser():
             )
     return parser
 
-def greet(pdb_id, mode=None):
-    """Say hello."""
-    if mode == "beq":
-        _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-                   "Checking Beq values in ANISOU records...").format(pdb_id))
-    elif mode == "group":
-        _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-                   "Determining most likely B-factor group type...").
-                   format(pdb_id))
-    elif mode == "calc":
-        _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-                   "Calculating B-factors from Uiso values...").format(pdb_id))
-
 def has_amino_acid_backbone(residue):
     """Return True if the residue's backbone looks like protein."""
     for atom in ("N", "CA", "C", "O"):
@@ -529,7 +519,8 @@ def transfer_header_and_trailer(xyzin, xyzout):
 def write_multiplied(xyzin, xyzout, pdb_id=None, verbose=False):
     """Multiply the B-factors in the input PDB file with 8*pi^2."""
     pdb_id = pdb_id if pdb_id else "usio"
-    greet(pdb_id, mode="calc")
+    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
+               "Calculating B-factors from Uiso values...").format(pdb_id))
     p = Bio.PDB.PDBParser(QUIET=not verbose)
     structure = p.get_structure(pdb_id, xyzin)
     structure = multiply(structure)

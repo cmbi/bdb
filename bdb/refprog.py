@@ -441,7 +441,8 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
     """
     pdb_id = pdb_xyz if pdb_id is None else pdb_id
     success = False
-    greet(pdb_id)
+    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
+                "Parsing refinement program...").format(pdb_id))
     pdb_info = get_raw_pdb_info(pdb_xyz)
     pdb_info.pop("expdta", None)
     (prog, prog_inter, version) = (pdb_info["refprog"], None, None)
@@ -582,11 +583,6 @@ def get_refprog_argparser():
     run = subparsers.add_parser("run", help="Parse refinement program")
     run.add_argument("xyzin", help="Input coordinates in PDB format.")
     return parser
-
-def greet(pdb_xyz):
-    """Say hello."""
-    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                "Parsing refinement program...").format(pdb_xyz))
 
 def last_used(pin, pv):
     """Make an educated guess about the refinement program that was used last.

@@ -23,11 +23,6 @@ def get_tlsanl_argparser():
             tensors in PDB format.")
     return parser
 
-def greet(pdb_id):
-    """Say hello."""
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-               "Preparing TLSANL run...").format(pdb_id))
-
 def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
                verbose_output=False):
     """Run TLSANL.
@@ -44,7 +39,8 @@ def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
     http://www.ccp4.ac.uk/html/tlsanl.html.
     """
     pdb_id = xyzin if pdb_id is None else pdb_id
-    greet(pdb_id)
+    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
+               "Preparing TLSANL run...").format(pdb_id))
     success = False
     keyworded_input = "BINPUT t\nBRESID t\nISOOUT FULL\nNUMERIC\nEND\n"
     p = subprocess.Popen(["tlsanl", "XYZIN", xyzin, "XYZOUT", xyzout],
@@ -65,28 +61,22 @@ def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
     # TODO categorize TLSANL problems (parse tlsanl.log)
     if p.returncode != 0:
         message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
-        swear(pdb_id, message, log_out_dir)
+        write_whynot(pdb_id, message, directory=log_out_dir)
+        _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
     elif os.stat(xyzout).st_size <= 2000:
         # from script at http://deposit.rcsb.org/adit/REFMAC.html
         message = "TLSANL problem"
-        swear(pdb_id, message, log_out_dir)
+        write_whynot(pdb_id, message, directory=log_out_dir)
+        _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
     elif os.stat(os.path.join(log_out_dir, "tlsanl.err")).st_size > 0:
         message = "TLSANL problem"
-        swear(pdb_id, message, log_out_dir)
+        write_whynot(pdb_id, message, directory=log_out_dir)
+        _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
     else:
         success = True
-        say_goodbye(pdb_id)
-    return success
-
-def say_goodbye(pdb_id):
-    """Report that TLSANL was run successfully."""
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
+        _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                "TLSANL ran without problems.").format(pdb_id))
-
-def swear(pdb_id, message, out_dir):
-    """Report TLSANL problems."""
-    write_whynot(pdb_id, message, directory=out_dir)
-    _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
+    return success
 
 if __name__ == "__main__":
     """Run TLSANL.

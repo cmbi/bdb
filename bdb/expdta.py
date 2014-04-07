@@ -60,7 +60,8 @@ def do_expdta(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
     """
     pdb_id = pdb_xyz if pdb_id is None else pdb_id
     success = False
-    greet(pdb_id)
+    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
+                "Parsing EXPDTA...").format(pdb_id))
     expdta = get_expdta(pdb_xyz)
     if expdta:
         expdta = parse_expdta(expdta)
@@ -101,11 +102,6 @@ def get_expdta_argparser():
     parser.add_argument("--pdbid", help="PDB file name.")
     parser.add_argument("xyzin", help="Input coordinates in PDB format.")
     return(parser)
-
-def greet(pdb_xyz):
-    """Say hello."""
-    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                "Parsing EXPDTA...").format(pdb_xyz))
 
 def parse_expdta(expdta):
     """Parse and sort the experimental method(s) in the EXPDTA record.

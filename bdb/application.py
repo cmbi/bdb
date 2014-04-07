@@ -19,7 +19,8 @@ def do_bdb(root, pdb_xyz, pdb_id, global_files):
 
     Return a Boolean."""
     done = False
-    greet(pdb_id)
+    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
+                "Creating bdb entry...").format(pdb_id))
     out_dir = get_bdb_entry_outdir(root, pdb_id)
     bdbd = {"pdb_id": pdb_id}
     expdta = do_expdta(pdb_xyz, pdb_id, out_dir, global_files)
@@ -85,16 +86,6 @@ def get_argparser():
         type=lambda x: is_valid_pdbid(parser, x))
     return parser
 
-def good_bye(pdb_xyz):
-    """Say good_bye."""
-    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                "Finished bdb entry.").format(pdb_xyz))
-
-def greet(pdb_xyz):
-    """Say hello."""
-    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                "Creating bdb entry...").format(pdb_xyz))
-
 def main():
     """Create a bdb entry.
 
@@ -111,7 +102,8 @@ def main():
         _log.setLevel(logging.DEBUG)
     import requirements
     if do_bdb(args.bdb_root, args.xyzin, args.pdbid, args.global_files):
-        good_bye(args.pdbid)
+        _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
+                "Finished bdb entry.").format(args.pdbid))
         sys.exit(0)
     else:
         sys.exit(1)
