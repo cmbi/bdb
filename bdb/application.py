@@ -58,8 +58,15 @@ def do_bdb(root, pdb_xyz, pdb_id, global_files):
                         format(pdb_id, message))
     return done
 
-def get_argparser():
-    """Create and return an argument parser."""
+def main():
+    """Create a bdb entry.
+
+    The bdb entry (.bdb) or WHY NOT (.whynot) file,
+    log and json files will be created in a separate directory
+    using the given pdbid and the directory structure:
+    BDB_ROOT/ab/1abc/1abc.(bdb|whynot|log|json)
+    """
+
     parser = argparse.ArgumentParser(
         description="Create a bdb entry")
     parser.add_argument(
@@ -84,19 +91,9 @@ def get_argparser():
         "pdbid",
         help="PDB file name.",
         type=lambda x: is_valid_pdbid(parser, x))
-    return parser
-
-def main():
-    """Create a bdb entry.
-
-    The bdb entry (.bdb) or WHY NOT (.whynot) file,
-    log and json files will be created in a separate directory
-    using the given pdbid and the directory structure:
-    BDB_ROOT/ab/1abc/1abc.(bdb|whynot|log|json)
-    """
-    global _log
-    parser = get_argparser()
     args = parser.parse_args()
+
+    global _log
     _log = init_bdb_logger(args.pdbid, args.bdb_root)
     if args.verbose:
         _log.setLevel(logging.DEBUG)

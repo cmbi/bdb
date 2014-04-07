@@ -10,19 +10,6 @@ import sys
 # Configure logging
 _log = logging.getLogger("bdb")
 
-def get_tlsanl_argparser():
-    """Create and return an argument parser."""
-    parser = argparse.ArgumentParser(description="Wrapper for TLSANL -\
-            Calculate isotropic B-factors for REFMAC files\
-            with residual B-factors")
-    parser.add_argument("-v", "--verbose", help="show TLSANL output",
-                        action="store_true")
-    parser.add_argument("--pdbid", help="PDB file name.")
-    parser.add_argument("xyzin", help="Input coordinates in PDB format.")
-    parser.add_argument("xyzout", help="Output coordinates and anisotropic\
-            tensors in PDB format.")
-    return parser
-
 def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
                verbose_output=False):
     """Run TLSANL.
@@ -83,7 +70,15 @@ if __name__ == "__main__":
 
     Exit with an exit code of 1 if TLSANL problems are encountered.
     """
-    parser = get_tlsanl_argparser()
+    parser = argparse.ArgumentParser(description="Wrapper for TLSANL -\
+            Calculate isotropic B-factors for REFMAC files\
+            with residual B-factors")
+    parser.add_argument("-v", "--verbose", help="show TLSANL output",
+                        action="store_true")
+    parser.add_argument("--pdbid", help="PDB file name.")
+    parser.add_argument("xyzin", help="Input coordinates in PDB format.")
+    parser.add_argument("xyzout", help="Output coordinates and anisotropic\
+            tensors in PDB format.")
     args = parser.parse_args()
     pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
     _log = init_bdb_logger(args.pdbid, global_log=True)

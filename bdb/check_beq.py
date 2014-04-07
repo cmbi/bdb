@@ -343,64 +343,6 @@ def determine_b_group_chain_greedy(chain):
         group = "overall"
     return group
 
-def get_check_beq_parser():
-    """Create and return an argument parser."""
-    parser = argparse.ArgumentParser(
-            description="Check Beq, find B-factor model or "
-                        "calculate B-factors"
-            )
-    parser.add_argument(
-            "-v",
-            "--verbose",
-            help="show versbose output",
-            action="store_true"
-            )
-    parser.add_argument(
-            "--pdbid",
-            help="PDB file name."
-            )
-    sub = parser.add_subparsers(
-            help="sub-command help"
-            )
-    xyz_help = "Input coordinates in PDB format."
-    calc = sub.add_parser(
-            "calc",
-            help="Multiply B-factor column with 8*pi**2"
-            )
-    calc.add_argument(
-            "xyzin",
-            help=xyz_help
-            )
-    calc.add_argument(
-            "xyzout",
-            help="Output coordinates in PDB format."
-            )
-    check = sub.add_parser(
-            "check",
-            help="Check Beq values or find B-factor model."
-            )
-    check.add_argument(
-            "xyzin",
-            help=xyz_help
-            )
-    check_mode = check.add_mutually_exclusive_group(required=True)
-    check_mode.add_argument(
-            "--beq",
-            help="Check if Beq values calculated from the ANISOU records in a "
-            "PDB file are equal to the B-factor values reported in the ATOM "
-            "records.",
-            action="store_true"
-            )
-    check_mode.add_argument(
-            "--group",
-            help="Determine most likely B-factor model parameterization "
-            "(overall, one per residue, two per residue (backbone and "
-            "side-chain, or individual). TLS groups are not "
-            "taken into account.",
-            action="store_true"
-            )
-    return parser
-
 def has_amino_acid_backbone(residue):
     """Return True if the residue's backbone looks like protein."""
     for atom in ("N", "CA", "C", "O"):
@@ -557,7 +499,60 @@ def report_beq(pdb_id, reproduced):
 
 if __name__ == "__main__":
     """Run Beq check or multiply Uiso with 8*pi^2."""
-    parser = get_check_beq_parser()
+    parser = argparse.ArgumentParser(
+            description="Check Beq, find B-factor model or "
+                        "calculate B-factors"
+            )
+    parser.add_argument(
+            "-v",
+            "--verbose",
+            help="show versbose output",
+            action="store_true"
+            )
+    parser.add_argument(
+            "--pdbid",
+            help="PDB file name."
+            )
+    sub = parser.add_subparsers(
+            help="sub-command help"
+            )
+    xyz_help = "Input coordinates in PDB format."
+    calc = sub.add_parser(
+            "calc",
+            help="Multiply B-factor column with 8*pi**2"
+            )
+    calc.add_argument(
+            "xyzin",
+            help=xyz_help
+            )
+    calc.add_argument(
+            "xyzout",
+            help="Output coordinates in PDB format."
+            )
+    check = sub.add_parser(
+            "check",
+            help="Check Beq values or find B-factor model."
+            )
+    check.add_argument(
+            "xyzin",
+            help=xyz_help
+            )
+    check_mode = check.add_mutually_exclusive_group(required=True)
+    check_mode.add_argument(
+            "--beq",
+            help="Check if Beq values calculated from the ANISOU records in a "
+            "PDB file are equal to the B-factor values reported in the ATOM "
+            "records.",
+            action="store_true"
+            )
+    check_mode.add_argument(
+            "--group",
+            help="Determine most likely B-factor model parameterization "
+            "(overall, one per residue, two per residue (backbone and "
+            "side-chain, or individual). TLS groups are not "
+            "taken into account.",
+            action="store_true"
+            )
     args = parser.parse_args()
     pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
     _log = init_bdb_logger(pdb_id, global_log=True)

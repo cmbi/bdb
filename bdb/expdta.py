@@ -94,15 +94,6 @@ def get_expdta(pdb_xyz):
                    format(pdb_xyz, expdta))
     return(expdta)
 
-def get_expdta_argparser():
-    """Create and return an argument parser."""
-    parser = argparse.ArgumentParser(description="Parse EXPDTA")
-    parser.add_argument("-v", "--verbose", help="verbose output",
-                        action="store_true")
-    parser.add_argument("--pdbid", help="PDB file name.")
-    parser.add_argument("xyzin", help="Input coordinates in PDB format.")
-    return(parser)
-
 def parse_expdta(expdta):
     """Parse and sort the experimental method(s) in the EXPDTA record.
 
@@ -136,7 +127,11 @@ if __name__ == "__main__":
     cannot be parsed, if it contains multiple methods or if the method cannot
     be used in the bdb project.
     """
-    parser = get_expdta_argparser()
+    parser = argparse.ArgumentParser(description="Parse EXPDTA")
+    parser.add_argument("-v", "--verbose", help="verbose output",
+                        action="store_true")
+    parser.add_argument("--pdbid", help="PDB file name.")
+    parser.add_argument("xyzin", help="Input coordinates in PDB format.")
     args = parser.parse_args()
     pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
     _log = init_bdb_logger(pdb_id, global_log=True)

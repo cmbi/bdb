@@ -77,36 +77,6 @@ SUM_PAT3  = re.compile(r"(GLOBAL\s+)?[BU]-?\s*(FACTORS?|VALUES?),?\s*"
                              "(CONTAINING\s+)?RESIDUALS?\s+(AND|\+)\s+TLS\s+"
                              "COMPONENTS?(HAVE\s+BEEN\s+DEPOSITED)?")
 
-def get_argparser():
-    """Create and return an argument parser."""
-    parser = argparse.ArgumentParser(
-            description="Create a WHY NOT entry or test BDB utils")
-    parser.add_argument("-v", "--verbose", help="show verbose output",
-                        action="store_true")
-    subparsers = parser.add_subparsers(help="sub-command help")
-    test = subparsers.add_parser("test", help="Test PDB file header parser")
-    test.add_argument(
-        "xyzin",
-        help="PDB file (with header).",
-        type=lambda x: is_valid_file(parser, x))
-    run = subparsers.add_parser("why_not", help="Create a WHY NOT entry")
-    run.add_argument(
-        "pdbid",
-        help="PDB file name.",
-        type=lambda x: is_valid_pdbid(parser, x))
-    run.add_argument(
-        "output_dir",
-        help="Directory where the output files should be saved.",
-        type=lambda x: is_valid_directory(parser, x))
-    run.add_argument(
-        "--output_file",
-        help="WHY NOT file name",
-        default="whynot.txt")
-    run.add_argument(
-        "whynot",
-        help="WHY NOT message.")
-    return parser
-
 def get_bdb_entry_outdir(root, pdb_id):
     out_dir = os.path.join(root, pdb_id[1:3], pdb_id)
     if not os.path.exists(out_dir):
@@ -483,7 +453,32 @@ def write_whynot(pdb_id, reason, filename=None, directory="."):
 
 if __name__ == "__main__":
     """Write WHY NOT entry."""
-    parser = get_argparser()
+    parser = argparse.ArgumentParser(
+            description="Create a WHY NOT entry or test BDB utils")
+    parser.add_argument("-v", "--verbose", help="show verbose output",
+                        action="store_true")
+    subparsers = parser.add_subparsers(help="sub-command help")
+    test = subparsers.add_parser("test", help="Test PDB file header parser")
+    test.add_argument(
+        "xyzin",
+        help="PDB file (with header).",
+        type=lambda x: is_valid_file(parser, x))
+    run = subparsers.add_parser("why_not", help="Create a WHY NOT entry")
+    run.add_argument(
+        "pdbid",
+        help="PDB file name.",
+        type=lambda x: is_valid_pdbid(parser, x))
+    run.add_argument(
+        "output_dir",
+        help="Directory where the output files should be saved.",
+        type=lambda x: is_valid_directory(parser, x))
+    run.add_argument(
+        "--output_file",
+        help="WHY NOT file name",
+        default="whynot.txt")
+    run.add_argument(
+        "whynot",
+        help="WHY NOT message.")
     args = parser.parse_args()
     if args.xyzin:
         # Test mode

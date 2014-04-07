@@ -571,19 +571,6 @@ def get_refprog(pdb_xyz):
                    format(pdb_xyz, record.rstrip()))
     return refprog
 
-def get_refprog_argparser():
-    """Create and return an argument parser."""
-    parser = argparse.ArgumentParser(description="Parse refinement program")
-    parser.add_argument("-v", "--verbose", help="verbose output",
-                        action="store_true")
-    parser.add_argument("--pdbid", help="PDB file name.")
-    subparsers = parser.add_subparsers(help="sub-command help")
-    test = subparsers.add_parser("test", help="Test refinement program parser")
-    test.add_argument("prog", help="Refinement program string")
-    run = subparsers.add_parser("run", help="Parse refinement program")
-    run.add_argument("xyzin", help="Input coordinates in PDB format.")
-    return parser
-
 def last_used(pin, pv):
     """Make an educated guess about the refinement program that was used last.
 
@@ -1335,7 +1322,15 @@ if __name__ == "__main__":
     decided which one was used last) or if the program cannot be used in the
     bdb project.
     """
-    parser = get_refprog_argparser()
+    parser = argparse.ArgumentParser(description="Parse refinement program")
+    parser.add_argument("-v", "--verbose", help="verbose output",
+                        action="store_true")
+    parser.add_argument("--pdbid", help="PDB file name.")
+    subparsers = parser.add_subparsers(help="sub-command help")
+    test = subparsers.add_parser("test", help="Test refinement program parser")
+    test.add_argument("prog", help="Refinement program string")
+    run = subparsers.add_parser("run", help="Parse refinement program")
+    run.add_argument("xyzin", help="Input coordinates in PDB format.")
     args = parser.parse_args()
     pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
     _log = init_bdb_logger(pdb_id, global_log=True)
