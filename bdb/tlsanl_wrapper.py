@@ -10,7 +10,7 @@ import sys
 # Configure logging
 _log = logging.getLogger("bdb")
 
-def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
+def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",
                verbose_output=False):
     """Run TLSANL.
 
@@ -25,12 +25,12 @@ def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
     Detailed documentation for TLSANL can be found at
     http://www.ccp4.ac.uk/html/tlsanl.html.
     """
-    pdb_id = xyzin if pdb_id is None else pdb_id
+    pdb_id = pdb_file_path if pdb_id is None else pdb_id
     _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                "Preparing TLSANL run...").format(pdb_id))
     success = False
     keyworded_input = "BINPUT t\nBRESID t\nISOOUT FULL\nNUMERIC\nEND\n"
-    p = subprocess.Popen(["tlsanl", "XYZIN", xyzin, "XYZOUT", xyzout],
+    p = subprocess.Popen(["tlsanl", "XYZIN", pdb_file_path, "XYZOUT", xyzout],
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate(input=keyworded_input)
@@ -75,17 +75,17 @@ if __name__ == "__main__":
             with residual B-factors")
     parser.add_argument("-v", "--verbose", help="show TLSANL output",
                         action="store_true")
-    parser.add_argument("--pdbid", help="PDB file name.")
-    parser.add_argument("xyzin", help="Input coordinates in PDB format.")
+    parser.add_argument("--pdbid", help="PDB accession code.")
+    parser.add_argument("pdb_file_path", help="PDB file location.")
     parser.add_argument("xyzout", help="Output coordinates and anisotropic\
             tensors in PDB format.")
     args = parser.parse_args()
-    pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
+    pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
     _log = init_bdb_logger(args.pdbid, global_log=True)
     import requirements
     if args.verbose:
         _log.setLevel(logging.DEBUG)
-    if run_tlsanl(args.xyzin, args.xyzout, pdb_id,
+    if run_tlsanl(args.pdb_file_path, args.xyzout, pdb_id,
                   verbose_output=args.verbose):
         sys.exit(0)
     else:

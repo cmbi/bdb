@@ -391,7 +391,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                                                                message))
     return useful, assume_iso, req_tlsanl
 
-def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
+def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
     """Determine whether this PDB file can be used in the bdb project.
 
     The decision is based on refinement details parsed from the header.
@@ -439,11 +439,11 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
     "tls_sum"      : True if it is mentioned somewhere in REMARK 3 that the
                      ATOM records contain the sum of TLS and residual B-factors
     """
-    pdb_id = pdb_xyz if pdb_id is None else pdb_id
+    pdb_id = pdb_file_path if pdb_id is None else pdb_id
     success = False
     _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
                 "Parsing refinement program...").format(pdb_id))
-    pdb_info = get_raw_pdb_info(pdb_xyz)
+    pdb_info = get_raw_pdb_info(pdb_file_path)
     pdb_info.pop("expdta", None)
     (prog, prog_inter, version) = (pdb_info["refprog"], None, None)
     prog_last = None
@@ -453,7 +453,7 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
             "correct_uij": None
             }
     if pdb_info["has_anisou"]: # save some time
-        reproduced = check_beq(pdb_xyz, pdb_id)
+        reproduced = check_beq(pdb_file_path, pdb_id)
         report_beq(pdb_id, reproduced)
         if reproduced["beq_identical"] > 0.9999:
             success = True
@@ -465,7 +465,7 @@ def do_refprog(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
             "protein_b": None,
             "nucleic_b": None,
             }
-    b_group  = determine_b_group(pdb_xyz, pdb_id)
+    b_group  = determine_b_group(pdb_file_path, pdb_id)
     pdb_info.update(b_group)
     if prog:
         (prog, prog_inter, version) = parse_refprog(prog, pdb_id, global_files)
@@ -560,15 +560,15 @@ def filter_progs(pin, pv):
             pv = pv[:pop] + pv[(pop + 1):]
     return pin,pv
 
-def get_refprog(pdb_xyz):
+def get_refprog(pdb_file_path):
     """Find the refinement program in a PDB file.
 
     Return the value of the refinement programs as a string.
     """
-    refprog = get_raw_pdb_info(pdb_xyz)["refprog"]
+    refprog = get_raw_pdb_info(pdb_file_path)["refprog"]
     if refprog:
         _log.debug(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").
-                   format(pdb_xyz, record.rstrip()))
+                   format(pdb_file_path, record.rstrip()))
     return refprog
 
 def last_used(pin, pv):
@@ -1325,14 +1325,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse refinement program")
     parser.add_argument("-v", "--verbose", help="verbose output",
                         action="store_true")
-    parser.add_argument("--pdbid", help="PDB file name.")
+    parser.add_argument("--pdbid", help="PDB accession code.")
     subparsers = parser.add_subparsers(help="sub-command help")
     test = subparsers.add_parser("test", help="Test refinement program parser")
     test.add_argument("prog", help="Refinement program string")
     run = subparsers.add_parser("run", help="Parse refinement program")
-    run.add_argument("xyzin", help="Input coordinates in PDB format.")
+    run.add_argument("pdb_file_path", help="PDB file location.")
     args = parser.parse_args()
-    pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
+    pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
     _log = init_bdb_logger(pdb_id, global_log=True)
     if args.verbose:
         _log.setLevel(logging.DEBUG)
@@ -1344,7 +1344,7 @@ if __name__ == "__main__":
             print("p:", p, "i:", i, "v:", v)
     else:
         # Run mode
-        if do_refprog(args.xyzin, pdb_id):
+        if do_refprog(args.pdb_file_path, pdb_id):
             sys.exit(0)
         else:
             sys.exit(1)

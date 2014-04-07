@@ -14,42 +14,42 @@ import re
 import shutil
 import sys
 
-def do_bdb(root, pdb_xyz, pdb_id, global_files):
+def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
     """Create a bdb entry.
 
     Return a Boolean."""
     done = False
     _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
                 "Creating bdb entry...").format(pdb_id))
-    out_dir = get_bdb_entry_outdir(root, pdb_id)
+    out_dir = get_bdb_entry_outdir(bdb_root_path, pdb_id)
     bdbd = {"pdb_id": pdb_id}
-    expdta = do_expdta(pdb_xyz, pdb_id, out_dir, global_files)
+    expdta = do_expdta(pdb_file_path, pdb_id, out_dir, global_files)
     bdbd.update(expdta)
     if expdta["expdta_useful"]:
-        refprog = do_refprog(pdb_xyz, pdb_id, out_dir, global_files)
+        refprog = do_refprog(pdb_file_path, pdb_id, out_dir, global_files)
         bdbd.update(refprog)
         write_dict_json(bdbd, os.path.join(out_dir, pdb_id + ".json"),
                 pretty=True)
         if refprog["refprog_useful"]:
-            bdb_xyz = os.path.join(out_dir, pdb_id + ".bdb")
+            bdb_file_path = os.path.join(out_dir, pdb_id + ".bdb")
             # TODO do we need extractor? or tlsextract (ccp4)
             if refprog["req_tlsanl"]:
                 if run_tlsanl(
-                        xyzin=pdb_xyz,
-                        xyzout=bdb_xyz,
+                        xyzin=pdb_file_path,
+                        xyzout=bdb_file_path,
                         pdb_id=pdb_id,
                         log_out_dir=out_dir
                         ):
                     done = True
             elif refprog["b_msqav"]:
                 if write_multiplied(
-                        xyzin=pdb_xyz,
-                        xyzout=bdb_xyz,
+                        xyzin=pdb_file_path,
+                        xyzout=bdb_file_path,
                         pdb_id=pdb_id
                         ):
                     done =True
             elif refprog["assume_iso"]:
-                shutil.copy(pdb_xyz, bdb_xyz)
+                shutil.copy(pdb_file_path, bdb_file_path)
                 done = True
             else:
                 message = "Unexpected bdb status"
@@ -80,27 +80,27 @@ def main():
         help="show verbose output",
         action="store_true")
     parser.add_argument(
-        "bdb_root",
+        "bdb_root_path",
         help="Root directory of the bdb data.",
         type=lambda x: is_valid_directory(parser, x))
     parser.add_argument(
-        "xyzin",
-        help="Input coordinates in PDB format.",
+        "pdb_file_path",
+        help="PDB file location.",
         type=lambda x: is_valid_file(parser, x))
     parser.add_argument(
-        "pdbid",
-        help="PDB file name.",
+        "pdb_id",
+        help="PDB accession code.",
         type=lambda x: is_valid_pdbid(parser, x))
     args = parser.parse_args()
 
     global _log
-    _log = init_bdb_logger(args.pdbid, args.bdb_root)
+    _log = init_bdb_logger(args.pdb_id, args.bdb_root_path)
     if args.verbose:
         _log.setLevel(logging.DEBUG)
     import requirements
-    if do_bdb(args.bdb_root, args.xyzin, args.pdbid, args.global_files):
+    if do_bdb(args.bdb_root_path, args.pdb_file_path, args.pdb_id, args.global_files):
         _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                "Finished bdb entry.").format(args.pdbid))
+                "Finished bdb entry.").format(args.pdb_id))
         sys.exit(0)
     else:
         sys.exit(1)

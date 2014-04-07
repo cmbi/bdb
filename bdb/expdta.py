@@ -51,18 +51,18 @@ def decide_expdta(expdta, pdb_id, out_dir=".", global_files=False):
                                                                message))
     return(useful)
 
-def do_expdta(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
+def do_expdta(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
     """Determine whether this PDB file can be included in the bdb.
 
     Return a dictionary.
     "expdta_useful" : True if this PDB file is useful
     "expdta"        : a list with experimental method(s) if not None
     """
-    pdb_id = pdb_xyz if pdb_id is None else pdb_id
+    pdb_id = pdb_file_path if pdb_id is None else pdb_id
     success = False
     _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
                 "Parsing EXPDTA...").format(pdb_id))
-    expdta = get_expdta(pdb_xyz)
+    expdta = get_expdta(pdb_file_path)
     if expdta:
         expdta = parse_expdta(expdta)
         _log.debug(("{0:" + PDB_LOGFORMAT + "} | Experimental method(s):"\
@@ -73,25 +73,25 @@ def do_expdta(pdb_xyz, pdb_id=None, out_dir=".", global_files=False):
         else: # we should not end up here
             message = "Experimental method: EXPDTA parse error"
             write_whynot(pdb_id, message, directory=out_dir)
-            _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").format(pdb_xyz,
-                                                                    message))
+            _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").format(
+                pdb_file_path, message))
     else:
         message = "Experimental method: no EXPDTA record"
         write_whynot(pdb_id, message, directory=out_dir)
-        _log.warn(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").format(pdb_xyz,
+        _log.warn(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").format(pdb_file_path,
                                                                message))
     return({"expdta_useful": success, "expdta":expdta})
 
 
-def get_expdta(pdb_xyz):
+def get_expdta(pdb_file_path):
     """Find the EXPDTA record in a PDB file.
 
     Return the value of the EXPDTA record as a string.
     """
-    expdta = get_raw_pdb_info(pdb_xyz)["expdta"]
+    expdta = get_raw_pdb_info(pdb_file_path)["expdta"]
     if expdta:
         _log.debug(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").
-                   format(pdb_xyz, expdta))
+                   format(pdb_file_path, expdta))
     return(expdta)
 
 def parse_expdta(expdta):
@@ -130,14 +130,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse EXPDTA")
     parser.add_argument("-v", "--verbose", help="verbose output",
                         action="store_true")
-    parser.add_argument("--pdbid", help="PDB file name.")
-    parser.add_argument("xyzin", help="Input coordinates in PDB format.")
+    parser.add_argument("--pdbid", help="PDB accession code.")
+    parser.add_argument("pdb_file_path", help="PDB file location.")
     args = parser.parse_args()
-    pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
+    pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
     _log = init_bdb_logger(pdb_id, global_log=True)
     if args.verbose:
         _log.setLevel(logging.DEBUG)
-    if do_expdta(args.xyzin, pdb_id)["expdta_useful"]:
+    if do_expdta(args.pdb_file_path, pdb_id)["expdta_useful"]:
         sys.exit(0)
     else:
         sys.exit(1)

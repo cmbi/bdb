@@ -18,7 +18,7 @@ _log = logging.getLogger("bdb")
 
 UF = 8*3.14159265359**2
 
-def check_beq(pdb_xyz, pdb_id=None, verbose=False):
+def check_beq(pdb_file_path, pdb_id=None, verbose=False):
     """Determine if Beq values are the same as the reported B-factors.
 
     The margin is 0.015 Angstrom**2
@@ -30,12 +30,12 @@ def check_beq(pdb_xyz, pdb_id=None, verbose=False):
     correct_uij  : False if a non-standard combination of the Uij values in the
                    ANISOU records was necessary to reproduce the B-factors.
     """
-    pdb_id = pdb_xyz if pdb_id is None else pdb_id
+    pdb_id = pdb_file_path if pdb_id is None else pdb_id
     _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                "Checking Beq values in ANISOU records...").format(pdb_id))
     margin = 0.015
     p = Bio.PDB.PDBParser(QUIET=not verbose)
-    structure = p.get_structure(pdb_id, pdb_xyz)
+    structure = p.get_structure(pdb_id, pdb_file_path)
     atoms = structure.get_atoms()
     has_anisou = False
     eq = 0
@@ -105,7 +105,7 @@ def check_combinations(anisou, b, margin, pdb_id=None):
             break
     return reproduced
 
-def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
+def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
     """Determine the most likely B-factor parameterization.
 
     Return a dictionary with separated output for protein and nucleic acid and
@@ -132,14 +132,14 @@ def determine_b_group(pdb_xyz, pdb_id=None, verbose=False):
             "calpha_only": False,
             }
     margin = 0.01
-    pdb_id = pdb_xyz if pdb_id is None else pdb_id
+    pdb_id = pdb_file_path if pdb_id is None else pdb_id
     _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                    "Determining most likely B-factor group type...").
                    format(pdb_id))
     structure = None
     try:
         p = Bio.PDB.PDBParser(QUIET=not verbose)
-        structure = p.get_structure(pdb_id, pdb_xyz)
+        structure = p.get_structure(pdb_id, pdb_file_path)
     except (AttributeError, IndexError, ValueError, AssertionError,
             Bio.PDB.PDBExceptions.PDBConstructionException):
         _log.error(("{0:" + PDB_LOGFORMAT + "} | Biopython Error.").format(
@@ -426,10 +426,10 @@ def multiply(structure):
         atom.set_bfactor(UF * atom.get_bfactor())
     return structure
 
-def transfer_header_and_trailer(xyzin, xyzout):
-    """Transfer header and trailer from xyzin to xyzout."""
+def transfer_header_and_trailer(pdb_file_path, xyzout):
+    """Transfer header and trailer from pdb_file_path to xyzout."""
     transferred = False
-    h, t = get_pdb_header_and_trailer(xyzin)
+    h, t = get_pdb_header_and_trailer(pdb_file_path)
     records = list()
     # Start with the header...
     records.extend(h)
@@ -458,19 +458,19 @@ def transfer_header_and_trailer(xyzin, xyzout):
         _log.error(ex)
     return transferred
 
-def write_multiplied(xyzin, xyzout, pdb_id=None, verbose=False):
+def write_multiplied(pdb_file_path, xyzout, pdb_id=None, verbose=False):
     """Multiply the B-factors in the input PDB file with 8*pi^2."""
     pdb_id = pdb_id if pdb_id else "usio"
     _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
                "Calculating B-factors from Uiso values...").format(pdb_id))
     p = Bio.PDB.PDBParser(QUIET=not verbose)
-    structure = p.get_structure(pdb_id, xyzin)
+    structure = p.get_structure(pdb_id, pdb_file_path)
     structure = multiply(structure)
     io = Bio.PDB.PDBIO()
     io.set_structure(structure)
     # Header and trailer records not present in this output file
     io.save(xyzout)
-    return transfer_header_and_trailer(xyzin, xyzout)
+    return transfer_header_and_trailer(pdb_file_path, xyzout)
 
 def report_beq(pdb_id, reproduced):
     """Report if Beqs are identical to B-factors."""
@@ -516,14 +516,13 @@ if __name__ == "__main__":
     sub = parser.add_subparsers(
             help="sub-command help"
             )
-    xyz_help = "Input coordinates in PDB format."
     calc = sub.add_parser(
             "calc",
             help="Multiply B-factor column with 8*pi**2"
             )
     calc.add_argument(
-            "xyzin",
-            help=xyz_help
+            "pdb_file_path",
+            help="PDB file location."
             )
     calc.add_argument(
             "xyzout",
@@ -534,8 +533,8 @@ if __name__ == "__main__":
             help="Check Beq values or find B-factor model."
             )
     check.add_argument(
-            "xyzin",
-            help=xyz_help
+            "pdb_file_path",
+            help="PDB file location."
             )
     check_mode = check.add_mutually_exclusive_group(required=True)
     check_mode.add_argument(
@@ -554,16 +553,16 @@ if __name__ == "__main__":
             action="store_true"
             )
     args = parser.parse_args()
-    pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
+    pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
     _log = init_bdb_logger(pdb_id, global_log=True)
     if args.verbose:
         _log.setLevel(logging.DEBUG)
     if args.beq:
         # Check Beq mode
-        report_beq(pdb_id, check_beq(args.xyzin, pdb_id))
+        report_beq(pdb_id, check_beq(args.pdb_file_path, pdb_id))
     elif args.group:
         # Check group mode
-        determine_b_group(args.xyzin, pdb_id, args.verbose)
+        determine_b_group(args.pdb_file_path, pdb_id, args.verbose)
     else:
         # Calc mode
-        write_multiplied(args.xyzin, args.xyzout, pdb_id, args.verbose)
+        write_multiplied(args.pdb_file_path, args.xyzout, pdb_id, args.verbose)

@@ -123,7 +123,7 @@ def get_n_tls_groups(record):
             n_tls = None
     return n_tls
 
-def get_pdb_header(pdb_xyz):
+def get_pdb_header(pdb_file_path):
     """Return the PDB-file header records as a list.
 
     We assume the PDB file has the following composition:
@@ -140,7 +140,7 @@ def get_pdb_header(pdb_xyz):
     """
     header = list()
     try:
-        with open(pdb_xyz, "r") as pdb:
+        with open(pdb_file_path, "r") as pdb:
             for record in pdb:
                 if re.search(r"^(MODEL|ATOM|HETATM)", record):
                     return header
@@ -150,7 +150,7 @@ def get_pdb_header(pdb_xyz):
         _log.error(ex)
     return header
 
-def get_pdb_header_and_trailer(pdb_xyz):
+def get_pdb_header_and_trailer(pdb_file_path):
     """Return the PDB-file header and trailer records as two lists.
 
     We assume the PDB file has the following composition:
@@ -169,7 +169,7 @@ def get_pdb_header_and_trailer(pdb_xyz):
     trailer = list()
     head_records = True
     try:
-        with open(pdb_xyz, "r") as pdb:
+        with open(pdb_file_path, "r") as pdb:
             for record in pdb:
                 if re.search(r"^(MODEL|ATOM|HETATM)", record):
                     head_records = False
@@ -182,7 +182,7 @@ def get_pdb_header_and_trailer(pdb_xyz):
         _log.error(ex)
     return header, trailer
 
-def get_pdb_trailer(pdb_xyz):
+def get_pdb_trailer(pdb_file_path):
     """Return the PDB-file trailer records as a list.
 
     We assume the PDB file has the following composition:
@@ -200,7 +200,7 @@ def get_pdb_trailer(pdb_xyz):
     trailer = list()
     header = True
     try:
-        with open(pdb_xyz, "r") as pdb:
+        with open(pdb_file_path, "r") as pdb:
             for record in pdb:
                 if re.search(r"^(MODEL|ATOM|HETATM)", record):
                     header = False
@@ -232,7 +232,7 @@ def get_refprog_from_string(s):
         program = s.rstrip()[27:]
     return program
 
-def get_raw_pdb_info(pdb_xyz):
+def get_raw_pdb_info(pdb_file_path):
     """Find the information necessary for bdb pipelin in a PDB file.
 
     Return a dictionary
@@ -260,7 +260,7 @@ def get_raw_pdb_info(pdb_xyz):
             other_refinement_remarks, refprog, tls_groups = (None,)*7
     b_msqav, has_anisou, refmarks, tls_residual, tls_sum = (False,)*5
     try:
-        with open(pdb_xyz, "r") as pdb:
+        with open(pdb_file_path, "r") as pdb:
             for record in pdb:
                 if re.search(EXPDTA_PAT, record):
                     expdta = get_expdta_from_record(record)
@@ -460,13 +460,13 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(help="sub-command help")
     test = subparsers.add_parser("test", help="Test PDB file header parser")
     test.add_argument(
-        "xyzin",
-        help="PDB file (with header).",
+        "pdb_file_path",
+        help="PDB file location.",
         type=lambda x: is_valid_file(parser, x))
     run = subparsers.add_parser("why_not", help="Create a WHY NOT entry")
     run.add_argument(
         "pdbid",
-        help="PDB file name.",
+        help="PDB accession code.",
         type=lambda x: is_valid_pdbid(parser, x))
     run.add_argument(
         "output_dir",
@@ -480,12 +480,12 @@ if __name__ == "__main__":
         "whynot",
         help="WHY NOT message.")
     args = parser.parse_args()
-    if args.xyzin:
+    if args.pdb_file_path:
         # Test mode
-        _log = init_bdb_logger(args.xyzin, global_log=True)
+        _log = init_bdb_logger(args.pdb_file_path, global_log=True)
         if args.verbose:
             _log.setLevel(logging.DEBUG)
-        d = get_raw_pdb_info(args.xyzin)
+        d = get_raw_pdb_info(args.pdb_file_path)
         print json.dumps(d, sort_keys=True, indent=4)
     else:
         _log = init_bdb_logger(args.pdbin, global_log=True)
