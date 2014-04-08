@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-from bdb.pdb.parser import parse_pdb_file
-from bdb_utils import is_valid_directory, is_valid_file, is_valid_pdbid,\
-get_bdb_entry_outdir, init_bdb_logger, write_dict_json, write_whynot,\
-PDB_LOGFORMAT
-from check_beq import write_multiplied
-from expdta import check_exp_methods
-from refprog import do_refprog
-from tlsanl_wrapper import run_tlsanl
-
 import argparse
 import logging
 import os
 import re
 import shutil
 import sys
+
+from bdb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
+                           get_bdb_entry_outdir, init_bdb_logger,
+                           write_dict_json, write_whynot, PDB_LOGFORMAT)
+from bdb.check_beq import write_multiplied
+from bdb.expdta import check_exp_methods
+from bdb.pdb.parser import parse_pdb_file
+from bdb.refprog import do_refprog
+from bdb.tlsanl_wrapper import run_tlsanl
+
 
 def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
     """Create a bdb entry.

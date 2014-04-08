@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 from __future__ import division
-from bdb_utils import get_pdb_header_and_trailer, init_bdb_logger,\
-        write_whynot, PDB_LOGFORMAT
+
 import argparse
-import Bio.PDB
 import itertools
 import logging
-import numpy
 import os
 import re
 import shutil
 import subprocess
 import sys
+
+import Bio.PDB
+import numpy
+
+from bdb.bdb_utils import (get_pdb_header_and_trailer, init_bdb_logger,
+                           write_whynot, PDB_LOGFORMAT)
 
 # Configure logging
 _log = logging.getLogger("bdb")

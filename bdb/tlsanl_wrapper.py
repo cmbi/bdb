@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 from __future__ import print_function
-from bdb_utils import init_bdb_logger, write_whynot, PDB_LOGFORMAT
+
 import argparse
 import logging
 import os
 import subprocess
 import sys
+
+from bdb.bdb_utils import init_bdb_logger, write_whynot, PDB_LOGFORMAT
 
 # Configure logging
 _log = logging.getLogger("bdb")

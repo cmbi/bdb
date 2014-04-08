@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 from __future__ import print_function
-from bdb_utils import get_raw_pdb_info, init_bdb_logger,\
-write_whynot, PDB_LOGFORMAT
-from check_beq import check_beq, determine_b_group, report_beq
+
 import argparse
 import logging
 import os
 import re
 import sys
+
+from bdb.bdb_utils import (get_raw_pdb_info, init_bdb_logger, write_whynot,
+                           PDB_LOGFORMAT)
+from bdb.check_beq import check_beq, determine_b_group, report_beq
+
 
 # Configure logging
 _log = logging.getLogger("bdb")
