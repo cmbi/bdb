@@ -7,7 +7,7 @@ import re
 import sys
 
 from bdb.pdb.parser import parse_exp_methods
-from bdb.bdb_utils import init_bdb_logger, unique, write_whynot, PDB_LOGFORMAT
+from bdb.bdb_utils import init_bdb_logger, write_whynot, PDB_LOGFORMAT
 
 
 _log = logging.getLogger("bdb")
@@ -70,7 +70,7 @@ def write_unsupported_expdta(expdta, expdta_file="unsupported_expdta.txt"):
             with open(expdta_file, "r") as f:
                 unsupported = [line.strip() for line in f]
         unsupported.append(" and ".join(expdta))
-        unsupported = unique(unsupported)
+        unsupported = set(unsupported)
         with open(expdta_file, "w") as f:
             for u in unsupported:
                 f.write("{0:s}\n".format(u))

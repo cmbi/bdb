@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from bdb_utils import get_raw_pdb_info, init_bdb_logger,\
-unique, write_whynot, PDB_LOGFORMAT
+write_whynot, PDB_LOGFORMAT
 from check_beq import check_beq, determine_b_group, report_beq
 import argparse
 import logging
@@ -593,7 +593,7 @@ def last_used(pin, pv):
     # Remove non-refinement programs
     pin, pv = filter_progs(pin, pv)
     # e.g. X-PLOR 3.1, X-PLOR 3.8 in 1c4k
-    pin = unique(pin)
+    pin = list(set(pin))
     # General rules
     if "SHELX" in pin and len(pin) > 1: # multiple programs
         """
@@ -1279,7 +1279,7 @@ def write_unknown_refprog(refprog, refprog_file="unknown_refprog.txt"):
             with open(refprog_file, "r") as f:
                 unknown = [line.strip() for line in f]
         unknown.append(refprog)
-        unknown = unique(unknown)
+        unknown = set(unknown)
         with open(refprog_file, "w") as f:
             for u in unknown:
                 f.write("{0:s}\n".format(u))
@@ -1294,7 +1294,7 @@ def write_unknown_version(refprog, refprog_file="unknown_version.txt"):
             with open(refprog_file, "r") as f:
                 un_version = [line.strip() for line in f]
         un_version.append(refprog)
-        un_version = unique(un_version)
+        un_version = set(un_version)
         with open(refprog_file, "w") as f:
             for u in un_version:
                 f.write("{0:s}\n".format(u))
@@ -1309,7 +1309,7 @@ def write_unsupported_refprog(refprog, refprog_file="unsupported_refprog.txt"):
             with open(refprog_file, "r") as f:
                 unsupported = [line.strip() for line in f]
         unsupported.append(" and ".join(refprog))
-        unsupported = unique(unsupported)
+        unsupported = set(unsupported)
         with open(refprog_file, "w") as f:
             for u in unsupported:
                 f.write("{0:s}\n".format(u))

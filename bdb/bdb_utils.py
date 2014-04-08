@@ -416,12 +416,6 @@ def is_valid_pdbid(parser, arg):
     else:
         return arg
 
-def unique(seq):
-    """Return a unique list."""
-    seen = set()
-    seen_add = seen.add
-    return [ x for x in seq if x not in seen and not seen_add(x)]
-
 def write_dict_json(d, filename="info.json", pretty=False):
     """Dump the dictionary to a JSON file."""
     try:
