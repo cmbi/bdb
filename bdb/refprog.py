@@ -70,6 +70,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
     tls_sum      = pdb_info["tls_sum"]
     format_vers  = pdb_info["format_vers"]
 
+    print(refprog[0])
+
     # Check and declare
     assert isinstance(refprog, list)
     (useful, assume_iso, req_tlsanl) = (False, False, False)

@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
+from bdb.pdb.parser import parse_pdb_file
 from bdb_utils import is_valid_directory, is_valid_file, is_valid_pdbid,\
 get_bdb_entry_outdir, init_bdb_logger, write_dict_json, write_whynot,\
 PDB_LOGFORMAT
 from check_beq import write_multiplied
-from expdta import do_expdta
+from expdta import check_exp_methods
 from refprog import do_refprog
 from tlsanl_wrapper import run_tlsanl
+
 import argparse
 import logging
 import os
@@ -18,13 +21,18 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
     """Create a bdb entry.
 
     Return a Boolean."""
-    done = False
+
     _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
                 "Creating bdb entry...").format(pdb_id))
+
+    # Parse the given pdb file into a dict.
+    pdb_records = parse_pdb_file(pdb_file_path)
+
     out_dir = get_bdb_entry_outdir(bdb_root_path, pdb_id)
     bdbd = {"pdb_id": pdb_id}
-    expdta = do_expdta(pdb_file_path, pdb_id, out_dir, global_files)
+    expdta = check_exp_methods(pdb_records, pdb_id, out_dir, global_files)
     bdbd.update(expdta)
+    done = False
     if expdta["expdta_useful"]:
         refprog = do_refprog(pdb_file_path, pdb_id, out_dir, global_files)
         bdbd.update(refprog)
@@ -93,11 +101,16 @@ def main():
         type=lambda x: is_valid_pdbid(parser, x))
     args = parser.parse_args()
 
+    # Setup logging
     global _log
     _log = init_bdb_logger(args.pdb_id, args.bdb_root_path)
     if args.verbose:
         _log.setLevel(logging.DEBUG)
+
+    # Check that the system has the required programs and libraries installed
+    # TODO: This should be moved to a `setup.py` file.
     import requirements
+
     if do_bdb(args.bdb_root_path, args.pdb_file_path, args.pdb_id, args.global_files):
         _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
                 "Finished bdb entry.").format(args.pdb_id))
