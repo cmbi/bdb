@@ -6,8 +6,8 @@ import os
 import re
 import sys
 
-# Configure logging
-_log = logging.getLogger("bdb")
+
+_log = logging.getLogger(__name__)
 
 
 ANISOU_PAT = re.compile(r"^ANISOU")
@@ -354,53 +354,6 @@ def get_raw_pdb_info(pdb_file_path):
             "tls_sum": tls_sum
             }
 
-# class SingleLevelFilter(logging.Filter):
-#    def __init__(self, passlevel, reject):
-#        self.passlevel = passlevel
-#        self.reject = reject
-#
-#    def filter(self, record):
-#        if self.reject:
-#            return (record.levelno != self.passlevel)
-#        else:
-#            return (record.levelno == self.passlevel)
-
-
-def init_bdb_logger(pdb_id, root=".", global_log=False):
-    """Configure logging for a single entry or globally."""
-    logger = logging.getLogger("bdb")
-    if not global_log:
-        log_name = pdb_id + ".log"
-        out_dir = get_bdb_entry_outdir(root, pdb_id)
-        log_file = os.path.join(out_dir, log_name)
-    else:
-        log_file = os.path.join(root, "bdb.log")
-
-    # File logger
-    log_file = logging.FileHandler(log_file, "w")
-    logger.addHandler(log_file)
-    form1 = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s")
-    log_file.setFormatter(form1)
-
-    # Console logger stdout
-    stdout = logging.StreamHandler(sys.stdout)
-    # f1 = SingleLevelFilter(logging.ERR, False)
-    # stdout.addFilter(f1)
-    form2 = logging.Formatter("%(message)s")
-    stdout.setFormatter(form2)
-    logger.addHandler(stdout)
-
-    # Console logger stderr
-    # stderr = logging.StreamHandler(sys.stderr)
-    # f2 = SingleLevelFilter(logging.ERR, True)
-    # stderr.addFilter(f2)
-    # stderr.setFormatter(form1)
-    # logger.addHandler(stderr)
-
-    # Default log level
-    logger.setLevel(logging.INFO)
-    return logger
-
 
 def is_valid_directory(parser, arg):
     """ Check if directory exists."""
@@ -449,7 +402,7 @@ def write_whynot(pdb_id, reason, filename=None, directory="."):
     Return a Boolean.
     """
     filename = pdb_id + ".whynot" if not filename else filename
-    _log.warn(("{0:4s} | Writing WHY NOT entry.").format(pdb_id))
+    _log.warn("Writing WHY NOT entry.")
     try:
         with open(os.path.join(directory, filename), "w") as whynot:
             whynot.write("COMMENT: " + reason + "\n" +
@@ -490,13 +443,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.pdb_file_path:
         # Test mode
-        _log = init_bdb_logger(args.pdb_file_path, global_log=True)
         if args.verbose:
             _log.setLevel(logging.DEBUG)
         d = get_raw_pdb_info(args.pdb_file_path)
         print json.dumps(d, sort_keys=True, indent=4)
     else:
-        _log = init_bdb_logger(args.pdbin, global_log=True)
         if args.verbose:
             _log.setLevel(logging.DEBUG)
         if write_whynot(args.pdbid, args.whynot,
