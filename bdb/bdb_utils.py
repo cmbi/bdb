@@ -383,19 +383,6 @@ def is_valid_pdbid(parser, arg):
         return arg
 
 
-def write_dict_json(d, filename="info.json", pretty=False):
-    """Dump the dictionary to a JSON file."""
-    try:
-        with open(filename, "w") as f:
-            if pretty:
-                json.dump(d, f,
-                          sort_keys=True, indent=4)
-            else:
-                json.dump(d, f)
-    except IOError as ex:
-        _log.error(ex)
-
-
 def write_whynot(pdb_id, reason, filename=None, directory="."):
     """Create a WHY NOT file.
 

@@ -1,13 +1,14 @@
 from __future__ import print_function
 
 import argparse
+import json
 import logging
 import os
 import shutil
 import sys
 
 from bdb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
-                           get_bdb_entry_outdir, write_dict_json, write_whynot)
+                           get_bdb_entry_outdir, write_whynot)
 from bdb.check_beq import write_multiplied
 from bdb.expdta import check_exp_methods
 from bdb.pdb.parser import parse_pdb_file
@@ -50,8 +51,15 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
     if expdta["expdta_useful"]:
         refprog = do_refprog(pdb_file_path, pdb_id, out_dir, global_files)
         bdbd.update(refprog)
-        write_dict_json(bdbd, os.path.join(out_dir, pdb_id + ".json"),
-                pretty=True)
+
+        # Write the bdb metadata to a json file
+        try:
+            with open(os.path.join(out_dir, pdb_id + ".json"), "w") as f:
+                json.dump(bdbd, f, sort_keys=True, indent=4)
+        except IOError as ex:
+            _log.error(ex)
+            return False
+
         if refprog["refprog_useful"]:
             bdb_file_path = os.path.join(out_dir, pdb_id + ".bdb")
             # TODO do we need extractor? or tlsextract (ccp4)
