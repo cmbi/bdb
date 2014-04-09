@@ -128,9 +128,13 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
             """ e.g. 3cms, 4cms """
             message = "RESTRAIN: B-factor field contains \"U\" "\
                       "according to REMARK 3"
+            write_whynot(pdb_id, message, directory=out_dir)
+            _log.warn("{}.".format(message))
         elif b_type or has_anisou or n_tls or tls_residual or tls_sum:
             message = "RESTRAIN: unexpected content cannot (yet) be "\
                       "handled"
+            write_whynot(pdb_id, message, directory=out_dir)
+            _log.warn("{}.".format(message))
         else:
             useful = True
             assume_iso = True
@@ -148,6 +152,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
             elif b_type == "unverified":
                 message = "REFMAC: B-value type could not be "\
                           "determined in the 2011 wwPDB remediation"
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             else:
                 # The entry was found to contain full B-values
                 useful = True
@@ -166,16 +172,22 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
         elif b_type == "unverified":
             message = "REFMAC: B-value type could not be "\
                       "determined in a wwPDB remediation"
+            write_whynot(pdb_id, message, directory=out_dir)
+            _log.warn("{}.".format(message))
         else:  # No B VALUE TYPE comment in REMARK 3, we have to 'guess'
             if tls_residual and tls_sum:
                 message = "REFMAC: "\
                           "mentioned residual and full B-factors"
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             elif n_tls:  # Probably TLS refinement
                 if tls_residual:  # Mentioned residual B-factors
                     if has_anisou:
                         message = "REFMAC: "\
                                   "TLS group(s), mentioned residual "\
                                   "B-factors and ANISOU records"
+                        write_whynot(pdb_id, message, directory=out_dir)
+                        _log.warn("{}.".format(message))
                     else:
                         useful = True
                         req_tlsanl = True
@@ -191,6 +203,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                                   "TLS group(s), mentioned full "\
                                   "B-factors and ANISOU records. "\
                                   + beq_mess
+                        write_whynot(pdb_id, message, directory=out_dir)
+                        _log.warn("{}.".format(message))
                     else:  # we want to be able look at these cases
                         """ e.g 2aen, 2wo7, 2wwj, 2wyb, 2wyc, 2wye,
                         2x00, 2x5s, 2xgq, 2xgx, 2xhk, 2xko, 2xkp, 2xr9
@@ -208,6 +222,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                               "possibly, residual or full B-factor "\
                               "remark in REMARK 3 with format "\
                               "that cannot (yet) be handled"
+                    write_whynot(pdb_id, message, directory=out_dir)
+                    _log.warn("{}.".format(message))
                 else:  # TLS refinement without hints about B-value type
                     if has_anisou:
                         """ e.g. 1oj7, 1pm7, 2gcl, 3c2s, 3l6r, 3o1a """
@@ -219,6 +235,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                         message = "REFMAC: "\
                                   "TLS group(s), no B-value type "\
                                   "details and no ANISOU records"
+                    write_whynot(pdb_id, message, directory=out_dir)
+                    _log.warn("{}.".format(message))
             else:  # No TLS groups reported
                 if re.search(r"TLS", refmarks):  # any exceptions?
                     """ e.g. 1fse, 1gmm, 1gqq, 1h3g, 1jnx, 1krh, 1muu,
@@ -229,6 +247,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                     message = "REFMAC: TLS remark without TLS group(s)"
                     if has_anisou:
                         message = message + ". " + beq_mess
+
                     if tls_sum:
                         """ e.g. 2wnl """
                         useful = True
@@ -240,17 +259,24 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                         req_tlsanl = True
                         _log.warn("{}. Mentioned residual "
                                   "B-factors.".format(message))
+                    else:
+                        write_whynot(pdb_id, message, directory=out_dir)
+                        _log.warn("{}.".format(message))
                 elif tls_residual:
                     """ e.g. 3ch0, 2pq7, 3h3z """
                     message = "REFMAC: mentioned residual B-factors "\
                               "without TLS group(s)"
                     if has_anisou:
                         message = message + ". " + beq_mess
+                    write_whynot(pdb_id, message, directory=out_dir)
+                    _log.warn("{}.".format(message))
                 elif tls_sum:
                     message = "REFMAC: mentioned full B-factors "\
                               "without TLS group(s)"
                     if has_anisou:
                         message = message + ". " + beq_mess
+                    write_whynot(pdb_id, message, directory=out_dir)
+                    _log.warn("{}.".format(message))
                 elif re.search(BEXCEPT_PAT, refmarks) and \
                         re.search("[BU]-?\s*(FACTORS?|VALUES?)",
                                   refmarks):
@@ -262,11 +288,15 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                               "No TLS groups"
                     if has_anisou:
                         message = message + ". " + beq_mess
+                    write_whynot(pdb_id, message, directory=out_dir)
+                    _log.warn("{}.".format(message))
                 # In REFMAC, we ASSUME that TLS- and full anisotropic
                 # refinement are mutually exclusive for now
                 elif has_anisou:
                     message = "REFMAC: probably full/mixed "\
                               "anisotropic refinement. " + beq_mess
+                    write_whynot(pdb_id, message, directory=out_dir)
+                    _log.warn("{}.".format(message))
                 else:
                     # Probably refinement without any type of
                     # anisotopic displacement parameters
@@ -279,12 +309,18 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
             # Don't continue; inspect first
             req_tlsanl = True
             message = refprog[0] + ": B-value type: residual"
+            write_whynot(pdb_id, message, directory=out_dir)
+            _log.warn("{}.".format(message))
         elif b_type == "unverified":
             message = refprog[0] + "REFMAC: B-value type could not be"\
                 " determined in a wwPDB remediation"
+            write_whynot(pdb_id, message, directory=out_dir)
+            _log.warn("{}.".format(message))
         elif tls_residual and tls_sum:
             message = refprog[0] + ": mentioned residual and full "\
                                    "B-factors"
+            write_whynot(pdb_id, message, directory=out_dir)
+            _log.warn("{}.".format(message))
         elif n_tls:
             if tls_residual:  # Mentioned residual B-factors
                 if has_anisou:
@@ -298,6 +334,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                     # Don't continue; inspect first
                     # useful = True
                     req_tlsanl = True
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             elif tls_sum:  # Mentioned full B-factors
                 if has_anisou:
                     message = refprog[0] + ": "\
@@ -312,6 +350,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                     # Don't continue; inspect first
                     # useful = True
                     assume_iso = True
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             elif re.search(BEXCEPT_PAT, refmarks) and \
                     re.search("[BU]-?\s*(FACTORS?|VALUES?)",
                               refmarks):
@@ -320,6 +360,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                     "possibly, residual or full B-factor "\
                     "remark in REMARK 3 with format "\
                     "that cannot (yet) be handled"
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             else:  # TLS refinement without hints about B-value type
                 if has_anisou:
                     message = refprog[0] + ": "\
@@ -332,12 +374,15 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                     message = refprog[0] + ": "\
                         "TLS group(s), no B-value type "\
                         "details and no ANISOU records"
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
         else:
             if re.search(r"TLS", refmarks):  # any exceptions?
                 message = refprog[0] + ": "\
                     "TLS remark without TLS group(s)"
                 if has_anisou:
                     message = message + ". " + beq_mess
+
                 if tls_sum:
                     # Don't continue; inspect first
                     # useful = True
@@ -350,11 +395,15 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                     req_tlsanl = True
                     _log.warn("{}. Mentioned residual B-factors.".format(
                         message))
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             elif tls_residual:
                 message = refprog[0] + ": mentioned residual B-factors "\
                     "without TLS group(s)"
                 if has_anisou:
                     message = message + ". " + beq_mess
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             elif tls_sum:
                 # Don't continue; inspect first
                 message = refprog[0] + ": "\
@@ -362,6 +411,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                     "without TLS group(s)"
                 if has_anisou:
                     message = message + ". " + beq_mess
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             elif re.search(BEXCEPT_PAT, refmarks) and \
                     re.search("[BU]-?\s*(FACTORS?|VALUES?)",
                               refmarks):
@@ -371,9 +422,13 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                     "cannot (yet) be handled. No TLS groups"
                 if has_anisou:
                     message = message + ". " + beq_mess
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             elif has_anisou:
                 message = "{}: probably full/mixed anisotropic " \
                           "refinement".format(refprog[0]) + beq_mess
+                write_whynot(pdb_id, message, directory=out_dir)
+                _log.warn("{}.".format(message))
             else:
                 # Probably refinement without any type of
                 # anisotopic displacement parameters
@@ -381,9 +436,6 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                 assume_iso = True
                 message = "{}: probably full B-factors".format(refprog[0])
                 _log.info("{}.".format(message))
-    if not useful:
-        write_whynot(pdb_id, message, directory=out_dir)
-        _log.warn("{}.".format(message))
 
     return useful, assume_iso, req_tlsanl
 
