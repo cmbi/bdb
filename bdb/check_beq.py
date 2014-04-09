@@ -10,7 +10,7 @@ import shutil
 import Bio.PDB
 import numpy
 
-from bdb.bdb_utils import get_pdb_header_and_trailer
+from bdb.pdb.parser import get_pdb_header_and_trailer
 
 
 _log = logging.getLogger(__name__)
@@ -481,8 +481,8 @@ def report_beq(pdb_id, reproduced):
             100 * (1 - reproduced["beq_identical"]))
     elif reproduced["beq_identical"] < 1:
         _log.warn("{1:3.2f}% of the B-factors in the ATOM records "
-                   "could not be reproduced within 0.015 A**2 by calculating "
-                   "Beq from the corresponding ANISOU records.").format(
+                  "could not be reproduced within 0.015 A**2 by calculating "
+                  "Beq from the corresponding ANISOU records.").format(
             100 * (1 - reproduced["beq_identical"]))
     else:
         _log.info("No ANISOU records.")

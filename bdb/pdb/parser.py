@@ -259,3 +259,36 @@ def is_tls_sum(pdb_records, other_refinement_remarks):
     if RE_SUM_TLS_RES_3.search(other_refinement_remarks):
         return True
     return False
+
+
+def get_pdb_header_and_trailer(pdb_file_path):
+    """Return the PDB-file header and trailer records as two lists.
+
+    We assume the PDB file has the following composition:
+    Header records
+    [MODEL]
+    ATOM
+    (ANISOU)
+    (SIGUIJ)
+    (HETATM)
+    TER
+    [ENDMDL]
+    Trailer records
+    END
+    """
+    header = list()
+    trailer = list()
+    head_records = True
+    try:
+        with open(pdb_file_path, "r") as pdb:
+            for record in pdb:
+                if re.search(r"^(MODEL|ATOM|HETATM)", record):
+                    head_records = False
+                if head_records:
+                    header.append(record[0:79])  # keep trailing whitespace
+                elif not re.search(r"^(MODEL|ATOM|HETATM|ANISOU|SIGUIJ|"
+                                   "TER|ENDMDL|END\s+)", record):
+                    trailer.append(record[0:79])
+    except IOError as ex:
+        _log.error(ex)
+    return header, trailer
