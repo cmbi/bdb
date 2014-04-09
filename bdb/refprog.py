@@ -23,28 +23,30 @@ BEXCEPT_PAT = re.compile(r"""
                                 \s+
                              )
                           """, re.VERBOSE)
-U_PAT       = re.compile(r"""
-                          THE\s+QUANTITY\s+PRESENTED\s+
-                          IN\s+THE\s+TEMPERATURE\s+FACTOR\s+
-                          FIELD\s+IS\s+U\.
-                          """, re.VERBOSE)
+U_PAT = re.compile(r"""
+                    THE\s+QUANTITY\s+PRESENTED\s+
+                    IN\s+THE\s+TEMPERATURE\s+FACTOR\s+
+                    FIELD\s+IS\s+U\.
+                    """, re.VERBOSE)
+
 
 def check_refprog(refprog):
     """Check if the refinement program can be included in the bdb.
 
     Return a Boolean.
     """
-    useful_pat = re.compile(r"""
-        ^(
-          REFMAC
-        | CNS           # Anisotropic B-factors nor TLS groups implemented
-        | X-PLOR        # Anisotropic B-factors nor TLS groups implemented
-        | BUSTER
-        )$
-    """, re.VERBOSE)
-    #return re.search(useful_pat, refprog)
+    # useful_pat = re.compile(r"""
+    #     ^(
+    #       REFMAC
+    #     | CNS           # Anisotropic B-factors nor TLS groups implemented
+    #     | X-PLOR        # Anisotropic B-factors nor TLS groups implemented
+    #     | BUSTER
+    #     )$
+    # """, re.VERBOSE)
+    # return re.search(useful_pat, refprog)
     # TODO: Why always return true?
     return True
+
 
 def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
     """Determine whether refinement program can be used in the bdb project.
@@ -64,15 +66,15 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
     """
     # Sorry, more readable local variable names
     # TODO: This shouldn't be required. Refactor.
-    refprog      = pdb_info["prog_last"]
-    b_msqav      = pdb_info["b_msqav"]
-    b_type       = pdb_info["b_type"]
-    has_anisou   = pdb_info["has_anisou"]
-    refmarks     = pdb_info["other_refinement_remarks"]
-    n_tls        = pdb_info["tls_groups"]
+    refprog = pdb_info["prog_last"]
+    b_msqav = pdb_info["b_msqav"]
+    b_type = pdb_info["b_type"]
+    has_anisou = pdb_info["has_anisou"]
+    refmarks = pdb_info["other_refinement_remarks"]
+    n_tls = pdb_info["tls_groups"]
     tls_residual = pdb_info["tls_residual"]
-    tls_sum      = pdb_info["tls_sum"]
-    format_vers  = pdb_info["format_vers"]
+    tls_sum = pdb_info["tls_sum"]
+    format_vers = pdb_info["format_vers"]
 
     # Check and declare
     assert isinstance(refprog, list)
@@ -100,7 +102,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
         return False, False, False
 
     assert isinstance(refprog[0], str)
-    _log.info(("{0:4s} | Interpreted last-used refinement " \
+    _log.info(("{0:4s} | Interpreted last-used refinement "
                "program: {1:s}.").format(pdb_id, refprog[0]))
 
     # Check if the refinement program is supported. If not, return False for
@@ -108,7 +110,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
     if not check_refprog(refprog[0]):
         message = "Refinement program: " + refprog[0]
         write_whynot(pdb_id, message, directory=out_dir)
-        _log.warn(("{0:4s} | {1:s} cannot (yet) be included in the " \
+        _log.warn(("{0:4s} | {1:s} cannot (yet) be included in the "
                    "bdb.").format(pdb_id, message))
         if global_files:
             write_unsupported_refprog(refprog)
@@ -165,12 +167,12 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
         elif b_type == "unverified":
             message = "REFMAC: B-value type could not be "\
                       "determined in a wwPDB remediation"
-        else: # No B VALUE TYPE comment in REMARK 3, we have to 'guess'
+        else:  # No B VALUE TYPE comment in REMARK 3, we have to 'guess'
             if tls_residual and tls_sum:
                 message = "REFMAC: "\
                           "mentioned residual and full B-factors"
-            elif n_tls: # Probably TLS refinement
-                if tls_residual: # Mentioned residual B-factors
+            elif n_tls:  # Probably TLS refinement
+                if tls_residual:  # Mentioned residual B-factors
                     if has_anisou:
                         message = "REFMAC: "\
                                   "TLS group(s), mentioned residual "\
@@ -182,16 +184,16 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                                   "TLS group(s), mentioned residual "\
                                   "B-factors without ANISOU records"
                         _log.info(("{0:4s} | {1:s}.").format(pdb_id,
-                            message))
-                elif tls_sum: # Mentioned full B-factors
-                    if has_anisou: # probably, TLSANL was run
+                                                             message))
+                elif tls_sum:  # Mentioned full B-factors
+                    if has_anisou:  # probably, TLSANL was run
                         # useful = True
                         # assume_iso = True
                         message = "REFMAC: "\
                                   "TLS group(s), mentioned full "\
                                   "B-factors and ANISOU records. "\
                                   + beq_mess
-                    else: # we want to be able look at these cases
+                    else:  # we want to be able look at these cases
                         """ e.g 2aen, 2wo7, 2wwj, 2wyb, 2wyc, 2wye,
                         2x00, 2x5s, 2xgq, 2xgx, 2xhk, 2xko, 2xkp, 2xr9
                         """
@@ -199,7 +201,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                                   "TLS group(s), mentioned full "\
                                   "B-factors without ANISOU records"
                         _log.warn(("{0:4s} | {1:s}.").format(pdb_id,
-                            message))
+                                                             message))
                         useful = True
                         assume_iso = True
                 elif re.search(BEXCEPT_PAT, refmarks):
@@ -209,7 +211,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                               "possibly, residual or full B-factor "\
                               "remark in REMARK 3 with format "\
                               "that cannot (yet) be handled"
-                else: # TLS refinement without hints about B-value type
+                else:  # TLS refinement without hints about B-value type
                     if has_anisou:
                         """ e.g. 1oj7, 1pm7, 2gcl, 3c2s, 3l6r, 3o1a """
                         message = "REFMAC: "\
@@ -220,8 +222,8 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                         message = "REFMAC: "\
                                   "TLS group(s), no B-value type "\
                                   "details and no ANISOU records"
-            else: # No TLS groups reported
-                if re.search(r"TLS", refmarks): # any exceptions?
+            else:  # No TLS groups reported
+                if re.search(r"TLS", refmarks):  # any exceptions?
                     """ e.g. 1fse, 1gmm, 1gqq, 1h3g, 1jnx, 1krh, 1muu,
                     1oc0, 1oiq, 1oir, 1oit, 1ux9, 1uzl, 1zca, 2hwy,
                     2jbm, 2oeu, 2pe4, 2wnl, 2wvi, 2zze, 2zzf, 2zzg,
@@ -234,12 +236,12 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                         """ e.g. 2wnl """
                         useful = True
                         assume_iso = True
-                        _log.warn(("{0:4s} | {1:s}. Mentioned full " \
+                        _log.warn(("{0:4s} | {1:s}. Mentioned full "
                                    "B-factors").format(pdb_id, message))
                     elif tls_residual:
                         useful = True
                         req_tlsanl = True
-                        _log.warn(("{0:4s} | {1:s}. Mentioned residual " \
+                        _log.warn(("{0:4s} | {1:s}. Mentioned residual "
                                    "B-factors.").format(pdb_id, message))
                 elif tls_residual:
                     """ e.g. 3ch0, 2pq7, 3h3z """
@@ -254,7 +256,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                         message = message + ". " + beq_mess
                 elif re.search(BEXCEPT_PAT, refmarks) and \
                         re.search("[BU]-?\s*(FACTORS?|VALUES?)",
-                                refmarks):
+                                  refmarks):
                     # any exceptions? we want to look at these
                     message = "REFMAC: "\
                               "possibly, residual or full B-factor "\
@@ -268,116 +270,118 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                 elif has_anisou:
                     message = "REFMAC: probably full/mixed "\
                               "anisotropic refinement. " + beq_mess
-                else: # Probably refinement without any type of
-                      # anisotopic displacement parameters
+                else:
+                    # Probably refinement without any type of
+                    # anisotopic displacement parameters
                     useful = True
                     assume_iso = True
                     message = "REFMAC: probably full B-factors"
                     _log.info(("{0:4s} | {1:s}.").format(pdb_id,
-                        message))
-    else: # Now: not REFMAC
+                                                         message))
+    else:  # Now: not REFMAC
         if b_type == "residual":
             # Don't continue; inspect first
             req_tlsanl = True
             message = refprog[0] + ": B-value type: residual"
         elif b_type == "unverified":
             message = refprog[0] + "REFMAC: B-value type could not be"\
-                      " determined in a wwPDB remediation"
+                " determined in a wwPDB remediation"
         elif tls_residual and tls_sum:
             message = refprog[0] + ": mentioned residual and full "\
                                    "B-factors"
         elif n_tls:
-            if tls_residual: # Mentioned residual B-factors
+            if tls_residual:  # Mentioned residual B-factors
                 if has_anisou:
                     message = refprog[0] + ": "\
-                              "TLS group(s), mentioned residual "\
-                              "B-factors and ANISOU records"
+                        "TLS group(s), mentioned residual "\
+                        "B-factors and ANISOU records"
                 else:
                     message = refprog[0] + ": "\
-                              "TLS group(s), mentioned residual "\
-                              "B-factors and ANISOU records"
+                        "TLS group(s), mentioned residual "\
+                        "B-factors and ANISOU records"
                     # Don't continue; inspect first
-                    #useful = True
+                    # useful = True
                     req_tlsanl = True
-            elif tls_sum: # Mentioned full B-factors
+            elif tls_sum:  # Mentioned full B-factors
                 if has_anisou:
                     message = refprog[0] + ": "\
-                              "TLS group(s), mentioned full "\
-                              "B-factors and ANISOU records. "\
-                              + beq_mess
-                else: # we want to be able look at these cases
+                        "TLS group(s), mentioned full "\
+                        "B-factors and ANISOU records. "\
+                        + beq_mess
+                else:  # we want to be able look at these cases
                     message = refprog[0] + ": "\
-                              "TLS group(s), mentioned full "\
-                              "B-factors without ANISOU records"
+                        "TLS group(s), mentioned full "\
+                        "B-factors without ANISOU records"
                     _log.warn(("{0:4s} | {1:s}.").format(pdb_id,
-                        message))
+                                                         message))
                     # Don't continue; inspect first
-                    #useful = True
+                    # useful = True
                     assume_iso = True
             elif re.search(BEXCEPT_PAT, refmarks) and \
                     re.search("[BU]-?\s*(FACTORS?|VALUES?)",
-                            refmarks):
+                              refmarks):
                 # any exceptions? we want to look at these
                 message = refprog[0] + ": "\
-                          "possibly, residual or full B-factor "\
-                          "remark in REMARK 3 with format "\
-                          "that cannot (yet) be handled"
-            else: # TLS refinement without hints about B-value type
+                    "possibly, residual or full B-factor "\
+                    "remark in REMARK 3 with format "\
+                    "that cannot (yet) be handled"
+            else:  # TLS refinement without hints about B-value type
                 if has_anisou:
                     message = refprog[0] + ": "\
-                              "TLS group(s), no B-value type "\
-                              "details. "\
-                              + beq_mess
+                        "TLS group(s), no B-value type "\
+                        "details. "\
+                        + beq_mess
                 else:
                     # Don't continue; inspect first
                     # This will be a large group
                     message = refprog[0] + ": "\
-                              "TLS group(s), no B-value type "\
-                              "details and no ANISOU records"
+                        "TLS group(s), no B-value type "\
+                        "details and no ANISOU records"
         else:
-            if re.search(r"TLS", refmarks): # any exceptions?
+            if re.search(r"TLS", refmarks):  # any exceptions?
                 message = refprog[0] + ": "\
-                          "TLS remark without TLS group(s)"
+                    "TLS remark without TLS group(s)"
                 if has_anisou:
                     message = message + ". " + beq_mess
                 if tls_sum:
                     # Don't continue; inspect first
-                    #useful = True
+                    # useful = True
                     assume_iso = True
-                    _log.warn(("{0:4s} | {1:s}. Mentioned full " \
+                    _log.warn(("{0:4s} | {1:s}. Mentioned full "
                                "B-factors").format(pdb_id, message))
                 elif tls_residual:
                     # Don't continue; inspect first
-                    #useful = True
+                    # useful = True
                     req_tlsanl = True
-                    _log.warn(("{0:4s} | {1:s}. Mentioned residual " \
+                    _log.warn(("{0:4s} | {1:s}. Mentioned residual "
                                "B-factors.").format(pdb_id, message))
             elif tls_residual:
                 message = refprog[0] + ": mentioned residual B-factors "\
-                          "without TLS group(s)"
+                    "without TLS group(s)"
                 if has_anisou:
                     message = message + ". " + beq_mess
             elif tls_sum:
                 # Don't continue; inspect first
                 message = refprog[0] + ": "\
-                          "mentioned full B-factors "\
-                          "without TLS group(s)"
+                    "mentioned full B-factors "\
+                    "without TLS group(s)"
                 if has_anisou:
                     message = message + ". " + beq_mess
             elif re.search(BEXCEPT_PAT, refmarks) and \
                     re.search("[BU]-?\s*(FACTORS?|VALUES?)",
-                            refmarks):
+                              refmarks):
                 # any exceptions? we want to look at these
                 message = refprog[0] + ": possibly, residual or full " \
-                          "B-factor remark in REMARK 3 with format that " \
-                          "cannot (yet) be handled. No TLS groups"
+                    "B-factor remark in REMARK 3 with format that " \
+                    "cannot (yet) be handled. No TLS groups"
                 if has_anisou:
                     message = message + ". " + beq_mess
             elif has_anisou:
                 message = "{0:s}: probably full/mixed anisotropic " \
                           "refinement".format(refprog[0]) + beq_mess
-            else: # Probably refinement without any type of
-                  # anisotopic displacement parameters
+            else:
+                # Probably refinement without any type of
+                # anisotopic displacement parameters
                 useful = True
                 assume_iso = True
                 message = "{0:s}: probably full B-factors".format(refprog[0])
@@ -387,6 +391,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
         _log.warn(("{0:4s} | {1:s}.").format(pdb_id, message))
 
     return useful, assume_iso, req_tlsanl
+
 
 def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
     """Determine whether this PDB file can be used in the bdb project.
@@ -445,10 +450,10 @@ def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
     prog_last = None
     (assume_iso, req_tlsanl) = (False, False)
     reproduced = {
-            "beq_identical": None,
-            "correct_uij": None
-            }
-    if pdb_info["has_anisou"]: # save some time
+        "beq_identical": None,
+        "correct_uij": None
+        }
+    if pdb_info["has_anisou"]:  # save some time
         reproduced = check_beq(pdb_file_path, pdb_id)
         report_beq(pdb_id, reproduced)
         if reproduced["beq_identical"] > 0.9999:
@@ -458,34 +463,35 @@ def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
             assume_iso = True
     pdb_info.update(reproduced)
     b_group = {
-            "protein_b": None,
-            "nucleic_b": None,
-            }
-    b_group  = determine_b_group(pdb_file_path, pdb_id)
+        "protein_b": None,
+        "nucleic_b": None,
+        }
+    b_group = determine_b_group(pdb_file_path, pdb_id)
     pdb_info.update(b_group)
     if prog:
         (prog, prog_inter, version) = parse_refprog(prog, pdb_id, global_files)
         prog_last = last_used(prog_inter, version)
         pdb_info.update({
             "prog_inter": prog_inter,
-            "prog_last" : prog_last,
-            "prog_vers" : version
+            "prog_last": prog_last,
+            "prog_vers": version
             })
         for p, i, v in zip(prog, prog_inter, version):
-            _log.debug(("{0:4s} | Refinement program: {1:s} - interpreted " \
-                        "as: {2:s} - version: {3:s} - last used: {4:s}.").format(
-                            pdb_id, p, i, v, prog_last))
+            _log.debug(
+                ("{0:4s} | Refinement program: {1:s} - interpreted "
+                 "as: {2:s} - version: {3:s} - last used: {4:s}.").
+                format(pdb_id, p, i, v, prog_last))
         if prog:
             if not assume_iso:
                 (success, assume_iso, req_tlsanl) = decide_refprog(
-                        pdb_info,
-                        pdb_id,
-                        out_dir,
-                        global_files)
+                    pdb_info,
+                    pdb_id,
+                    out_dir,
+                    global_files)
             else:
                 _log.info(("{0:4s} | {1:s}: probably full B-factors.").format(
-                                pdb_id, " and ".join(prog_last)))
-        else: # we should not end up here under normal circumstances
+                    pdb_id, " and ".join(prog_last)))
+        else:  # we should not end up here under normal circumstances
             message = "Refinement program parse error"
             write_whynot(pdb_id, message, directory=out_dir)
             _log.error(("{0:4s} | {1:s}.").format(pdb_id, message))
@@ -495,20 +501,22 @@ def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
         if not assume_iso:
             write_whynot(pdb_id, message, directory=out_dir)
 
-    more_refprog = {"assume_iso"    : assume_iso,
-                    "prog_inter"    : prog_inter,
-                    "prog_last"     : prog_last,
-                    "prog_vers"     : version,
+    more_refprog = {"assume_iso": assume_iso,
+                    "prog_inter": prog_inter,
+                    "prog_last": prog_last,
+                    "prog_vers": version,
                     "refprog_useful": success,
-                    "ref_prog"      : prog,
-                    "req_tlsanl"    : req_tlsanl
+                    "ref_prog": prog,
+                    "req_tlsanl": req_tlsanl
                     }
     pdb_info.update(more_refprog)
     return pdb_info
 
+
 def except_refprog_warn(pdb_id):
     message = "Pre-defined exceptional refinement program case found"
     _log.warn(("{0:4s} | {1:s}.").format(pdb_id, message))
+
 
 def filter_progs(pin, pv):
     """Remove non-refinement programs.
@@ -519,36 +527,37 @@ def filter_progs(pin, pv):
     assert isinstance(pv, list)
     assert len(pin) == len(pv)
     pop_progs = [
-            "ARP",             # model building
-            "ARP/WARP",        # model building
-            "CHAIN",           # graphics
-            "COOT",            # model building, graphics
-            "DM",              # density modification
-            "FRODO",           # graphics
-            "HKL-3000",        # data collection
-            "LAFIRE",          # uses CNS, Refmac5, phenix.refine or autoBUSTER
-            "MOLPROBITY",      # validation
-            "O",               # model building, graphics
-            "OOPS",            # model building, graphics
-            "PIKSOL",
-            "PRODRG",          # small-mol topology
-            "PROTEIN",         # crytallographic data analysis
-            "QUANTA",          # model building, workbench
-            "SCWRL",           # predict side-chains
-            "SFALL",           # structure factor calculation
-            "SOLVE/RESOLVE",   # phasing
-            "TOM",             # model building, graphics
-            "TOM/FRODO",       # model building, graphics
-            "XFIT",            # peak fitting
-            "XPLEO",           # real space model completion
-            "XTALVIEW"         # workbench
-            ]
+        "ARP",             # model building
+        "ARP/WARP",        # model building
+        "CHAIN",           # graphics
+        "COOT",            # model building, graphics
+        "DM",              # density modification
+        "FRODO",           # graphics
+        "HKL-3000",        # data collection
+        "LAFIRE",          # uses CNS, Refmac5, phenix.refine or autoBUSTER
+        "MOLPROBITY",      # validation
+        "O",               # model building, graphics
+        "OOPS",            # model building, graphics
+        "PIKSOL",
+        "PRODRG",          # small-mol topology
+        "PROTEIN",         # crytallographic data analysis
+        "QUANTA",          # model building, workbench
+        "SCWRL",           # predict side-chains
+        "SFALL",           # structure factor calculation
+        "SOLVE/RESOLVE",   # phasing
+        "TOM",             # model building, graphics
+        "TOM/FRODO",       # model building, graphics
+        "XFIT",            # peak fitting
+        "XPLEO",           # real space model completion
+        "XTALVIEW"         # workbench
+        ]
     for rp in pin:
         if rp in pop_progs:
             pop = pin.index(rp)
             pin = pin[:pop] + pin[(pop + 1):]
             pv = pv[:pop] + pv[(pop + 1):]
-    return pin,pv
+    return pin, pv
+
 
 def get_refprog(pdb_file_path):
     """Find the refinement program in a PDB file.
@@ -557,8 +566,9 @@ def get_refprog(pdb_file_path):
     """
     refprog = get_raw_pdb_info(pdb_file_path)["refprog"]
     if refprog:
-        _log.debug(("{0:4s} | {1:s}.").format(pdb_file_path, record.rstrip()))
+        _log.debug(("{0:4s} | {1:s}.").format(pdb_file_path, refprog.rstrip()))
     return refprog
+
 
 def last_used(pin, pv):
     """Make an educated guess about the refinement program that was used last.
@@ -582,7 +592,7 @@ def last_used(pin, pv):
     # e.g. X-PLOR 3.1, X-PLOR 3.8 in 1c4k
     pin = list(set(pin))
     # General rules
-    if "SHELX" in pin and len(pin) > 1: # multiple programs
+    if "SHELX" in pin and len(pin) > 1:  # multiple programs
         """
         If SHELXL/H has been used, it has probably been used last. (SHELXH was
         a version of SHELXL for very large structures that has become obsolete
@@ -610,34 +620,35 @@ def last_used(pin, pv):
     # Decide about some (sub)combinations
     #    First       Last
     known_combis = [
-        ("CCP4"    , "CNS"),
-        ("CCP4"    , "X-PLOR"),
-        ("CNS"     , "BUSTER"),
-        ("CNS"     , "PHENIX.REFINE"),
-        ("CNS"     , "REFMAC"),
-        ("CNS"     , "TNT"),
-        ("CNX"     , "BUSTER"),
-        ("CNX"     , "PHENIX.REFINE"),
-        ("CNX"     , "REFMAC"),
-        ("CNX"     , "TNT"),
-        ("EREF"    , "PROLSQ"),
-        ("EREF"    , "X-PLOR"),
-        ("PROLSQ"  , "TNT"),
-        ("PROLSQ"  , "REFMAC"),
-        ("REFMAC"  , "MAIN"), # According to currently available papers
+        ("CCP4", "CNS"),
+        ("CCP4", "X-PLOR"),
+        ("CNS", "BUSTER"),
+        ("CNS", "PHENIX.REFINE"),
+        ("CNS", "REFMAC"),
+        ("CNS", "TNT"),
+        ("CNX", "BUSTER"),
+        ("CNX", "PHENIX.REFINE"),
+        ("CNX", "REFMAC"),
+        ("CNX", "TNT"),
+        ("EREF", "PROLSQ"),
+        ("EREF", "X-PLOR"),
+        ("PROLSQ", "TNT"),
+        ("PROLSQ", "REFMAC"),
+        ("REFMAC", "MAIN"),  # According to currently available papers
         ("RESTRAIN", "X-PLOR"),
         ("TWIN_LSQ", "CNS"),
-        ("TNT"     , "REFMAC"),
-        ("X-PLOR"  , "BUSTER"),
-        ("X-PLOR"  , "CNS"),
-        ("X-PLOR"  , "PHENIX.REFINE"),
-        ("X-PLOR"  , "PROLSQ"), # First simulated annealing, then least squares
-        ("X-PLOR"  , "REFMAC"),
-        ("X-PLOR"  , "TNT"),
+        ("TNT", "REFMAC"),
+        ("X-PLOR", "BUSTER"),
+        ("X-PLOR", "CNS"),
+        ("X-PLOR", "PHENIX.REFINE"),
+        ("X-PLOR", "PROLSQ"),  # First simulated annealing, then least squares
+        ("X-PLOR", "REFMAC"),
+        ("X-PLOR", "TNT"),
         ]
     for combi in known_combis:
         pin = one_of_the_two(pin, loser=combi[0], winner=combi[1])
     return pin
+
 
 def one_of_the_two(lst, loser, winner):
     """Remove the loser from the list.
@@ -651,6 +662,7 @@ def one_of_the_two(lst, loser, winner):
         li = lst.index(loser)
         lst = lst[:li] + lst[(li + 1):]
     return lst
+
 
 def parse_refprog(refprog, pdb_id, global_files=False):
     """Parse and sort the refinement program(s) found in the PDB file.
@@ -708,8 +720,8 @@ def parse_refprog(refprog, pdb_id, global_files=False):
     elif refprog == "CNS 0.4, O, OOPS":
         except_refprog_warn(pdb_id)
         return (["CNS 0.4", "O", "OOPS"],
-                ["CNS"    , "O", "OOPS"],
-                ["0.4"    , "-", "-"   ])
+                ["CNS", "O", "OOPS"],
+                ["0.4", "-", "-"])
     elif refprog == "CNS 0.1-0.4":
         except_refprog_warn(pdb_id)
         return (["CNS 0.4"], ["CNS"], ["0.4"])
@@ -726,7 +738,7 @@ def parse_refprog(refprog, pdb_id, global_files=False):
         except_refprog_warn(pdb_id)
         return (["PHENIX.REFINE", "REFMAC 5.5.0070"],
                 ["PHENIX.REFINE", "REFMAC"],
-                ["-"            , "5.5.0070"])
+                ["-", "5.5.0070"])
     elif refprog == "PHENIX (CCI APPS 2007_04_06_1210)":
         except_refprog_warn(pdb_id)
         return (["PHENIX (PHENIX.REFINE: 2007_04_06_1210)"], ["PHENIX.REFINE"],
@@ -740,7 +752,7 @@ def parse_refprog(refprog, pdb_id, global_files=False):
         return (["PHENIX (PHENIX.REFINE: 1.6.2_432)"], ["PHENIX.REFINE"],
                 ["1.6.2_432"])
     elif refprog == "PHENIX REFINE" or refprog == "PHENIX, REFINE" or \
-         refprog == "PHENIX AUTOREFINE":
+            refprog == "PHENIX AUTOREFINE":
         except_refprog_warn(pdb_id)
         return (["PHENIX.REFINE"], ["PHENIX.REFINE"], ["-"])
     elif refprog == "REFMAC 5.1.24/TLS":
@@ -756,15 +768,15 @@ def parse_refprog(refprog, pdb_id, global_files=False):
         except_refprog_warn(pdb_id)
         return (["REFMAC", "X-PLOR 3.843"],
                 ["REFMAC", "X-PLOR"],
-                ["-"     , "3.843"])
+                ["-", "3.843"])
     elif refprog == "REFMAC5 5.2.0019":
         except_refprog_warn(pdb_id)
         return (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
     elif refprog == "REFMAC 5.5.0109 (AND PHENIX)":
         except_refprog_warn(pdb_id)
         return (["REFMAC 5.5.0109", "PHENIX.REFINE"],
-                ["REFMAC"         , "PHENIX.REFINE"],
-                ["5.5.0109"       , "-"])
+                ["REFMAC", "PHENIX.REFINE"],
+                ["5.5.0109", "-"])
     elif refprog == "BUSTER, BETA VERSION":
         except_refprog_warn(pdb_id)
         return (["BUSTER BETA"], ["BUSTER"], ["BETA"])
@@ -802,49 +814,49 @@ def parse_refprog(refprog, pdb_id, global_files=False):
     prog_inter = [None] * len(prog)
     vers = [None] * len(prog)
     no_versions = [
-        "ARP"          ,
-        "BILDER"       ,
-        "CCP4"         ,
-        "CEDAR"        ,
-        "CHAIN"        ,
-        "CORELS"       ,
-        "DM"           ,
-        "DYNAMIX"      ,
-        "EREF"         ,
-        "FFX"          ,
-        "FMLS/VP"      ,
-        "FRODO"        ,
-        "HIPHOP"       ,
-        "IMPLOR"       ,
-        "LAFIRE"       ,
-        "LALS"         ,
-        "MAIN"         ,
-        "MOLPROBITY"   ,
-        "MOLLY"        ,
-        "MOPRO"        ,
-        "NCNS"         ,
-        "NCNS-TINKER"  ,
-        "NMREF"        ,
-        "PIKSOL"       ,
-        "PHASER"       ,
-        "PMB"          ,
-        "POLYVISION"   ,
-        "PRIMEX"       ,
-        "PRODRG"       ,
-        "PROTEIN"      ,
-        "QUANTA"       ,
-        "RESTRAIN"     ,
-        "SCWRL"        ,
-        "SHARP"        ,
-        "SFALL"        ,
-        "SOLVE"        ,
+        "ARP",
+        "BILDER",
+        "CCP4",
+        "CEDAR",
+        "CHAIN",
+        "CORELS",
+        "DM",
+        "DYNAMIX",
+        "EREF",
+        "FFX",
+        "FMLS/VP",
+        "FRODO",
+        "HIPHOP",
+        "IMPLOR",
+        "LAFIRE",
+        "LALS",
+        "MAIN",
+        "MOLPROBITY",
+        "MOLLY",
+        "MOPRO",
+        "NCNS",
+        "NCNS-TINKER",
+        "NMREF",
+        "PIKSOL",
+        "PHASER",
+        "PMB",
+        "POLYVISION",
+        "PRIMEX",
+        "PRODRG",
+        "PROTEIN",
+        "QUANTA",
+        "RESTRAIN",
+        "SCWRL",
+        "SHARP",
+        "SFALL",
+        "SOLVE",
         "SOLVE/RESOLVE",
-        "TIBBITTS"     ,
-        "TOM"          ,
-        "TOM/FRODO"    ,
-        "XFIT"         ,
-        "XPLEO"        ,
-        "XTALVIEW"     ]
+        "TIBBITTS",
+        "TOM",
+        "TOM/FRODO",
+        "XFIT",
+        "XPLEO",
+        "XTALVIEW"]
     for i, p in enumerate(prog):
         # ... and yes, we also find REFAMC (3m1o) and REFMEC (3e9q)...
         if re.match("[REFMAC]{6}", p):
@@ -936,8 +948,8 @@ def parse_refprog(refprog, pdb_id, global_files=False):
             # if one of the programs is PHENIX.ENSEMBLE_REFINEMENT, we expect
             # "PHENIX (PHENIX.ENSEMBLE_REFINEMENT: <version>)"
             s = re.search(
-                    r"^PHENIX \(PHENIX.ENSEMBLE_REFINEMENT: ([.\-_0-9A-Z]+)\)$",
-                    p)
+                r"^PHENIX \(PHENIX.ENSEMBLE_REFINEMENT: ([.\-_0-9A-Z]+)\)$",
+                p)
             if s:
                 if s.group(1) != "NULL":
                     vers[i] = s.group(1)
@@ -956,7 +968,7 @@ def parse_refprog(refprog, pdb_id, global_files=False):
             # "PHENIX (<version>)"
             # "PHENIX (PHENIX.REFINE: <version>)"
             s1 = re.search(
-                    r"^PHENIX \((?:PHENIX.REFINE: )?([.\-_0-9A-Z]+)\)$", p)
+                r"^PHENIX \((?:PHENIX.REFINE: )?([.\-_0-9A-Z]+)\)$", p)
             # ... or without version
             # "PHENIX"
             # "PHENIX.REFINE"
@@ -964,7 +976,7 @@ def parse_refprog(refprog, pdb_id, global_files=False):
             # "PHENIX (PHENIX.REFINE)"
             # "PHENIX.REFINE (PHENIX.REFINE)" is also matched
             s2 = re.search(
-                    r"^PHENIX(?:.REFINE(?:MENT)?)?(?: \(PHENIX.REFINE\))?$", p)
+                r"^PHENIX(?:.REFINE(?:MENT)?)?(?: \(PHENIX.REFINE\))?$", p)
             if s0:
                 if s0.group(1) != "NULL":
                     vers[i] = s0.group(1)
@@ -997,7 +1009,7 @@ def parse_refprog(refprog, pdb_id, global_files=False):
             s1 = re.search(r"^(?:AUTO)?BUSTER(?:[ \-/]TNT)?\s*$", p)
             if s0:
                 if s0.group(1) != "NULL":
-                        vers[i] = s0.group(1)
+                    vers[i] = s0.group(1)
             elif s1:
                 vers[i] = "-"
             # ... and otherwise we cannot (yet) handle this version format
@@ -1243,19 +1255,23 @@ def parse_refprog(refprog, pdb_id, global_files=False):
                 vers[i] = "np"
         # Report
         if prog_inter[i] == "OTHER":
-            _log.warn(("{0:4s} | {1:s}: program {2:s} could not (yet) be parsed.").format(
-                pdb_id, prog_inter[i], p))
+            _log.warn(
+                ("{0:4s} | {1:s}: program {2:s} could not (yet) be "
+                 "parsed.").format(pdb_id, prog_inter[i], p))
             if global_files:
                 write_unknown_refprog(p)
         elif vers[i] == "np":
-            _log.warn(("{0:4s} | {1:s}: version could not (yet) be parsed.").format(
-                pdb_id, prog_inter[i]))
+            _log.warn(
+                ("{0:4s} | {1:s}: version could not (yet) be parsed.").format(
+                    pdb_id,
+                    prog_inter[i]))
             if global_files:
                 write_unknown_version(p)
         elif vers[i] == "-":
             _log.debug(("{0:4s} | {1:s}: version not present.").format(
                 pdb_id, prog_inter[i]))
     return prog, prog_inter, vers
+
 
 def write_unknown_refprog(refprog, refprog_file="unknown_refprog.txt"):
     """Add program(s) to the unique list of unknown programs."""
@@ -1272,6 +1288,7 @@ def write_unknown_refprog(refprog, refprog_file="unknown_refprog.txt"):
     except IOError as ex:
         _log.error(ex)
 
+
 def write_unknown_version(refprog, refprog_file="unknown_version.txt"):
     """Add program version(s) to the unique list of unknown versions."""
     un_version = []
@@ -1286,6 +1303,7 @@ def write_unknown_version(refprog, refprog_file="unknown_version.txt"):
                 f.write("{0:s}\n".format(u))
     except IOError as ex:
         _log.error(ex)
+
 
 def write_unsupported_refprog(refprog, refprog_file="unsupported_refprog.txt"):
     """Add program(s) to the unique list of unsupported programs."""

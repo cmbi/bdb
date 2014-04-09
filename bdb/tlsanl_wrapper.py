@@ -9,8 +9,9 @@ import sys
 
 from bdb.bdb_utils import init_bdb_logger, write_whynot
 
-# Configure logging
+
 _log = logging.getLogger("bdb")
+
 
 def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",
                verbose_output=False):

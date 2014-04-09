@@ -4,7 +4,6 @@ from __future__ import print_function
 import argparse
 import logging
 import os
-import re
 import shutil
 import sys
 
@@ -55,7 +54,7 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
                         xyzout=bdb_file_path,
                         pdb_id=pdb_id
                         ):
-                    done =True
+                    done = True
             elif refprog["assume_iso"]:
                 shutil.copy(pdb_file_path, bdb_file_path)
                 done = True
@@ -64,6 +63,7 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
                 write_whynot(pdb_id, message, directory=out_dir)
                 _log.error(("{0:4s} | {1:s}.").format(pdb_id, message))
     return done
+
 
 def main():
     """Create a bdb entry.
@@ -78,9 +78,9 @@ def main():
         description="Create a bdb entry")
     parser.add_argument(
         "-g", "--global_files",
-        help="Create files with PDB-wide information. Useful for local bdb "\
-             "copies. "\
-             "WARNING: do not use in an embarassingly parallel setting!",
+        help="Create files with PDB-wide information. Useful for local bdb "
+             "copies. WARNING: do not use in an embarassingly parallel "
+             "setting!",
         action="store_true")
     parser.add_argument(
         "-v", "--verbose",
@@ -110,7 +110,9 @@ def main():
     # TODO: This should be moved to a `setup.py` file.
     import requirements
 
-    if do_bdb(args.bdb_root_path, args.pdb_file_path, args.pdb_id, args.global_files):
+    if do_bdb(args.bdb_root_path,
+              args.pdb_file_path,
+              args.pdb_id, args.global_files):
         _log.debug(("{0:4s} | Finished bdb entry.").format(args.pdb_id))
         sys.exit(0)
     else:

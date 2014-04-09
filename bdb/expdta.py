@@ -1,13 +1,10 @@
 from __future__ import print_function
 
-import argparse
 import logging
 import os
-import re
-import sys
 
 from bdb.pdb.parser import parse_exp_methods
-from bdb.bdb_utils import init_bdb_logger, write_whynot
+from bdb.bdb_utils import write_whynot
 
 
 _log = logging.getLogger("bdb")
@@ -37,7 +34,8 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
 
     # Multiple experiment methods are not supported
     if len(exp_methods) > 1:
-        message = "Experimental method: multiple (" + " and ".join(exp_methods) + ")"
+        message = "Experimental method: multiple ({0})".format(
+            " and ".join(exp_methods))
         write_whynot(pdb_id, message, directory=out_dir)
         _log.warn(("{0:4s} | {1:s}.").format(pdb_id, message))
         if global_files:

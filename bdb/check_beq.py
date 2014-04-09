@@ -4,22 +4,19 @@ from __future__ import division
 import argparse
 import itertools
 import logging
-import os
 import re
 import shutil
-import subprocess
-import sys
 
 import Bio.PDB
 import numpy
 
-from bdb.bdb_utils import (get_pdb_header_and_trailer, init_bdb_logger,
-                           write_whynot)
+from bdb.bdb_utils import get_pdb_header_and_trailer, init_bdb_logger
 
 # Configure logging
 _log = logging.getLogger("bdb")
 
 UF = 8*3.14159265359**2
+
 
 def check_beq(pdb_file_path, pdb_id=None, verbose=False):
     """Determine if Beq values are the same as the reported B-factors.
@@ -34,11 +31,11 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                    ANISOU records was necessary to reproduce the B-factors.
     """
     pdb_id = pdb_file_path if pdb_id is None else pdb_id
-    _log.info(("{0:4s} | Checking Beq values in ANISOU records...").format(pdb_id))
+    _log.info(("{0:4s} | Checking Beq values in ANISOU records...").format(
+        pdb_id))
     margin = 0.015
     p = Bio.PDB.PDBParser(QUIET=not verbose)
     structure = p.get_structure(pdb_id, pdb_file_path)
-    atoms = structure.get_atoms()
     has_anisou = False
     eq = 0
     ne = 0
@@ -52,7 +49,7 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                 # Beq = 8*pi**2*Ueq
                 # Ueq = 1/3<u.u> == 1/3<|u|**2> = 1/3(U11+U22+U33)
                 beq = UF * sum(anisou[0:3]) / 3
-                b   = atom.get_bfactor()
+                b = atom.get_bfactor()
                 if numpy.isclose(b, beq, atol=margin):
                     eq = eq + 1
                 elif check_combinations(anisou, b, margin, pdb_id):
@@ -60,10 +57,10 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                     """
                     eq = eq + 1
                     correct_uij = False
-                    _log.debug(("{0:4s} | B-factor reproduced by "\
-                                "non-standard combination of Uij values in " \
+                    _log.debug(("{0:4s} | B-factor reproduced by "
+                                "non-standard combination of Uij values in "
                                 "the ANISOU record of ATOM: {1:s}").format(
-                                    pdb_id, atom.get_full_id()))
+                        pdb_id, atom.get_full_id()))
                 else:
                     """ e.g 1g8t, 1kr7, 1llr, 1mgr, 1o9g, 1pm1, 1q7l, 1qjp,
                     1s2p, 1si6, 1sxu, 1sxy, 1sy0, 1sy2, 1ug6, 1x9q, 2a83, 2acp,
@@ -72,17 +69,18 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                     3fde, 3g5t, 3jql, 3nju, 3nna, 3oxp
                     """
                     ne = ne + 1
-                    _log.debug(("{0:4s} | Beq not identical to B-factor in " \
+                    _log.debug(("{0:4s} | Beq not identical to B-factor in "
                                 "ATOM record: {1:s} {2:3.2f} {3:3.2f}").format(
-                                    pdb_id, atom.get_full_id(), b,beq))
+                        pdb_id, atom.get_full_id(), b, beq))
         else:
             # TODO: Why break if an ATOM is None? This *could* happen at the
             #       very first. If so, isn't this a special case?
-            break;
+            break
     reproduced = eq / (eq + ne) if has_anisou else None
     correct_uij = correct_uij if has_anisou else None
     return {"beq_identical": reproduced,
-            "correct_uij"  : correct_uij}
+            "correct_uij": correct_uij}
+
 
 def check_combinations(anisou, b, margin, pdb_id=None):
     """Check if the B-factor can be reproduced by non-standard U combinations.
@@ -93,16 +91,17 @@ def check_combinations(anisou, b, margin, pdb_id=None):
     assert(len(anisou) == 6)
     reproduced = False
     for c in itertools.combinations(list(xrange(0, 6)), 3):
-        if c == (0, 1, 2): # we have already calculated this
+        if c == (0, 1, 2):  # we have already calculated this
             pass
         beq = UF * (anisou[c[0]] + anisou[c[1]] + anisou[c[2]])/3
         if numpy.isclose(b, beq, atol=margin):
             reproduced = True
-            _log.debug(("{0:4s} | B-factor could only be reproduced by " \
-                        "combining non-standard Uij values "\
+            _log.debug(("{0:4s} | B-factor could only be reproduced by "
+                        "combining non-standard Uij values "
                         "{1:d} {2:d} {3:d}.").format(pdb_id, c[0], c[1], c[2]))
             break
     return reproduced
+
 
 def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
     """Determine the most likely B-factor parameterization.
@@ -126,11 +125,10 @@ def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
     for other chains (if they exist).
     """
     group = {
-            "protein_b": None,
-            "nucleic_b": None,
-            "calpha_only": False,
-            }
-    margin = 0.01
+        "protein_b": None,
+        "nucleic_b": None,
+        "calpha_only": False,
+    }
     pdb_id = pdb_file_path if pdb_id is None else pdb_id
     _log.info(("{0:4s} | Determining most likely B-factor group type").format(
         pdb_id))
@@ -157,15 +155,17 @@ def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
                         pdb_id))
                     group["protein_b"] = determine_b_group_chain(c)
             else:
-                _log.error(("{0:4s} | Chain {1:s}: no protein or nucleic " \
+                _log.error(("{0:4s} | Chain {1:s}: no protein or nucleic "
                             "acid chain found.").format(pdb_id, c.get_id()))
-        _log.info(("{0:4s} | Most likely B-factor group type protein: {1:s}" \
-                   "| nucleic acid: {2:s}.").format(pdb_id,
-                    group["protein_b"] if group["protein_b"] is not None else\
-                            "not present",
-                    group["nucleic_b"] if group["nucleic_b"] is not None else\
-                            "not present",))
+        _log.info(("{0:4s} | Most likely B-factor group type protein: {1:s}"
+                   "| nucleic acid: {2:s}.").format(
+            pdb_id,
+            group["protein_b"] if group["protein_b"] is not None else
+                "not present",
+            group["nucleic_b"] if group["nucleic_b"] is not None else
+                "not present",))
     return group
+
 
 def determine_b_group_chain(chain):
     """Return the most likely B-factor group type for this chain.
@@ -198,20 +198,19 @@ def determine_b_group_chain(chain):
             res = residues.next()
         except StopIteration:
             # e.g. 1c0q
-            _log.warn(("{0:4s} | Chain {1:s} has less than {2:d} useful " \
+            _log.warn(("{0:4s} | Chain {1:s} has less than {2:d} useful "
                        "residues composed of ATOMs.").format(
-                           chain.get_full_id()[0], chain.get_id(), max_res))
-            break;
-        if res.get_id()[0] == " ": # Exclude HETATM and waters
+                chain.get_full_id()[0], chain.get_id(), max_res))
+            break
+        if res.get_id()[0] == " ":  # Exclude HETATM and waters
             b_atom = list()
             for atom in res:
                 # Exclude hydrogens and zero occupancy (many in e.g. 1etu)
-                if not re.match("H", atom.get_name())\
+                if not re.match("H", atom.get_name()) \
                         and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
                     _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}").format(
-                                    chain.get_full_id()[0], atom.get_full_id(),
-                                    b,))
+                        chain.get_full_id()[0], atom.get_full_id(), b,))
                     b_atom.append(b)
             # Useful atoms in this residue
             if len(b_atom) > 0:
@@ -224,15 +223,13 @@ def determine_b_group_chain(chain):
                     group = "residue_1ADP"
                 elif len(b_atom) > 3 and \
                         numpy.allclose(
-                                [b_atom[-1], b_atom[1]],
-                                [b_atom[-2], b_atom[0]],
-                                atol=margin,
-                                ) and \
+                            [b_atom[-1], b_atom[1]],
+                            [b_atom[-2], b_atom[0]],
+                            atol=margin,) and \
                         not numpy.isclose(
-                                b_atom[-2],
-                                b_atom[1],
-                                atol=margin,
-                                ):
+                            b_atom[-2],
+                            b_atom[1],
+                            atol=margin,):
                     group = "residue_2ADP"
                 else:
                     group = "individual"
@@ -245,6 +242,7 @@ def determine_b_group_chain(chain):
         else:
             group = "overall"
     return group
+
 
 def determine_b_group_chain_greedy(chain):
     """Return the most likely B-factor group type for this chain.
@@ -266,6 +264,8 @@ def determine_b_group_chain_greedy(chain):
     ATOM      5  CB  GLU A 135      51.257  63.833  13.722  1.00 49.05
     Individual B-factors, not 2 per residue
     """
+    # TODO: I added the margin variable (it was missing) without testing.
+    margin = 0.01
     residues = chain.get_residues()
     group = "individual"
     b_res = list()
@@ -274,7 +274,7 @@ def determine_b_group_chain_greedy(chain):
     # 4 useful residues should be sufficient to make a decision
     while (i < max_res):
         res = residues.next()
-        if res.get_id()[0] == " ": # Exclude HETATM and waters
+        if res.get_id()[0] == " ":  # Exclude HETATM and waters
             b_back = list()
             b_side = list()
             for atom in res:
@@ -283,30 +283,29 @@ def determine_b_group_chain_greedy(chain):
                         and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
                     _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}").format(
-                                    chain.get_full_id()[0], atom.get_full_id(),
-                                    b,))
+                        chain.get_full_id()[0], atom.get_full_id(), b,))
                     if is_heavy_backbone(atom):
                         b_back.append(atom.get_bfactor())
-                        if len(b_back) > 1: # Whithin backbone
+                        if len(b_back) > 1:  # Whithin backbone
                             if not numpy.isclose(
                                     b_back[0],
                                     b_back[1],
                                     atol=margin
                                     ):
-                                #group = "individual"
-                                i = max_res # stop comparing residues...
-                                break; # or atoms
+                                # group = "individual"
+                                i = max_res  # stop comparing residues...
+                                break  # or atoms
                     else:
                         b_side.append(atom.get_bfactor())
-                        if len(b_side) > 1: # Whithin side-chain
+                        if len(b_side) > 1:  # Whithin side-chain
                             if not numpy.isclose(
                                     b_side[0],
                                     b_side[1],
                                     atol=margin
                                     ):
-                                #group = "individual"
+                                # group = "individual"
                                 i = max_res
-                                break;
+                                break
                     if len(b_back) > 0 and len(b_side) > 0:
                         # Between backbone and side-chain
                         if not numpy.isclose(
@@ -316,13 +315,13 @@ def determine_b_group_chain_greedy(chain):
                                 ):
                             group = "residue_2ADP"
                             i = max_res
-                            break;
+                            break
                         else:
                             group = "residue_1ADP"
-                            break;
-            #b_back.extend(b_side)
+                            break
+            # b_back.extend(b_side)
             b_res.append(b_back)
-            i = i + 1 # useful atoms in this residue
+            i = i + 1  # useful atoms in this residue
     if len(b_res) > max_res - 1 and numpy.isclose(
             b_res[0][0],
             b_res[-1][0],
@@ -331,28 +330,31 @@ def determine_b_group_chain_greedy(chain):
         group = "overall"
     return group
 
+
 def has_amino_acid_backbone(residue):
     """Return True if the residue's backbone looks like protein."""
     for atom in ("N", "CA", "C", "O"):
-        if not atom in residue.child_dict:
+        if atom not in residue.child_dict:
             return False
     return True
+
 
 def has_sugar_phosphate_backbone(residue):
     """Return True if the residue's backbone looks like nucleic acid."""
     for atom in ("P", "OP1", "OP2", "O5'", "C5'", "C4'",
-                 "O4'", "C3'","O3'", "C2'", "C1'"):
-        if not atom in residue.child_dict:
+                 "O4'", "C3'", "O3'", "C2'", "C1'"):
+        if atom not in residue.child_dict:
             return False
     return True
+
 
 def is_heavy_backbone(atom):
     """Return True if the atom looks like a backbone atom."""
     return atom.get_name() in [
-            "N", "CA", "C", "O", # Protein
-            "P", "OP1", "OP2", "O5'", "C5'", "C4'",
-            "O4'", "C3'","O3'", "C2'", "O2'", "C1'", # DNA/RNA
-            ]
+        "N", "CA", "C", "O",  # Protein
+        "P", "OP1", "OP2", "O5'", "C5'", "C4'",
+        "O4'", "C3'", "O3'", "C2'", "O2'", "C1'", ]  # DNA/RNA
+
 
 def is_calpha_trace(chain):
     """Return True if more than 75% of the atoms in the chain are ca atoms.
@@ -372,6 +374,7 @@ def is_calpha_trace(chain):
     ca_ratio = numpy.count_nonzero(ca) / len(ca)
     return ca_ratio >= 0.75
 
+
 def is_nucleic_chain(chain):
     """Return True if the first 10 residues of the chain look like nucleotides.
 
@@ -381,15 +384,18 @@ def is_nucleic_chain(chain):
     residues = chain.get_residues()
     check_max = 10
     residues_checked = 0
-    residues.next() # The first residue does not contain the phosphate,
-                    # we rather start checking from the second residue
+
+    # The first residue does not contain the phosphate, we rather start
+    # checking from the second residue
+    residues.next()
     for res in residues:
         if residues_checked < check_max \
-                and res.get_id()[0] == " ": # Exclude HETATM and waters
+                and res.get_id()[0] == " ":  # Exclude HETATM and waters
             if not has_sugar_phosphate_backbone(res):
                 return False
             residues_checked = residues_checked + 1
     return True
+
 
 def is_protein_chain(chain):
     """Return True if the first 10 residues of the chain look like amino acids.
@@ -402,17 +408,19 @@ def is_protein_chain(chain):
     residues_checked = 0
     for res in residues:
         if residues_checked < check_max \
-                and res.get_id()[0] == " ": # Exclude HETATM and waters
+                and res.get_id()[0] == " ":  # Exclude HETATM and waters
             if not has_amino_acid_backbone(res):
                 return False
             residues_checked = residues_checked + 1
     return True
+
 
 def multiply(structure):
     """Multiply B-factors with 8*pi**2."""
     for atom in structure.get_atoms():
         atom.set_bfactor(UF * atom.get_bfactor())
     return structure
+
 
 def transfer_header_and_trailer(pdb_file_path, xyzout):
     """Transfer header and trailer from pdb_file_path to xyzout."""
@@ -446,6 +454,7 @@ def transfer_header_and_trailer(pdb_file_path, xyzout):
         _log.error(ex)
     return transferred
 
+
 def write_multiplied(pdb_file_path, xyzout, pdb_id=None, verbose=False):
     """Multiply the B-factors in the input PDB file with 8*pi^2."""
     pdb_id = pdb_id if pdb_id else "usio"
@@ -460,86 +469,73 @@ def write_multiplied(pdb_file_path, xyzout, pdb_id=None, verbose=False):
     io.save(xyzout)
     return transfer_header_and_trailer(pdb_file_path, xyzout)
 
+
 def report_beq(pdb_id, reproduced):
     """Report if Beqs are identical to B-factors."""
     if reproduced["beq_identical"] is None:
         _log.debug(("{0:4s} | No ANISOU records").format(pdb_id))
         return
     if not reproduced["correct_uij"]:
-        _log.warn(("{0:4s} | One or more B-factors could only be reproduced " \
-                   "by a non-standard combination of Uij values in the " \
+        _log.warn(("{0:4s} | One or more B-factors could only be reproduced "
+                   "by a non-standard combination of Uij values in the "
                    "corresponding ANISOU record.").format(pdb_id))
     if reproduced["beq_identical"] == 1:
-        _log.info(("{0:4s} | The B-factors in the ATOM records could all be " \
-                   "reproduced within 0.015 A**2 by calculating Beq from " \
+        _log.info(("{0:4s} | The B-factors in the ATOM records could all be "
+                   "reproduced within 0.015 A**2 by calculating Beq from "
                    "the corresponding ANISOU records.").format(
-                       pdb_id, 100 * (1 - reproduced["beq_identical"])))
+            pdb_id, 100 * (1 - reproduced["beq_identical"])))
     elif reproduced["beq_identical"] < 1:
-        _log.warn(("{0:4s} | {1:3.2f}% of the B-factors in the ATOM records " \
-                "could not be reproduced within 0.015 A**2 by calculating " \
-                "Beq from the corresponding ANISOU records.").format(
-                    pdb_id, 100 * (1 - reproduced["beq_identical"])))
+        _log.warn(("{0:4s} | {1:3.2f}% of the B-factors in the ATOM records "
+                   "could not be reproduced within 0.015 A**2 by calculating "
+                   "Beq from the corresponding ANISOU records.").format(
+            pdb_id, 100 * (1 - reproduced["beq_identical"])))
     else:
         _log.info(("{0:4s} | No ANISOU records.").format(pdb_id))
 
 if __name__ == "__main__":
     """Run Beq check or multiply Uiso with 8*pi^2."""
     parser = argparse.ArgumentParser(
-            description="Check Beq, find B-factor model or "
-                        "calculate B-factors"
-            )
-    parser.add_argument(
-            "-v",
-            "--verbose",
-            help="show versbose output",
-            action="store_true"
-            )
-    parser.add_argument(
-            "--pdbid",
-            help="PDB file name."
-            )
-    sub = parser.add_subparsers(
-            help="sub-command help"
-            )
+        description="Check Beq, find B-factor model or calculate B-factors")
+    parser.add_argument("-v", "--verbose", help="show versbose output",
+                        action="store_true")
+    parser.add_argument("--pdbid", help="PDB file name.")
+    sub = parser.add_subparsers(help="sub-command help")
     calc = sub.add_parser(
-            "calc",
-            help="Multiply B-factor column with 8*pi**2"
-            )
+        "calc",
+        help="Multiply B-factor column with 8*pi**2")
     calc.add_argument(
-            "pdb_file_path",
-            help="PDB file location."
-            )
+        "pdb_file_path",
+        help="PDB file location.")
     calc.add_argument(
-            "xyzout",
-            help="Output coordinates in PDB format."
-            )
+        "xyzout",
+        help="Output coordinates in PDB format.")
     check = sub.add_parser(
-            "check",
-            help="Check Beq values or find B-factor model."
-            )
+        "check",
+        help="Check Beq values or find B-factor model.")
     check.add_argument(
-            "pdb_file_path",
-            help="PDB file location."
-            )
+        "pdb_file_path",
+        help="PDB file location.")
     check_mode = check.add_mutually_exclusive_group(required=True)
     check_mode.add_argument(
-            "--beq",
-            help="Check if Beq values calculated from the ANISOU records in a "
-            "PDB file are equal to the B-factor values reported in the ATOM "
-            "records.",
-            action="store_true"
-            )
+        "--beq",
+        help="Check if Beq values calculated from the ANISOU records in a "
+        "PDB file are equal to the B-factor values reported in the ATOM "
+        "records.",
+        action="store_true")
     check_mode.add_argument(
-            "--group",
-            help="Determine most likely B-factor model parameterization "
-            "(overall, one per residue, two per residue (backbone and "
-            "side-chain, or individual). TLS groups are not "
-            "taken into account.",
-            action="store_true"
-            )
+        "--group",
+        help="Determine most likely B-factor model parameterization "
+        "(overall, one per residue, two per residue (backbone and "
+        "side-chain, or individual). TLS groups are not "
+        "taken into account.",
+        action="store_true")
+
     args = parser.parse_args()
+
     pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
+
     _log = init_bdb_logger(pdb_id, global_log=True)
+
     if args.verbose:
         _log.setLevel(logging.DEBUG)
     if args.beq:
