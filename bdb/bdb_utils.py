@@ -187,37 +187,6 @@ def get_pdb_header_and_trailer(pdb_file_path):
     return header, trailer
 
 
-def get_pdb_trailer(pdb_file_path):
-    """Return the PDB-file trailer records as a list.
-
-    We assume the PDB file has the following composition:
-    Header records
-    [MODEL]
-    ATOM
-    (ANISOU)
-    (SIGUIJ)
-    (HETATM)
-    TER
-    [ENDMDL]
-    Trailer records
-    END
-    """
-    trailer = list()
-    header = True
-    try:
-        with open(pdb_file_path, "r") as pdb:
-            for record in pdb:
-                if re.search(r"^(MODEL|ATOM|HETATM)", record):
-                    header = False
-                elif not header and not \
-                        re.search(r"^(MODEL|ATOM|HETATM|ANISOU|SIGUIJ|"
-                                  "TER|ENDMDL|END\s+)", record):
-                    trailer.append(record[0:79])  # keep trailing whitespace
-    except IOError as ex:
-        _log.error(ex)
-    return trailer
-
-
 def get_refmark_from_string(s):
     """Get the text written in REMARK 3, OTHER REFINEMENT REMARKS.
 
