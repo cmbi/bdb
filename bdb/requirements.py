@@ -1,15 +1,13 @@
-#!/usr/bin/env python
 import logging
 import subprocess
 import sys
 
-# Configure logging
+
 _log = logging.getLogger("bdb")
 
 # CCP4 dependencies
 ccp4_software = [
-    "tlsanl",
-    ]
+    "tlsanl", ]
 
 # Other dependencies
 # None
