@@ -605,17 +605,6 @@ def filter_progs(pin, pv):
     return pin, pv
 
 
-def get_refprog(pdb_file_path):
-    """Find the refinement program in a PDB file.
-
-    Return the value of the refinement programs as a string.
-    """
-    refprog = get_raw_pdb_info(pdb_file_path)["refprog"]
-    if refprog:
-        _log.debug("{} | {}.".format(pdb_file_path, refprog.rstrip()))
-    return refprog
-
-
 def last_used(pin, pv):
     """Make an educated guess about the refinement program that was used last.
 
