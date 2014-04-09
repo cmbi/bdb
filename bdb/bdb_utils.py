@@ -126,34 +126,6 @@ def get_n_tls_groups(record):
     return n_tls
 
 
-def get_pdb_header(pdb_file_path):
-    """Return the PDB-file header records as a list.
-
-    We assume the PDB file has the following composition:
-    Header records
-    [MODEL]
-    ATOM
-    (ANISOU)
-    (SIGUIJ)
-    (HETATM)
-    TER
-    [ENDMDL]
-    Trailer records
-    END
-    """
-    header = list()
-    try:
-        with open(pdb_file_path, "r") as pdb:
-            for record in pdb:
-                if re.search(r"^(MODEL|ATOM|HETATM)", record):
-                    return header
-                else:
-                    header.append(record[0:79])  # keep trailing whitespace
-    except IOError as ex:
-        _log.error(ex)
-    return header
-
-
 def get_pdb_header_and_trailer(pdb_file_path):
     """Return the PDB-file header and trailer records as two lists.
 
