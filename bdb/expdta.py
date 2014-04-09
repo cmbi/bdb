@@ -29,7 +29,7 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
     except ValueError:
         message = "Experimental method: EXPDTA parse error"
         write_whynot(pdb_id, message, directory=out_dir)
-        _log.error("{1:s}.").format(message)
+        _log.error("{}.".format(message))
         return {"expdta_useful": False, "expdta": []}
 
     # Multiple experiment methods are not supported
@@ -37,7 +37,7 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
         message = "Experimental method: multiple ({0})".format(
             " and ".join(exp_methods))
         write_whynot(pdb_id, message, directory=out_dir)
-        _log.warn("{1:s}.").format(message)
+        _log.warn("{}.".format(message))
         if global_files:
             write_unsupported_expdta(exp_methods)
         return {"expdta_useful": False, "expdta": exp_methods}
@@ -52,7 +52,7 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
     else:
         message = "Experimental method: " + exp_methods[0]
         write_whynot(pdb_id, message, directory=out_dir)
-        _log.warn("{1:s} cannot be included in the bdb.").format(message)
+        _log.warn("{} cannot be included in the bdb.".format(message))
         if global_files:
             write_unsupported_expdta(exp_methods)
 
