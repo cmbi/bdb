@@ -18,7 +18,7 @@ from bdb.tlsanl_wrapper import run_tlsanl
 _log = logging.getLogger(__name__)
 
 
-def init_logger(pdb_id, root="."):
+def init_logger(pdb_id, root, verbose):
     log_name = pdb_id + ".log"
     out_dir = get_bdb_entry_outdir(root, pdb_id)
     log_file_path = os.path.join(out_dir, log_name)
@@ -28,7 +28,7 @@ def init_logger(pdb_id, root="."):
     logging.basicConfig(
         filename=log_file_path,
         filemode='w',
-        level=logging.INFO,
+        level=logging.INFO if not verbose else logging.DEBUG,
         format=fmt)
 
 
@@ -115,10 +115,7 @@ def main():
         type=lambda x: is_valid_pdbid(parser, x))
     args = parser.parse_args()
 
-    init_logger(args.pdb_id, args.bdb_root_path)
-
-    if args.verbose:
-        _log.setLevel(logging.DEBUG)
+    init_logger(args.pdb_id, args.bdb_root_path, args.verbose)
 
     # Check that the system has the required programs and libraries installed
     # TODO: This should be moved to a `setup.py` file.
