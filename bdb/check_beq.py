@@ -14,7 +14,7 @@ import Bio.PDB
 import numpy
 
 from bdb.bdb_utils import (get_pdb_header_and_trailer, init_bdb_logger,
-                           write_whynot, PDB_LOGFORMAT)
+                           write_whynot)
 
 # Configure logging
 _log = logging.getLogger("bdb")
@@ -34,8 +34,7 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                    ANISOU records was necessary to reproduce the B-factors.
     """
     pdb_id = pdb_file_path if pdb_id is None else pdb_id
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-               "Checking Beq values in ANISOU records...").format(pdb_id))
+    _log.info(("{0:4s} | Checking Beq values in ANISOU records...").format(pdb_id))
     margin = 0.015
     p = Bio.PDB.PDBParser(QUIET=not verbose)
     structure = p.get_structure(pdb_id, pdb_file_path)
@@ -61,11 +60,10 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                     """
                     eq = eq + 1
                     correct_uij = False
-                    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                                "B-factor reproduced by non-standard "\
-                                "combination of Uij values in the ANISOU "\
-                                "record of ATOM: {1:s}").
-                                format(pdb_id, atom.get_full_id()))
+                    _log.debug(("{0:4s} | B-factor reproduced by "\
+                                "non-standard combination of Uij values in " \
+                                "the ANISOU record of ATOM: {1:s}").format(
+                                    pdb_id, atom.get_full_id()))
                 else:
                     """ e.g 1g8t, 1kr7, 1llr, 1mgr, 1o9g, 1pm1, 1q7l, 1qjp,
                     1s2p, 1si6, 1sxu, 1sxy, 1sy0, 1sy2, 1ug6, 1x9q, 2a83, 2acp,
@@ -74,14 +72,12 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                     3fde, 3g5t, 3jql, 3nju, 3nna, 3oxp
                     """
                     ne = ne + 1
-                    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                                "Beq not identical to B-factor in ATOM "\
-                                "record: {1:s} {2:3.2f} {3:3.2f}").format(
-                                    pdb_id,
-                                    atom.get_full_id(),
-                                    b,
-                                    beq))
+                    _log.debug(("{0:4s} | Beq not identical to B-factor in " \
+                                "ATOM record: {1:s} {2:3.2f} {3:3.2f}").format(
+                                    pdb_id, atom.get_full_id(), b,beq))
         else:
+            # TODO: Why break if an ATOM is None? This *could* happen at the
+            #       very first. If so, isn't this a special case?
             break;
     reproduced = eq / (eq + ne) if has_anisou else None
     correct_uij = correct_uij if has_anisou else None
@@ -102,9 +98,9 @@ def check_combinations(anisou, b, margin, pdb_id=None):
         beq = UF * (anisou[c[0]] + anisou[c[1]] + anisou[c[2]])/3
         if numpy.isclose(b, beq, atol=margin):
             reproduced = True
-            _log.debug(("{0:" + PDB_LOGFORMAT + "} | B-factor could only be "\
-                       "reproduced by combining non-standard Uij values "\
-                       "{1:d} {2:d} {3:d}.").format(pdb_id, c[0], c[1], c[2]))
+            _log.debug(("{0:4s} | B-factor could only be reproduced by " \
+                        "combining non-standard Uij values "\
+                        "{1:d} {2:d} {3:d}.").format(pdb_id, c[0], c[1], c[2]))
             break
     return reproduced
 
@@ -136,17 +132,15 @@ def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
             }
     margin = 0.01
     pdb_id = pdb_file_path if pdb_id is None else pdb_id
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-                   "Determining most likely B-factor group type...").
-                   format(pdb_id))
+    _log.info(("{0:4s} | Determining most likely B-factor group type").format(
+        pdb_id))
     structure = None
     try:
         p = Bio.PDB.PDBParser(QUIET=not verbose)
         structure = p.get_structure(pdb_id, pdb_file_path)
     except (AttributeError, IndexError, ValueError, AssertionError,
             Bio.PDB.PDBExceptions.PDBConstructionException):
-        _log.error(("{0:" + PDB_LOGFORMAT + "} | Biopython Error.").format(
-            pdb_id))
+        _log.error(("{0:4s} | Biopython Error.").format(pdb_id))
     if structure is not None:
         chains = structure.get_chains()
         for c in chains:
@@ -159,21 +153,18 @@ def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
             elif is_calpha_trace(c):
                 if group["protein_b"] is None:
                     group["calpha_only"] = True
-                    _log.info(("{0:" + PDB_LOGFORMAT + "} | Calpha-only "\
-                               "chain(s) present.").format(pdb_id))
+                    _log.info(("{0:4s} | Calpha-only chain(s) present").format(
+                        pdb_id))
                     group["protein_b"] = determine_b_group_chain(c)
             else:
-                _log.error(("{0:" + PDB_LOGFORMAT + "} | Chain {1:s}: "\
-                            "no protein or nucleic acid chain found.").format(
-                                pdb_id, c.get_id()))
-        _log.info(("{0:" + PDB_LOGFORMAT + "} | Most likely B-factor group "\
-                   "type protein: {1:s} | nucleic acid: {2:s}.").format(
-                    pdb_id,
+                _log.error(("{0:4s} | Chain {1:s}: no protein or nucleic " \
+                            "acid chain found.").format(pdb_id, c.get_id()))
+        _log.info(("{0:4s} | Most likely B-factor group type protein: {1:s}" \
+                   "| nucleic acid: {2:s}.").format(pdb_id,
                     group["protein_b"] if group["protein_b"] is not None else\
                             "not present",
                     group["nucleic_b"] if group["nucleic_b"] is not None else\
-                            "not present",
-                    ))
+                            "not present",))
     return group
 
 def determine_b_group_chain(chain):
@@ -207,8 +198,8 @@ def determine_b_group_chain(chain):
             res = residues.next()
         except StopIteration:
             # e.g. 1c0q
-            _log.warn(("{0:" + PDB_LOGFORMAT + "} | Chain {1:s} has less "\
-                       "than {2:d} useful residues composed of ATOMs.").format(
+            _log.warn(("{0:4s} | Chain {1:s} has less than {2:d} useful " \
+                       "residues composed of ATOMs.").format(
                            chain.get_full_id()[0], chain.get_id(), max_res))
             break;
         if res.get_id()[0] == " ": # Exclude HETATM and waters
@@ -218,12 +209,9 @@ def determine_b_group_chain(chain):
                 if not re.match("H", atom.get_name())\
                         and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
-                    _log.debug(("{0:" + PDB_LOGFORMAT + "} | {1:s} - B-factor"\
-                                ": {2:3.2f}").format(
-                                    chain.get_full_id()[0],
-                                    atom.get_full_id(),
-                                    b,
-                                    ))
+                    _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}").format(
+                                    chain.get_full_id()[0], atom.get_full_id(),
+                                    b,))
                     b_atom.append(b)
             # Useful atoms in this residue
             if len(b_atom) > 0:
@@ -294,12 +282,9 @@ def determine_b_group_chain_greedy(chain):
                 if not re.match("H", atom.get_name())\
                         and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
-                    _log.debug(("{0:" + PDB_LOGFORMAT + "} | {1:s} - B-factor"\
-                                ": {2:3.2f}").format(
-                                    chain.get_full_id()[0],
-                                    atom.get_full_id(),
-                                    b,
-                                    ))
+                    _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}").format(
+                                    chain.get_full_id()[0], atom.get_full_id(),
+                                    b,))
                     if is_heavy_backbone(atom):
                         b_back.append(atom.get_bfactor())
                         if len(b_back) > 1: # Whithin backbone
@@ -464,8 +449,8 @@ def transfer_header_and_trailer(pdb_file_path, xyzout):
 def write_multiplied(pdb_file_path, xyzout, pdb_id=None, verbose=False):
     """Multiply the B-factors in the input PDB file with 8*pi^2."""
     pdb_id = pdb_id if pdb_id else "usio"
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-               "Calculating B-factors from Uiso values...").format(pdb_id))
+    _log.info(("{0:4s} | Calculating B-factors from Uiso values...").format(
+        pdb_id))
     p = Bio.PDB.PDBParser(QUIET=not verbose)
     structure = p.get_structure(pdb_id, pdb_file_path)
     structure = multiply(structure)
@@ -478,27 +463,24 @@ def write_multiplied(pdb_file_path, xyzout, pdb_id=None, verbose=False):
 def report_beq(pdb_id, reproduced):
     """Report if Beqs are identical to B-factors."""
     if reproduced["beq_identical"] is None:
-        _log.debug(("{0:" + PDB_LOGFORMAT + "} | No ANISOU records").
-                format(pdb_id))
+        _log.debug(("{0:4s} | No ANISOU records").format(pdb_id))
         return
     if not reproduced["correct_uij"]:
-        _log.warn(("{0:" + PDB_LOGFORMAT + "} | One or more B-factors could "\
-                   "only be reproduced by a non-standard combination of Uij "\
-                   "values in the corresponding ANISOU record.").
-                   format(pdb_id))
+        _log.warn(("{0:4s} | One or more B-factors could only be reproduced " \
+                   "by a non-standard combination of Uij values in the " \
+                   "corresponding ANISOU record.").format(pdb_id))
     if reproduced["beq_identical"] == 1:
-        _log.info(("{0:" + PDB_LOGFORMAT + "} | The B-factors in the"\
-                " ATOM records could all be reproduced within 0.015 A**2 by "\
-                "calculating Beq from the corresponding ANISOU records.").
-                format(pdb_id,100*(1-reproduced["beq_identical"])))
+        _log.info(("{0:4s} | The B-factors in the ATOM records could all be " \
+                   "reproduced within 0.015 A**2 by calculating Beq from " \
+                   "the corresponding ANISOU records.").format(
+                       pdb_id, 100 * (1 - reproduced["beq_identical"])))
     elif reproduced["beq_identical"] < 1:
-        _log.warn(("{0:" + PDB_LOGFORMAT + "} | {1:3.2f}% of the B-factors in"\
-                " the ATOM records could not be reproduced within 0.015 A**2 "\
-                "by calculating Beq from the corresponding ANISOU records.").
-                format(pdb_id,100*(1-reproduced["beq_identical"])))
+        _log.warn(("{0:4s} | {1:3.2f}% of the B-factors in the ATOM records " \
+                "could not be reproduced within 0.015 A**2 by calculating " \
+                "Beq from the corresponding ANISOU records.").format(
+                    pdb_id, 100 * (1 - reproduced["beq_identical"])))
     else:
-        _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-                "No ANISOU records.").format(pdb_id))
+        _log.info(("{0:4s} | No ANISOU records.").format(pdb_id))
 
 if __name__ == "__main__":
     """Run Beq check or multiply Uiso with 8*pi^2."""

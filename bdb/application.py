@@ -10,7 +10,7 @@ import sys
 
 from bdb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
                            get_bdb_entry_outdir, init_bdb_logger,
-                           write_dict_json, write_whynot, PDB_LOGFORMAT)
+                           write_dict_json, write_whynot)
 from bdb.check_beq import write_multiplied
 from bdb.expdta import check_exp_methods
 from bdb.pdb.parser import parse_pdb_file
@@ -23,8 +23,7 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
 
     Return a Boolean."""
 
-    _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                "Creating bdb entry...").format(pdb_id))
+    _log.debug(("{0:4s} | Creating bdb entry...").format(pdb_id))
 
     # Parse the given pdb file into a dict.
     pdb_records = parse_pdb_file(pdb_file_path)
@@ -63,8 +62,7 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
             else:
                 message = "Unexpected bdb status"
                 write_whynot(pdb_id, message, directory=out_dir)
-                _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}.").
-                        format(pdb_id, message))
+                _log.error(("{0:4s} | {1:s}.").format(pdb_id, message))
     return done
 
 def main():
@@ -113,8 +111,7 @@ def main():
     import requirements
 
     if do_bdb(args.bdb_root_path, args.pdb_file_path, args.pdb_id, args.global_files):
-        _log.debug(("{0:" + PDB_LOGFORMAT + "} | "\
-                "Finished bdb entry.").format(args.pdb_id))
+        _log.debug(("{0:4s} | Finished bdb entry.").format(args.pdb_id))
         sys.exit(0)
     else:
         sys.exit(1)

@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 
-from bdb.bdb_utils import init_bdb_logger, write_whynot, PDB_LOGFORMAT
+from bdb.bdb_utils import init_bdb_logger, write_whynot
 
 # Configure logging
 _log = logging.getLogger("bdb")
@@ -28,8 +28,7 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",
     http://www.ccp4.ac.uk/html/tlsanl.html.
     """
     pdb_id = pdb_file_path if pdb_id is None else pdb_id
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-               "Preparing TLSANL run...").format(pdb_id))
+    _log.info(("{0:4s} | Preparing TLSANL run...").format(pdb_id))
     success = False
     keyworded_input = "BINPUT t\nBRESID t\nISOOUT FULL\nNUMERIC\nEND\n"
     p = subprocess.Popen(["tlsanl", "XYZIN", pdb_file_path, "XYZOUT", xyzout],
@@ -51,20 +50,19 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",
     if p.returncode != 0:
         message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
         write_whynot(pdb_id, message, directory=log_out_dir)
-        _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
+        _log.error(("{0:4s} | {1:s}").format(pdb_id, message))
     elif os.stat(xyzout).st_size <= 2000:
         # from script at http://deposit.rcsb.org/adit/REFMAC.html
         message = "TLSANL problem"
         write_whynot(pdb_id, message, directory=log_out_dir)
-        _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
+        _log.error(("{0:4s} | {1:s}").format(pdb_id, message))
     elif os.stat(os.path.join(log_out_dir, "tlsanl.err")).st_size > 0:
         message = "TLSANL problem"
         write_whynot(pdb_id, message, directory=log_out_dir)
-        _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
+        _log.error(("{0:4s} | {1:s}").format(pdb_id, message))
     else:
         success = True
-        _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-               "TLSANL ran without problems.").format(pdb_id))
+        _log.info(("{0:4s} | TLSANL ran without problems.").format(pdb_id))
     return success
 
 if __name__ == "__main__":
