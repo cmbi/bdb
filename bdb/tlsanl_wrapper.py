@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 
-from bdb.bdb_utils import init_bdb_logger, write_whynot
+from bdb.bdb_utils import write_whynot
 
 
 _log = logging.getLogger("bdb")
@@ -82,7 +82,6 @@ if __name__ == "__main__":
             tensors in PDB format.")
     args = parser.parse_args()
     pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
-    _log = init_bdb_logger(args.pdbid, global_log=True)
     import requirements
     if args.verbose:
         _log.setLevel(logging.DEBUG)

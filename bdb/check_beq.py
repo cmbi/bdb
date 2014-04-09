@@ -10,7 +10,7 @@ import shutil
 import Bio.PDB
 import numpy
 
-from bdb.bdb_utils import get_pdb_header_and_trailer, init_bdb_logger
+from bdb.bdb_utils import get_pdb_header_and_trailer
 
 
 _log = logging.getLogger(__name__)
@@ -528,8 +528,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
-
-    _log = init_bdb_logger(pdb_id, global_log=True)
 
     if args.verbose:
         _log.setLevel(logging.DEBUG)

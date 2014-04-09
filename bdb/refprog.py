@@ -7,7 +7,7 @@ import os
 import re
 import sys
 
-from bdb.bdb_utils import get_raw_pdb_info, init_bdb_logger, write_whynot
+from bdb.bdb_utils import get_raw_pdb_info, write_whynot
 from bdb.check_beq import check_beq, determine_b_group, report_beq
 
 
@@ -1329,7 +1329,6 @@ if __name__ == "__main__":
     run.add_argument("pdb_file_path", help="PDB file location.")
     args = parser.parse_args()
     pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
-    _log = init_bdb_logger(pdb_id, global_log=True)
     if args.verbose:
         _log.setLevel(logging.DEBUG)
     if args.prog:
