@@ -7,7 +7,7 @@ from bdb.pdb.parser import parse_exp_methods
 from bdb.bdb_utils import write_whynot
 
 
-_log = logging.getLogger("bdb")
+_log = logging.getLogger(__name__)
 
 
 def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
@@ -20,7 +20,7 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
         "expdta"        : a list with experimental method(s) if not None
     """
 
-    _log.debug(("{0:4s} | Parsing EXPDTA...").format(pdb_id))
+    _log.debug("Parsing EXPDTA...")
 
     # Parse the experiment methods. A ValueError is raised when no EXPDTA
     # records are found, which is fatal.
@@ -29,7 +29,7 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
     except ValueError:
         message = "Experimental method: EXPDTA parse error"
         write_whynot(pdb_id, message, directory=out_dir)
-        _log.error(("{0:4s} | {1:s}.").format(pdb_id, message))
+        _log.error("{1:s}.").format(message)
         return {"expdta_useful": False, "expdta": []}
 
     # Multiple experiment methods are not supported
@@ -37,15 +37,14 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
         message = "Experimental method: multiple ({0})".format(
             " and ".join(exp_methods))
         write_whynot(pdb_id, message, directory=out_dir)
-        _log.warn(("{0:4s} | {1:s}.").format(pdb_id, message))
+        _log.warn("{1:s}.").format(message)
         if global_files:
             write_unsupported_expdta(exp_methods)
         return {"expdta_useful": False, "expdta": exp_methods}
 
     assert len(exp_methods) == 1
 
-    _log.info(("{0:4s} | Experimental method:{1:s}.").format(
-        pdb_id, exp_methods[0]))
+    _log.info("Experimental method: {0}.".format(exp_methods[0]))
 
     useful = False
     if "X-RAY DIFFRACTION" in exp_methods:
@@ -53,8 +52,7 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
     else:
         message = "Experimental method: " + exp_methods[0]
         write_whynot(pdb_id, message, directory=out_dir)
-        _log.warn(("{0:4s} | {1:s} cannot be included in the bdb.").format(
-            pdb_id, message))
+        _log.warn("{1:s} cannot be included in the bdb.").format(message)
         if global_files:
             write_unsupported_expdta(exp_methods)
 

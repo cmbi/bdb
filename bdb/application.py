@@ -7,8 +7,7 @@ import shutil
 import sys
 
 from bdb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
-                           get_bdb_entry_outdir, init_bdb_logger,
-                           write_dict_json, write_whynot)
+                           get_bdb_entry_outdir, write_dict_json, write_whynot)
 from bdb.check_beq import write_multiplied
 from bdb.expdta import check_exp_methods
 from bdb.pdb.parser import parse_pdb_file
@@ -16,12 +15,29 @@ from bdb.refprog import do_refprog
 from bdb.tlsanl_wrapper import run_tlsanl
 
 
+_log = logging.getLogger(__name__)
+
+
+def init_logger(pdb_id, root="."):
+    log_name = pdb_id + ".log"
+    out_dir = get_bdb_entry_outdir(root, pdb_id)
+    log_file_path = os.path.join(out_dir, log_name)
+
+    fmt = "%(asctime)s | %(levelname)-7s | {0:4s} | %(message)s".format(pdb_id)
+
+    logging.basicConfig(
+        filename=log_file_path,
+        filemode='w',
+        level=logging.INFO,
+        format=fmt)
+
+
 def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
     """Create a bdb entry.
 
     Return a Boolean."""
 
-    _log.debug(("{0:4s} | Creating bdb entry...").format(pdb_id))
+    _log.debug("Creating bdb entry...")
 
     # Parse the given pdb file into a dict.
     pdb_records = parse_pdb_file(pdb_file_path)
@@ -60,7 +76,7 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
             else:
                 message = "Unexpected bdb status"
                 write_whynot(pdb_id, message, directory=out_dir)
-                _log.error(("{0:4s} | {1:s}.").format(pdb_id, message))
+                _log.error("{}.".format(message))
     return done
 
 
@@ -99,9 +115,8 @@ def main():
         type=lambda x: is_valid_pdbid(parser, x))
     args = parser.parse_args()
 
-    # Setup logging
-    global _log
-    _log = init_bdb_logger(args.pdb_id, args.bdb_root_path)
+    init_logger(args.pdb_id, args.bdb_root_path)
+
     if args.verbose:
         _log.setLevel(logging.DEBUG)
 
@@ -112,7 +127,7 @@ def main():
     if do_bdb(args.bdb_root_path,
               args.pdb_file_path,
               args.pdb_id, args.global_files):
-        _log.debug(("{0:4s} | Finished bdb entry.").format(args.pdb_id))
+        _log.debug("Finished bdb entry.")
         sys.exit(0)
     else:
         sys.exit(1)

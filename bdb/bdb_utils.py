@@ -6,8 +6,8 @@ import os
 import re
 import sys
 
-# Configure logging
-_log = logging.getLogger("bdb")
+
+_log = logging.getLogger(__name__)
 
 
 ANISOU_PAT = re.compile(r"^ANISOU")
@@ -449,7 +449,7 @@ def write_whynot(pdb_id, reason, filename=None, directory="."):
     Return a Boolean.
     """
     filename = pdb_id + ".whynot" if not filename else filename
-    _log.warn(("{0:4s} | Writing WHY NOT entry.").format(pdb_id))
+    _log.warn("Writing WHY NOT entry.")
     try:
         with open(os.path.join(directory, filename), "w") as whynot:
             whynot.write("COMMENT: " + reason + "\n" +

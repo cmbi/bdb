@@ -1,4 +1,8 @@
+import logging
 import os
+
+
+_log = logging.getLogger(__name__)
 
 
 def parse_pdb_file(pdb_file_path):
@@ -11,7 +15,10 @@ def parse_pdb_file(pdb_file_path):
 
     If the file at pdb_file_path doesn't exist, a ValueError is raised.
     """
+    _log.info("Parsing pdb file {}".format(pdb_file_path))
+
     if not os.path.exists(pdb_file_path):
+        _log.error("'{}' not found".format(pdb_file_path))
         raise ValueError("'{}' not found".format(pdb_file_path))
 
     with open(pdb_file_path) as pdb_file:
@@ -24,6 +31,7 @@ def parse_pdb_file(pdb_file_path):
             if record_name not in records:
                 records[record_name] = []
             records[record_name].append(record[7:])
+        _log.debug("Parsed {0} records".format(len(records)))
         return records
 
 
@@ -41,11 +49,14 @@ def parse_exp_methods(pdb_records):
     If no EXPDTA records are found, a ValueError is raised.
     If no experimental method is found, an empty list is returned.
     """
+    _log.info("Parsing experiment methods from EXPDTA records")
     if "EXPDTA" not in pdb_records:
-        raise ValueError("Expected at least one EXPDTA record")
+        _log.error("No EXPDTA records found")
+        raise ValueError("No EXPDTA records found")
 
     exp_methods = []
     for record in pdb_records["EXPDTA"]:
         for method in record.split(";"):
             exp_methods.append(method.strip())
+    _log.debug("Found {} experiment methods".format(len(exp_methods)))
     return exp_methods
