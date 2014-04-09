@@ -366,7 +366,7 @@ def get_raw_pdb_info(pdb_file_path):
 #            return (record.levelno == self.passlevel)
 
 
-def init_bdb_logger(pdb_id, root=".", global_log=False, append=False):
+def init_bdb_logger(pdb_id, root=".", global_log=False):
     """Configure logging for a single entry or globally."""
     logger = logging.getLogger("bdb")
     if not global_log:
@@ -377,7 +377,7 @@ def init_bdb_logger(pdb_id, root=".", global_log=False, append=False):
         log_file = os.path.join(root, "bdb.log")
 
     # File logger
-    log_file = logging.FileHandler(log_file, "a" if append else "w")
+    log_file = logging.FileHandler(log_file, "w")
     logger.addHandler(log_file)
     form1 = logging.Formatter("%(asctime)s | %(levelname)-7s | %(message)s")
     log_file.setFormatter(form1)
