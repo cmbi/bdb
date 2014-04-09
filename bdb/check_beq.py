@@ -74,11 +74,12 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
         else:
             # TODO: Why break if an ATOM is None? This *could* happen at the
             #       very first. If so, isn't this a special case?
+            # TODO: Check error case first, then you don't need the else and
+            #       the indentation is less.
             break
     reproduced = eq / (eq + ne) if has_anisou else None
     correct_uij = correct_uij if has_anisou else None
-    return {"beq_identical": reproduced,
-            "correct_uij": correct_uij}
+    return {"beq_identical": reproduced, "correct_uij": correct_uij}
 
 
 def check_combinations(anisou, b, margin, pdb_id=None):
@@ -90,8 +91,11 @@ def check_combinations(anisou, b, margin, pdb_id=None):
     assert(len(anisou) == 6)
     reproduced = False
     for c in itertools.combinations(list(xrange(0, 6)), 3):
+        # TODO: Comment why this combination can be skipped. Where was is
+        #       already calculated?
         if c == (0, 1, 2):  # we have already calculated this
             pass
+
         beq = UF * (anisou[c[0]] + anisou[c[1]] + anisou[c[2]])/3
         if numpy.isclose(b, beq, atol=margin):
             reproduced = True
@@ -128,6 +132,9 @@ def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
         "nucleic_b": None,
         "calpha_only": False,
     }
+
+    # TODO: This happens a lot. It seems really odd to set the pdb_id to the
+    #       file path. pdb_id becomes something else, so make that clear.
     pdb_id = pdb_file_path if pdb_id is None else pdb_id
     _log.info("Determining most likely B-factor group type")
     structure = None
@@ -136,6 +143,7 @@ def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
         structure = p.get_structure(pdb_id, pdb_file_path)
     except (AttributeError, IndexError, ValueError, AssertionError,
             Bio.PDB.PDBExceptions.PDBConstructionException):
+        # TODO: Include the error message in the log statement
         _log.error("Biopython Error.")
     if structure is not None:
         chains = structure.get_chains()
@@ -189,6 +197,8 @@ def determine_b_group_chain(chain):
     i = 0
     max_res = 4
     # 4 useful residues should be sufficient to make a decision
+
+    # TODO: Summarise what this loop is doing. It's not trivial.
     while (i < max_res):
         try:
             res = residues.next()
@@ -199,6 +209,7 @@ def determine_b_group_chain(chain):
                 chain.get_full_id()[0], chain.get_id(), max_res)
             break
         if res.get_id()[0] == " ":  # Exclude HETATM and waters
+            # TODO: You can create an empty list just with `[]`
             b_atom = list()
             for atom in res:
                 # Exclude hydrogens and zero occupancy (many in e.g. 1etu)
@@ -208,6 +219,10 @@ def determine_b_group_chain(chain):
                     _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}").format(
                         chain.get_full_id()[0], atom.get_full_id(), b,))
                     b_atom.append(b)
+
+            # TODO: To me, a useful ATOM morphs into a power ranger...do you
+            #       mean that as well? There are other "useful" comments like
+            #       this in your code, as well as "useful" variable names. :)
             # Useful atoms in this residue
             if len(b_atom) > 0:
                 b_res.append(b_atom)
@@ -230,9 +245,7 @@ def determine_b_group_chain(chain):
                 else:
                     group = "individual"
     if len(b_res) > max_res - 1 and numpy.isclose(
-            b_res[0][0],
-            b_res[-1][0],
-            atol=margin):
+            b_res[0][0], b_res[-1][0], atol=margin):
         if numpy.isclose(b_res[-1][-1], 0):
             group = "no_b-factors"
         else:
@@ -260,7 +273,8 @@ def determine_b_group_chain_greedy(chain):
     ATOM      5  CB  GLU A 135      51.257  63.833  13.722  1.00 49.05
     Individual B-factors, not 2 per residue
     """
-    # TODO: I added the margin variable (it was missing) without testing.
+    # TODO: I added the margin variable (it was missing, luckily your code
+    #       never got to the problem); however, I haven't tested it.
     margin = 0.01
     residues = chain.get_residues()
     group = "individual"
@@ -319,14 +333,12 @@ def determine_b_group_chain_greedy(chain):
             b_res.append(b_back)
             i = i + 1  # useful atoms in this residue
     if len(b_res) > max_res - 1 and numpy.isclose(
-            b_res[0][0],
-            b_res[-1][0],
-            atol=margin
-            ):
+            b_res[0][0], b_res[-1][0], atol=margin):
         group = "overall"
     return group
 
 
+# TODO: This is super-easy to unit test.
 def has_amino_acid_backbone(residue):
     """Return True if the residue's backbone looks like protein."""
     for atom in ("N", "CA", "C", "O"):
@@ -335,6 +347,7 @@ def has_amino_acid_backbone(residue):
     return True
 
 
+# TODO: This is super-easy to unit test.
 def has_sugar_phosphate_backbone(residue):
     """Return True if the residue's backbone looks like nucleic acid."""
     for atom in ("P", "OP1", "OP2", "O5'", "C5'", "C4'",
@@ -344,6 +357,7 @@ def has_sugar_phosphate_backbone(residue):
     return True
 
 
+# TODO: This is super-easy to unit test.
 def is_heavy_backbone(atom):
     """Return True if the atom looks like a backbone atom."""
     return atom.get_name() in [
@@ -352,6 +366,7 @@ def is_heavy_backbone(atom):
         "O4'", "C3'", "O3'", "C2'", "O2'", "C1'", ]  # DNA/RNA
 
 
+# TODO: This is super-easy to unit test.
 def is_calpha_trace(chain):
     """Return True if more than 75% of the atoms in the chain are ca atoms.
 
@@ -371,6 +386,7 @@ def is_calpha_trace(chain):
     return ca_ratio >= 0.75
 
 
+# TODO: This is super-easy to unit test.
 def is_nucleic_chain(chain):
     """Return True if the first 10 residues of the chain look like nucleotides.
 
@@ -393,6 +409,7 @@ def is_nucleic_chain(chain):
     return True
 
 
+# TODO: This is super-easy to unit test.
 def is_protein_chain(chain):
     """Return True if the first 10 residues of the chain look like amino acids.
 
@@ -411,6 +428,8 @@ def is_protein_chain(chain):
     return True
 
 
+# TODO: This is super-easy to unit test.
+# TODO: multiply what? I'm sure there's a better name for this.
 def multiply(structure):
     """Multiply B-factors with 8*pi**2."""
     for atom in structure.get_atoms():

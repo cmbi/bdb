@@ -68,15 +68,13 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
                         xyzin=pdb_file_path,
                         xyzout=bdb_file_path,
                         pdb_id=pdb_id,
-                        log_out_dir=out_dir
-                        ):
+                        log_out_dir=out_dir):
                     done = True
             elif refprog["b_msqav"]:
                 if write_multiplied(
                         xyzin=pdb_file_path,
                         xyzout=bdb_file_path,
-                        pdb_id=pdb_id
-                        ):
+                        pdb_id=pdb_id):
                     done = True
             elif refprog["assume_iso"]:
                 shutil.copy(pdb_file_path, bdb_file_path)
@@ -126,7 +124,8 @@ def main():
     init_logger(args.pdb_id, args.bdb_root_path, args.verbose)
 
     # Check that the system has the required programs and libraries installed
-    # TODO: This should be moved to a `setup.py` file.
+    # TODO: This should be moved to the `setup.py` file or at least be provided
+    #       via a function.
     import requirements
 
     if do_bdb(args.bdb_root_path,
