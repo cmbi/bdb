@@ -1,10 +1,7 @@
 #!/usr/bin/env python
-import argparse
-import json
 import logging
 import os
 import re
-import sys
 
 
 _log = logging.getLogger(__name__)
@@ -181,121 +178,6 @@ def get_refprog_from_string(s):
     return program
 
 
-def get_raw_pdb_info(pdb_file_path):
-    """Find the information necessary for bdb pipelin in a PDB file.
-
-    Return a dictionary
-    "expdta"       : the value of the EXPDTA record as a string.
-    "b_msqav"      : True if the B-factor file contains U**2 (mean-square
-                     amplitude of atomic vibration) instead of
-                     8 * PI**2 * U**2 according to REMARK 3.
-    "b_type"       : B VALUE TYPE. Can be "residual", "unverified" or None.
-    "format_date"  : PDB format date.
-    "format_vers"  : PDB format version.
-    "has_anisou"   : True if ANISOU records are present in the PDB file.
-    "other_refinement_remarks"
-                   : OTHER REFINEMENT REMARKS in REMARK 3
-                     as a single string.
-    "refprog"      : the value of the refinement program record as a string.
-    "tls_groups"   : number of TLS groups as integer. If not present: None.
-    "tls_residual" : True if it is mentioned in the TLS details or elsewhere
-                     that the ATOM records contain residual B-factors only.
-    "tls_sum"      : True if it is mentioned somewhere in REMARK 3 that the
-                     ATOM records contain the sum of TLS and residual B-factors
-    """
-    # TODO Note: what happens if programs are listed in multiple records?
-    #            Try to parse from other part of header?
-    b_type, expdta, format_date, format_vers, \
-        other_refinement_remarks, refprog, tls_groups = (None,)*7
-    b_msqav, has_anisou, refmarks, tls_residual, tls_sum = (False,)*5
-    try:
-        with open(pdb_file_path, "r") as pdb:
-            for record in pdb:
-                if re.search(EXPDTA_PAT, record):
-                    expdta = get_expdta_from_record(record)
-                elif re.search(REMARK_3_PAT, record):
-                    if re.search(PROGRAM_PAT, record):
-                        refprog = get_refprog_from_string(record)
-                    elif re.search(B_TYPE_PAT, record):
-                        b_type = get_b_value_type_from_string(record)
-                    elif re.search(N_TLS_PAT, record):
-                        tls_groups = get_n_tls_groups(record)
-                    elif re.search(TLS_REMARK_PAT, record):
-                        tls_residual = True
-                    # elif re.search(RESIDUAL_PAT, record):
-                    #    tls_residual = True
-                    # elif re.search(RESIDUAL_PAT2, record):
-                    #    tls_residual = True
-                    # elif re.search(RESIDUAL_PAT3, record):
-                    #    tls_residual = True
-                    # elif re.search(RESIDUAL_PAT4, record):
-                    #    tls_residual = True
-                    elif re.search(SUM_TLS_RES, record):
-                        tls_sum = True
-                    # elif re.search(SUM_PAT, record):
-                    #    tls_sum = True
-                    # elif re.search(SUM_PAT2, record):
-                    #    tls_sum = True
-                    # elif re.search(SUM_PAT3, record):
-                    #    tls_sum = True
-                    # This should always be the final REMARK 3 remark...
-                    if re.search(REFMARKS_PAT, record):
-                        refmarks = True
-                        other_refinement_remarks = \
-                            get_refmark_from_string(record)
-                    # ... so the next REMARK 3 lines can be appended
-                    if refmarks and not re.search(REFMARKS_PAT, record):
-                        other_refinement_remarks = other_refinement_remarks +\
-                            " " + get_refmark_from_string(record)
-                elif re.search(REMARK_4_PAT, record):
-                    m = re.search(FORMAT_PAT, record)
-                    if m:
-                        format_date = m.group("date")
-                        format_vers = m.group("version")
-                        try:
-                            format_vers = float(format_vers)
-                        except ValueError:
-                            _log.error(
-                                "Unexpected value encountered for REMARK 4"
-                                " FORMAT VERSION: {1:f}. None returned",
-                                format_vers)
-                            format_vers = None
-                if re.search(ANISOU_PAT, record):
-                    has_anisou = True
-    except IOError as ex:
-        _log.error(ex)
-    # Maybe the other refinement remarks contain something interesting
-    if other_refinement_remarks:
-        if re.search(RESIDUAL_PAT, other_refinement_remarks):
-            tls_residual = True
-        elif re.search(RESIDUAL_PAT2, other_refinement_remarks):
-            tls_residual = True
-        elif re.search(RESIDUAL_PAT3, other_refinement_remarks):
-            tls_residual = True
-        elif re.search(RESIDUAL_PAT4, other_refinement_remarks):
-            tls_residual = True
-        elif re.search(SUM_PAT, other_refinement_remarks):
-            tls_sum = True
-        elif re.search(SUM_PAT2, other_refinement_remarks):
-            tls_sum = True
-        elif re.search(SUM_PAT3, other_refinement_remarks):
-            tls_sum = True
-        elif re.search(B_MSQAV_PAT, other_refinement_remarks):
-            b_msqav = True
-    return {"b_msqav": b_msqav,
-            "b_type": b_type,
-            "expdta": expdta,
-            "has_anisou": has_anisou,
-            "format_date": format_date,
-            "format_vers": format_vers,
-            "other_refinement_remarks": other_refinement_remarks,
-            "refprog": refprog,
-            "tls_groups": tls_groups,
-            "tls_residual": tls_residual,
-            "tls_sum": tls_sum
-            }
-
-
 def is_valid_directory(parser, arg):
     """ Check if directory exists."""
     if not os.path.isdir(arg):
@@ -339,47 +221,3 @@ def write_whynot(pdb_id, reason, filename=None, directory="."):
     except IOError as ex:
         _log.error(ex)
         return False
-
-if __name__ == "__main__":
-    """Write WHY NOT entry."""
-    parser = argparse.ArgumentParser(
-        description="Create a WHY NOT entry or test BDB utils")
-    parser.add_argument("-v", "--verbose", help="show verbose output",
-                        action="store_true")
-    subparsers = parser.add_subparsers(help="sub-command help")
-    test = subparsers.add_parser("test", help="Test PDB file header parser")
-    test.add_argument(
-        "pdb_file_path",
-        help="PDB file location.",
-        type=lambda x: is_valid_file(parser, x))
-    run = subparsers.add_parser("why_not", help="Create a WHY NOT entry")
-    run.add_argument(
-        "pdbid",
-        help="PDB accession code.",
-        type=lambda x: is_valid_pdbid(parser, x))
-    run.add_argument(
-        "output_dir",
-        help="Directory where the output files should be saved.",
-        type=lambda x: is_valid_directory(parser, x))
-    run.add_argument(
-        "--output_file",
-        help="WHY NOT file name",
-        default="whynot.txt")
-    run.add_argument(
-        "whynot",
-        help="WHY NOT message.")
-    args = parser.parse_args()
-    if args.pdb_file_path:
-        # Test mode
-        if args.verbose:
-            _log.setLevel(logging.DEBUG)
-        d = get_raw_pdb_info(args.pdb_file_path)
-        print json.dumps(d, sort_keys=True, indent=4)
-    else:
-        if args.verbose:
-            _log.setLevel(logging.DEBUG)
-        if write_whynot(args.pdbid, args.whynot,
-                        args.output_file, args.output_dir):
-            sys.exit(0)
-        else:
-            sys.exit(1)

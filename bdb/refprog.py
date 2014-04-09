@@ -7,7 +7,11 @@ import os
 import re
 import sys
 
-from bdb.bdb_utils import get_raw_pdb_info, write_whynot
+from bdb.pdb.parser import (parse_pdb_file, parse_other_ref_remarks, is_bmsqav,
+                            parse_btype, parse_format_date_version,
+                            parse_num_tls_groups, parse_ref_prog,
+                            is_tls_residual, is_tls_sum)
+from bdb.bdb_utils import write_whynot
 from bdb.check_beq import check_beq, determine_b_group, report_beq
 
 
@@ -491,16 +495,28 @@ def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
     pdb_id = pdb_file_path if pdb_id is None else pdb_id
     success = False
     _log.debug("Parsing refinement program...")
-    pdb_info = get_raw_pdb_info(pdb_file_path)
-    pdb_info.pop("expdta", None)
-    (prog, prog_inter, version) = (pdb_info["refprog"], None, None)
-    prog_last = None
-    (assume_iso, req_tlsanl) = (False, False)
-    reproduced = {
-        "beq_identical": None,
-        "correct_uij": None
-        }
-    if pdb_info["has_anisou"]:  # save some time
+
+    # Parse the pdb records for refinement program data
+    pdb_records = parse_pdb_file(pdb_file_path)
+    format_vers, format_date = parse_format_date_version(pdb_records)
+    other_refinement_remarks = parse_other_ref_remarks(pdb_records)
+    pdb_info = {
+        "b_type": parse_btype(pdb_records),
+        "has_anisou": "ANISOU" in pdb_records,
+        "format_date": format_date,
+        "format_vers": format_vers,
+        "other_refinement_remarks": other_refinement_remarks,
+        "b_msqav": is_bmsqav(other_refinement_remarks),
+        "refprog": parse_ref_prog(pdb_records),
+        "tls_groups": parse_num_tls_groups(pdb_records),
+        "tls_residual": is_tls_residual(pdb_records, other_refinement_remarks),
+        "tls_sum": is_tls_sum(pdb_records, other_refinement_remarks)}
+
+    assume_iso = False
+    reproduced = {"beq_identical": None, "correct_uij": None}
+
+    # save some time
+    if pdb_info["has_anisou"]:
         reproduced = check_beq(pdb_file_path, pdb_id)
         report_beq(pdb_id, reproduced)
         if reproduced["beq_identical"] > 0.9999:
@@ -509,35 +525,36 @@ def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
             # Any contra examples of residual ANISOU records?
             assume_iso = True
     pdb_info.update(reproduced)
-    b_group = {
-        "protein_b": None,
-        "nucleic_b": None,
-        }
+
+    b_group = {"protein_b": None, "nucleic_b": None, }
     b_group = determine_b_group(pdb_file_path, pdb_id)
     pdb_info.update(b_group)
+
+    prog = pdb_info["refprog"]
+    prog_inter = None
+    version = None
+    prog_last = None
+    req_tlsanl = False
     if prog:
         (prog, prog_inter, version) = parse_refprog(prog, pdb_id, global_files)
         prog_last = last_used(prog_inter, version)
-        pdb_info.update({
-            "prog_inter": prog_inter,
-            "prog_last": prog_last,
-            "prog_vers": version
-            })
+        pdb_info.update({"prog_inter": prog_inter,
+                         "prog_last": prog_last,
+                         "prog_vers": version})
+
         for p, i, v in zip(prog, prog_inter, version):
-            _log.debug("Refinement program: {} - interpreted as: {} - "
-                       "version: {} - last used: {}.".format(
-                           p, i, v, prog_last))
+            _log.debug("Refinement program: {} - interpreted as: {} - version:"
+                       "{} - last used: {}.".format(p, i, v, prog_last))
+
         if prog:
             if not assume_iso:
                 (success, assume_iso, req_tlsanl) = decide_refprog(
-                    pdb_info,
-                    pdb_id,
-                    out_dir,
-                    global_files)
+                    pdb_info, pdb_id, out_dir, global_files)
             else:
                 _log.info("{}: probably full B-factors.".format(
                     " and ".join(prog_last)))
-        else:  # we should not end up here under normal circumstances
+        else:
+            # we should not end up here under normal circumstances
             message = "Refinement program parse error"
             write_whynot(pdb_id, message, directory=out_dir)
             _log.error("{}.".format(message))
@@ -553,8 +570,7 @@ def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
                     "prog_vers": version,
                     "refprog_useful": success,
                     "ref_prog": prog,
-                    "req_tlsanl": req_tlsanl
-                    }
+                    "req_tlsanl": req_tlsanl}
     pdb_info.update(more_refprog)
     return pdb_info
 
