@@ -41,7 +41,7 @@ def test_parse_exp_method_none():
     parse_exp_methods(records)
 
 
-def test_parse_btype():
+def test_parse_btype_residual():
     """
     Tests that the btype value is correctly parsed from the pdb file remark
     records.
@@ -50,7 +50,19 @@ def test_parse_btype():
     """
     records = {"REMARK": ["  3   B VALUE TYPE : LIKELY RESIDUAL", ]}
     btype = parse_btype(records)
-    eq_(btype, "LIKELY RESIDUAL")
+    eq_(btype, "residual")
+
+
+def test_parse_btype_unverified():
+    """
+    Tests that the btype value is correctly parsed from the pdb file remark
+    records.
+
+    This example is taken from 1ean.
+    """
+    records = {"REMARK": ["  3   B VALUE TYPE : UNVERIFIED", ]}
+    btype = parse_btype(records)
+    eq_(btype, "unverified")
 
 
 def test_parse_other_ref_remarks():

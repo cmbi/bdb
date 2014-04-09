@@ -107,7 +107,13 @@ def parse_btype(pdb_records):
     for record in pdb_records["REMARK"]:
         m = RE_BTYPE.search(record)
         if m is not None:
-            return m.group('btype')
+            btype = m.group('btype')
+            if btype == "LIKELY RESIDUAL":
+                return "residual"
+            elif btype == "UNVERIFIED":
+                return "unverified"
+            else:
+                _log.error("Unexpected B VALUE TYPE found: {}", btype)
     return None
 
 

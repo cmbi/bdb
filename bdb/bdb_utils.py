@@ -36,41 +36,7 @@ PROGRAM_PAT = re.compile(r"^REMARK   3   PROGRAM     : "
 REMARK_3_PAT = re.compile(r"^REMARK   3")
 REFMARKS_PAT = re.compile(r"^REMARK   3  OTHER REFINEMENT REMARKS: "
                           "(?!NULL|NONE)")
-REMARK_4_PAT = re.compile(r"^REMARK   4")
-FORMAT_PAT = re.compile(r"^REMARK   4 [0-9A-Z]{4} COMPLIES WITH FORMAT V. "
-                        "(?P<version>[\d.]+), "
-                        "(?P<date>\d{2}-[A-Z]{3}-\d{2})")
 N_TLS_PAT = re.compile(r"^REMARK   3   NUMBER OF TLS GROUPS  : (\d+)\s*$")
-TLS_REMARK_PAT = re.compile(r"^REMARK   3   "
-                            "ATOM RECORD CONTAINS RESIDUAL B FACTORS ONLY")
-RESIDUAL_PAT = re.compile(r"RESIDUAL\s+([BU]-?\s*(FACTORS?|VALUES?)\s+)?"
-                          "ONLY")
-RESIDUAL_PAT2 = re.compile(r"ATOMIC\s+[BU]-?\s*(FACTORS?|VALUES?)\s+ARE"
-                           "\s+RESIDUALS(\s+FROM\s+TLS(\s+REFINEMENT)?)?")
-RESIDUAL_PAT3 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s+ARE\s+RESIDUAL"
-                           "\s+[BU]-?\s*(FACTORS?|VALUES?),?"
-                           "(\(?WHICH\s+DO\s+NOT\s+"
-                           "INCLUDE\s+THE\s+CONTRIBUTION\s+FROM\s+THE\s+TLS"
-                           "\s+PARAMETERS\)?)?(.?\s+USE\s+TLSANL(\s+\(?\s*"
-                           "DISTRIBUTED\s+WITH\s+CCP4\)?)?\s+TO\s+OBTAIN\s+"
-                           "THE\s+(FULL\s+)?[BU]-?\s*(FACTORS?|VALUES?)"
-                           ")?")
-# eg. 2ix9:
-RESIDUAL_PAT4 = re.compile(r"([BU]-?\s*(FACTORS?|VALUES?)\s+CORRESPOND\s+"
-                           "TO\s+(THE\s+)?OVERALL?"
-                           "[BU]-?\s*(FACTORS?|VALUES?)\s+EQUAL\s+TO\s+"
-                           "THE\s+)?RESIDUAL[S]?\s+PLUS\s+(THE\s+)?TLS\s+"
-                           "(COMPONENT)?")
-SUM_TLS_RES = re.compile(r"^REMARK   3   ATOM RECORD CONTAINS SUM OF TLS"
-                         "AND RESIDUAL B FACTORS")
-SUM_PAT = re.compile(r"SUM\s+OF\s+TLS\s+AND\s+RESIDUAL\s+"
-                     "[BU]-?\s*(FACTORS?|VALUES?)")
-SUM_PAT2 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s*:?\s+WITH\s+"
-                      "TLS\s+ADDED")
-# e.g. 2x2s 2wsp:
-SUM_PAT3 = re.compile(r"(GLOBAL\s+)?[BU]-?\s*(FACTORS?|VALUES?),?\s*"
-                      "(CONTAINING\s+)?RESIDUALS?\s+(AND|\+)\s+TLS\s+"
-                      "COMPONENTS?(HAVE\s+BEEN\s+DEPOSITED)?")
 
 
 def get_bdb_entry_outdir(root, pdb_id):
@@ -78,49 +44,6 @@ def get_bdb_entry_outdir(root, pdb_id):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     return out_dir
-
-
-def get_b_value_type_from_string(s):
-    """Return the B VALUE TYPE if it is present in this record.
-
-    The returned B VALUE TYPE string can be "residual", "unverified" or None.
-    """
-    b_type = None
-    # b_type = record.rstrip()[28:]
-    m = re.search(B_TYPE_PAT, s)
-    if m:
-        b_type = m.group(1)
-        if b_type == "LIKELY RESIDUAL":
-            b_type = "residual"
-        elif b_type == "UNVERIFIED":
-            b_type = "unverified"
-        else:
-            _log.error("Unexpected B VALUE TYPE found: {1:s}", b_type)
-    return b_type
-
-
-def get_expdta_from_record(record):
-    """Return the EXPDTA value if it is present in this record."""
-    method = None
-    if re.search(EXPDTA_PAT, record):
-        method = record.rstrip()[10:]
-    return method
-
-
-def get_n_tls_groups(record):
-    """Return the number of TLS groups if present in this record."""
-    n_tls = None
-    m = re.search(N_TLS_PAT, record)
-    if m:
-        n_tls = m.group(1)
-        n_tls = None if n_tls == 0 else n_tls
-        try:
-            n_tls = int(n_tls)
-        except ValueError:
-            _log.error("Unexpected value encountered for "
-                       "NUMBER OF TLS GROUPS: {1:s}. None returned", n_tls)
-            n_tls = None
-    return n_tls
 
 
 def get_pdb_header_and_trailer(pdb_file_path):
@@ -154,28 +77,6 @@ def get_pdb_header_and_trailer(pdb_file_path):
     except IOError as ex:
         _log.error(ex)
     return header, trailer
-
-
-def get_refmark_from_string(s):
-    """Get the text written in REMARK 3, OTHER REFINEMENT REMARKS.
-
-    Note: it is assumed the string is actually part
-          of OTHER REFINEMENT REMARKS."""
-    refmark = None
-    # First line
-    if re.search(REFMARKS_PAT, s):
-        refmark = s.rstrip()[38:]
-    elif re.search(REMARK_3_PAT, s):
-        refmark = s.rstrip()[12:]
-    return refmark
-
-
-def get_refprog_from_string(s):
-    """Return the refinement program if present in s."""
-    program = None
-    if re.search(PROGRAM_PAT, s):
-        program = s.rstrip()[27:]
-    return program
 
 
 def is_valid_directory(parser, arg):
