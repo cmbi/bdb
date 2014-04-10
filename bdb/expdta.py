@@ -10,7 +10,7 @@ from bdb.bdb_utils import write_whynot
 _log = logging.getLogger(__name__)
 
 
-def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
+def check_exp_methods(pdb_records, pdb_id):
     """
     Check if the experiment methods are suitable for adding the PDB file to
     the BDB.
@@ -28,7 +28,7 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
         exp_methods = parse_exp_methods(pdb_records)
     except ValueError:
         message = "Experimental method: EXPDTA parse error"
-        write_whynot(pdb_id, message, directory=out_dir)
+        write_whynot(pdb_id, message)
         _log.error("{}.".format(message))
         return {"expdta_useful": False, "expdta": []}
 
@@ -36,10 +36,8 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
     if len(exp_methods) > 1:
         message = "Experimental method: multiple ({0})".format(
             " and ".join(exp_methods))
-        write_whynot(pdb_id, message, directory=out_dir)
+        write_whynot(pdb_id, message)
         _log.warn("{}.".format(message))
-        if global_files:
-            write_unsupported_expdta(exp_methods)
         return {"expdta_useful": False, "expdta": exp_methods}
 
     assert len(exp_methods) == 1
@@ -51,25 +49,7 @@ def check_exp_methods(pdb_records, pdb_id, out_dir=".", global_files=False):
         useful = True
     else:
         message = "Experimental method: " + exp_methods[0]
-        write_whynot(pdb_id, message, directory=out_dir)
+        write_whynot(pdb_id, message)
         _log.warn("{} cannot be included in the bdb.".format(message))
-        if global_files:
-            write_unsupported_expdta(exp_methods)
 
     return {"expdta_useful": useful, "expdta": exp_methods}
-
-
-def write_unsupported_expdta(expdta, expdta_file="unsupported_expdta.txt"):
-    """Add EXPDTA to the unique list of unsupported EXPDTA if applicable."""
-    unsupported = []
-    try:
-        if os.path.exists(expdta_file):
-            with open(expdta_file, "r") as f:
-                unsupported = [line.strip() for line in f]
-        unsupported.append(" and ".join(expdta))
-        unsupported = set(unsupported)
-        with open(expdta_file, "w") as f:
-            for u in unsupported:
-                f.write("{0:s}\n".format(u))
-    except IOError as ex:
-        _log.error(ex)

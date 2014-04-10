@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 
-_log = logging.getLogger("bdb")
+_log = logging.getLogger(__name__)
 
 # CCP4 dependencies
 ccp4_software = [

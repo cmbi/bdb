@@ -10,7 +10,7 @@ import sys
 from bdb.bdb_utils import write_whynot
 
 
-_log = logging.getLogger("bdb")
+_log = logging.getLogger(__name__)
 
 
 def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",

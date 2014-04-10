@@ -18,7 +18,7 @@ def test_check_exp_methods_none():
 
 
 def test_check_exp_methods_not_suitable():
-    records = {"EXPDTA": ["    NEUTRON DIFFRACTION", ]}
+    records = {"EXPDTA": ["    NEUTRON DIFFRACTION                        ", ]}
     result = check_exp_methods(records, "test")
     eq_(result["expdta_useful"], False)
     eq_(result["expdta"], ["NEUTRON DIFFRACTION"])

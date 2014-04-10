@@ -2,6 +2,7 @@ import logging
 import os
 import re
 
+from bdb.settings import BDB_FILE_DIR_PATH
 
 _log = logging.getLogger(__name__)
 
@@ -73,12 +74,13 @@ def is_valid_pdbid(parser, arg):
         return arg
 
 
-def write_whynot(pdb_id, reason, filename=None, directory="."):
+def write_whynot(pdb_id, reason):
     """Create a WHY NOT file.
 
     Return a Boolean.
     """
-    filename = pdb_id + ".whynot" if not filename else filename
+    directory = get_bdb_entry_outdir(BDB_FILE_DIR_PATH, pdb_id)
+    filename = pdb_id + ".whynot"
     _log.warn("Writing WHY NOT entry.")
     try:
         with open(os.path.join(directory, filename), "w") as whynot:

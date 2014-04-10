@@ -444,7 +444,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
     return useful, assume_iso, req_tlsanl
 
 
-def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
+def get_refi_data(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
     """Determine whether this PDB file can be used in the bdb project.
 
     The decision is based on refinement details parsed from the header.

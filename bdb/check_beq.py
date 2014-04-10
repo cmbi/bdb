@@ -429,8 +429,7 @@ def is_protein_chain(chain):
 
 
 # TODO: This is super-easy to unit test.
-# TODO: multiply what? I'm sure there's a better name for this.
-def multiply(structure):
+def multiply_bfactors_8pipi(structure):
     """Multiply B-factors with 8*pi**2."""
     for atom in structure.get_atoms():
         atom.set_bfactor(UF * atom.get_bfactor())
@@ -470,13 +469,13 @@ def transfer_header_and_trailer(pdb_file_path, xyzout):
     return transferred
 
 
-def write_multiplied(pdb_file_path, xyzout, pdb_id=None, verbose=False):
+def write_multiplied_8pipi(pdb_file_path, xyzout, pdb_id=None, verbose=False):
     """Multiply the B-factors in the input PDB file with 8*pi^2."""
     pdb_id = pdb_id if pdb_id else "usio"
     _log.info("Calculating B-factors from Uiso values...")
     p = Bio.PDB.PDBParser(QUIET=not verbose)
     structure = p.get_structure(pdb_id, pdb_file_path)
-    structure = multiply(structure)
+    structure = multiply_bfactors_8pipi(structure)
     io = Bio.PDB.PDBIO()
     io.set_structure(structure)
     # Header and trailer records not present in this output file
@@ -558,4 +557,5 @@ if __name__ == "__main__":
         determine_b_group(args.pdb_file_path, pdb_id, args.verbose)
     else:
         # Calc mode
-        write_multiplied(args.pdb_file_path, args.xyzout, pdb_id, args.verbose)
+        write_multiplied_8pipi(args.pdb_file_path, args.xyzout, pdb_id,
+                args.verbose)
