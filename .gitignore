@@ -61,4 +61,4 @@ Session.vim
 
 # bdb
 bdb.log
-.whynot
+*.whynot
