@@ -65,14 +65,14 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
             # TODO do we need extractor? or tlsextract (ccp4)
             if refprog["req_tlsanl"]:
                 if run_tlsanl(
-                        xyzin=pdb_file_path,
+                        pdb_file_path=pdb_file_path,
                         xyzout=bdb_file_path,
                         pdb_id=pdb_id,
                         log_out_dir=out_dir):
                     done = True
             elif refprog["b_msqav"]:
                 if write_multiplied(
-                        xyzin=pdb_file_path,
+                        pdb_file_path=pdb_file_path,
                         xyzout=bdb_file_path,
                         pdb_id=pdb_id):
                     done = True
@@ -89,14 +89,13 @@ def do_bdb(bdb_root_path, pdb_file_path, pdb_id, global_files):
 def main():
     """Create a bdb entry.
 
-    The bdb entry (.bdb) or WHY NOT (.whynot) file,
-    log and json files will be created in a separate directory
-    using the given pdbid and the directory structure:
-    BDB_ROOT/ab/1abc/1abc.(bdb|whynot|log|json)
     """
 
     parser = argparse.ArgumentParser(
-        description="Create a bdb entry")
+        description="Create a bdb entry. The bdb entry (.bdb) or WHY NOT\
+        (.whynot) file, log and json files will be created in a separate\
+        directory using the given pdb_id and the directory structure:\
+        BDB_ROOT/ab/1abc/1abc.(bdb|whynot|log|json)")
     parser.add_argument(
         "-g", "--global_files",
         help="Create files with PDB-wide information. Useful for local bdb "

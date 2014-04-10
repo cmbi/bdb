@@ -3,8 +3,8 @@ import os
 import re
 
 
-RE_BTYPE = re.compile(r"^  3   B VALUE TYPE : (?P<btype>.*)$")
-RE_REF_PROG = re.compile(r"^  3   PROGRAM     : (?P<refprogs>.*)$")
+RE_BTYPE = re.compile(r"^  3   B VALUE TYPE : (?P<btype>.*)")
+RE_REF_PROG = re.compile(r"^  3   PROGRAM     : (?P<refprogs>.*)")
 RE_REF_REMARKS = re.compile(r"^  3  OTHER REFINEMENT REMARKS: (?!NULL|NONE)")
 RE_B_MSQAV = re.compile(r"(MEAN-SQUARE AMPLITUDE OF ATOMIC VIBRATION|"
                         "U\*\*2|UISO)")
@@ -107,13 +107,14 @@ def parse_btype(pdb_records):
     for record in pdb_records["REMARK"]:
         m = RE_BTYPE.search(record)
         if m is not None:
-            btype = m.group('btype')
+            btype = m.group("btype")
+            btype = btype.rstrip()
             if btype == "LIKELY RESIDUAL":
                 return "residual"
             elif btype == "UNVERIFIED":
                 return "unverified"
             else:
-                _log.error("Unexpected B VALUE TYPE found: {}", btype)
+                _log.error("Unexpected B VALUE TYPE found: {0:s}", btype)
     return None
 
 
@@ -129,11 +130,12 @@ def parse_other_ref_remarks(pdb_records):
         # If the regular expression matches, extract all of the following
         # REMARK 3 lines.
         if RE_REF_REMARKS.search(record):
-            ref_rem = record[31:]
+            ref_rem = record[31:].rstrip()
             j = 1
             while (i+j < len(pdb_records["REMARK"]) and
                    pdb_records["REMARK"][i+j][0:3] == "  3"):
-                ref_rem = ref_rem + '\n' + pdb_records["REMARK"][i+j][5:]
+                ref_rem = ref_rem + " " + \
+                pdb_records["REMARK"][i+j][5:].rstrip()
                 j = j + 1
             return ref_rem
     return None
@@ -155,7 +157,7 @@ def parse_format_date_version(pdb_records):
                 format_vers = float(format_vers)
             except ValueError:
                 _log.error("Unexpected value encountered for REMARK 4 FORMAT "
-                           "VERSION: {1:f}. None returned", format_vers)
+                           "VERSION: {0:f}. None returned", format_vers)
                 format_vers = None
             return format_vers, format_date
     return None, None
@@ -191,10 +193,11 @@ def parse_ref_prog(pdb_records):
         m = RE_REF_PROG.search(record)
         if m is not None:
             refprog = m.group("refprogs")
+            refprog = refprog.rstrip()
             if (refprog == "NULL" or refprog == "NONE" or
                     refprog == "NO REFINEMENT"):
                 return None
-            return refprog.rstrip()
+            return refprog
     return None
 
 

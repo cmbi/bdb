@@ -430,7 +430,7 @@ def decide_refprog(pdb_info, pdb_id, out_dir=".", global_files=False):
                 _log.warn("{}.".format(message))
             elif has_anisou:
                 message = "{}: probably full/mixed anisotropic " \
-                          "refinement".format(refprog[0]) + beq_mess
+                          "refinement. ".format(refprog[0]) + beq_mess
                 write_whynot(pdb_id, message, directory=out_dir)
                 _log.warn("{}.".format(message))
             else:
@@ -544,7 +544,7 @@ def do_refprog(pdb_file_path, pdb_id=None, out_dir=".", global_files=False):
 
         for p, i, v in zip(prog, prog_inter, version):
             _log.debug("Refinement program: {} - interpreted as: {} - version:"
-                       "{} - last used: {}.".format(p, i, v, prog_last))
+                       " {} - last used: {}.".format(p, i, v, prog_last))
 
         if prog:
             if not assume_iso:

@@ -51,16 +51,16 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",
     if p.returncode != 0:
         message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
         write_whynot(pdb_id, message, directory=log_out_dir)
-        _log.error("{1:s}").format(message)
+        _log.error("{0:s}".format(message))
     elif os.stat(xyzout).st_size <= 2000:
         # from script at http://deposit.rcsb.org/adit/REFMAC.html
         message = "TLSANL problem"
         write_whynot(pdb_id, message, directory=log_out_dir)
-        _log.error("{1:s}").format(message)
+        _log.error("{0:s}".format(message))
     elif os.stat(os.path.join(log_out_dir, "tlsanl.err")).st_size > 0:
         message = "TLSANL problem"
         write_whynot(pdb_id, message, directory=log_out_dir)
-        _log.error("{1:s}").format(message)
+        _log.error("{0:s}".format(message))
     else:
         success = True
         _log.info("TLSANL ran without problems.")

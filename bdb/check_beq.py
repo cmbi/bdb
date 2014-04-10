@@ -58,8 +58,8 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                     correct_uij = False
                     _log.debug("B-factor reproduced by non-standard "
                                "combination of Uij values in the ANISOU "
-                               "record of ATOM: {1:s}").format(
-                        atom.get_full_id())
+                               "record of ATOM: {0:s}".format(
+                        atom.get_full_id()))
                 else:
                     """ e.g 1g8t, 1kr7, 1llr, 1mgr, 1o9g, 1pm1, 1q7l, 1qjp,
                     1s2p, 1si6, 1sxu, 1sxy, 1sy0, 1sy2, 1ug6, 1x9q, 2a83, 2acp,
@@ -69,8 +69,8 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                     """
                     ne = ne + 1
                     _log.debug("Beq not identical to B-factor inATOM record: "
-                               "{1:s} {2:3.2f} {3:3.2f}").format(
-                        atom.get_full_id(), b, beq)
+                               "{0:s} {1:3.2f} {2:3.2f}".format(
+                        atom.get_full_id(), b, beq))
         else:
             # TODO: Why break if an ATOM is None? This *could* happen at the
             #       very first. If so, isn't this a special case?
@@ -100,8 +100,8 @@ def check_combinations(anisou, b, margin, pdb_id=None):
         if numpy.isclose(b, beq, atol=margin):
             reproduced = True
             _log.debug(("B-factor could only be reproduced by combining "
-                        "non-standard Uij values {1:d} {2:d} {3:d}.").format(
-                c[0], c[1], c[2]))
+                        "non-standard Uij values {0:d} {1:d} {2:d}.".format(
+                c[0], c[1], c[2])))
             break
     return reproduced
 
@@ -160,8 +160,8 @@ def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
                     _log.info("Calpha-only chain(s) present")
                     group["protein_b"] = determine_b_group_chain(c)
             else:
-                _log.error("Chain {1:s}: no protein or nucleic acid chain "
-                           "found.").format(c.get_id())
+                _log.error("Chain {0:s}: no protein or nucleic acid chain "
+                           "found.".format(c.get_id()))
         _log.info("Most likely B-factor group type protein: {0:s} | nucleic "
                   "acid: {1:s}.".format(
             group["protein_b"] if group["protein_b"] is not None else
@@ -205,8 +205,8 @@ def determine_b_group_chain(chain):
         except StopIteration:
             # e.g. 1c0q
             _log.warn("{0:4s} | Chain {1:s} has less than {2:d} useful "
-                      "residues composed of ATOMs.").format(
-                chain.get_full_id()[0], chain.get_id(), max_res)
+                      "residues composed of ATOMs.".format(
+                chain.get_full_id()[0], chain.get_id(), max_res))
             break
         if res.get_id()[0] == " ":  # Exclude HETATM and waters
             # TODO: You can create an empty list just with `[]`
@@ -216,8 +216,8 @@ def determine_b_group_chain(chain):
                 if not re.match("H", atom.get_name()) \
                         and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
-                    _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}").format(
-                        chain.get_full_id()[0], atom.get_full_id(), b,))
+                    _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}".format(
+                        chain.get_full_id()[0], atom.get_full_id(), b)))
                     b_atom.append(b)
 
             # TODO: To me, a useful ATOM morphs into a power ranger...do you
@@ -292,8 +292,8 @@ def determine_b_group_chain_greedy(chain):
                 if not re.match("H", atom.get_name())\
                         and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
-                    _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}").format(
-                        chain.get_full_id()[0], atom.get_full_id(), b,))
+                    _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}".format(
+                        chain.get_full_id()[0], atom.get_full_id(), b)))
                     if is_heavy_backbone(atom):
                         b_back.append(atom.get_bfactor())
                         if len(b_back) > 1:  # Whithin backbone
@@ -496,13 +496,13 @@ def report_beq(pdb_id, reproduced):
     if reproduced["beq_identical"] == 1:
         _log.info("The B-factors in the ATOM records could all be "
                   "reproduced within 0.015 A**2 by calculating Beq from "
-                  "the corresponding ANISOU records.").format(
-            100 * (1 - reproduced["beq_identical"]))
+                  "the corresponding ANISOU records.".format(
+            100 * (1 - reproduced["beq_identical"])))
     elif reproduced["beq_identical"] < 1:
-        _log.warn("{1:3.2f}% of the B-factors in the ATOM records "
+        _log.warn("{0:3.2f}% of the B-factors in the ATOM records "
                   "could not be reproduced within 0.015 A**2 by calculating "
-                  "Beq from the corresponding ANISOU records.").format(
-            100 * (1 - reproduced["beq_identical"]))
+                  "Beq from the corresponding ANISOU records.".format(
+            100 * (1 - reproduced["beq_identical"])))
     else:
         _log.info("No ANISOU records.")
 
