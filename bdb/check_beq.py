@@ -106,7 +106,7 @@ def check_combinations(anisou, b, margin, pdb_id=None):
     return reproduced
 
 
-def determine_b_group(pdb_file_path, pdb_id=None, verbose=False):
+def determine_b_group(pdb_file_path, pdb_id, verbose=False):
     """Determine the most likely B-factor parameterization.
 
     Return a dictionary with separated output for protein and nucleic acid and
@@ -204,9 +204,9 @@ def determine_b_group_chain(chain):
             res = residues.next()
         except StopIteration:
             # e.g. 1c0q
-            _log.warn("{0:4s} | Chain {1:s} has less than {2:d} useful "
+            _log.warn("Chain {0:s} has less than {1:d} useful "
                       "residues composed of ATOMs.".format(
-                chain.get_full_id()[0], chain.get_id(), max_res))
+                chain.get_id(), max_res))
             break
         if res.get_id()[0] == " ":  # Exclude HETATM and waters
             # TODO: You can create an empty list just with `[]`
@@ -216,8 +216,8 @@ def determine_b_group_chain(chain):
                 if not re.match("H", atom.get_name()) \
                         and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
-                    _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}".format(
-                        chain.get_full_id()[0], atom.get_full_id(), b)))
+                    _log.debug(("{0:s} - B-factor: {1:3.2f}".format(
+                        atom.get_full_id(), b)))
                     b_atom.append(b)
 
             # TODO: To me, a useful ATOM morphs into a power ranger...do you
@@ -292,8 +292,8 @@ def determine_b_group_chain_greedy(chain):
                 if not re.match("H", atom.get_name())\
                         and atom.get_occupancy() > 0:
                     b = atom.get_bfactor()
-                    _log.debug(("{0:4s} | {1:s} - B-factor: {2:3.2f}".format(
-                        chain.get_full_id()[0], atom.get_full_id(), b)))
+                    _log.debug(("{0:s} - B-factor: {1:3.2f}".format(
+                        atom.get_full_id(), b)))
                     if is_heavy_backbone(atom):
                         b_back.append(atom.get_bfactor())
                         if len(b_back) > 1:  # Whithin backbone

@@ -1,1 +1,0 @@
-BDB_FILE_DIR_PATH = "."

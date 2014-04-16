@@ -1,8 +1,7 @@
 import logging
 import os
+import pyconfig
 import re
-
-from bdb.settings import BDB_FILE_DIR_PATH
 
 _log = logging.getLogger(__name__)
 
@@ -79,7 +78,7 @@ def write_whynot(pdb_id, reason):
 
     Return a Boolean.
     """
-    directory = get_bdb_entry_outdir(BDB_FILE_DIR_PATH, pdb_id)
+    directory = pyconfig.get("BDB_FILE_DIR_PATH")
     filename = pdb_id + ".whynot"
     _log.warn("Writing WHY NOT entry.")
     try:
