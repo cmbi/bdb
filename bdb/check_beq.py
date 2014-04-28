@@ -16,6 +16,7 @@ from bdb.pdb.parser import get_pdb_header_and_trailer
 _log = logging.getLogger(__name__)
 
 
+# TODO: This is super-easy to unit test.
 def check_beq(structure, pdb_id):
     """Determine if Beq values are the same as the reported B-factors.
 
@@ -77,6 +78,7 @@ def check_beq(structure, pdb_id):
     return {"beq_identical": reproduced, "correct_uij": correct_uij}
 
 
+# TODO: This is super-easy to unit test.
 def check_combinations(anisou, b, margin, pdb_id=None):
     """Check if the B-factor can be reproduced by non-standard U combinations.
 
@@ -243,7 +245,6 @@ def determine_b_group_chain(chain):
     return group
 
 
-# TODO: This is super-easy to unit test.
 def determine_b_group_chain_greedy(chain):
     """Return the most likely B-factor group type for this chain.
 
@@ -366,9 +367,8 @@ def is_heavy_backbone(atom):
         "O4'", "C3'", "O3'", "C2'", "O2'", "C1'", ]  # DNA/RNA
 
 
-# TODO: This is super-easy to unit test.
 def is_calpha_trace(chain):
-    """Return True if more than 75% of the atoms in the chain are ca atoms.
+    """Return True if more than 75% of the atoms in the chain are CA atoms.
 
     The function accounts for unexpected residues and atoms (such as UNK and
     hetatms listed as atms) by calculating the percentage of ca atoms.
@@ -407,6 +407,24 @@ def is_nucleic_chain(chain):
                 return False
             residues_checked = residues_checked + 1
     return True
+
+
+def is_phos_trace(chain):
+    """Return True if more than 75% of the atoms in the chain are P atoms.
+
+    The function accounts for unexpected residues and atoms (such as UNK and
+    hetatms listed as atms) by calculating the percentage of P atoms.
+
+    Example: 3cw1 chain V.
+    """
+    p = []
+    for atom in chain.get_atoms():
+        if atom.get_name() == "P":
+            p.append(1)
+        else:
+            p.append(0)
+    p_ratio = np.count_nonzero(p) / len(p)
+    return p_ratio >= 0.75
 
 
 # TODO: This is super-easy to unit test.

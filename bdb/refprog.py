@@ -97,6 +97,7 @@ def decide_refprog(pdb_info, pdb_id):
         _log.warn("{}.".format(message))
         return False, False, False
     elif len(refprog) == 0:
+        # e.g. 3cw1
         message = "Program(s) in REMARK 3 not interpreted as refinement "\
                   "program(s)"
         write_whynot(pdb_id, message)
