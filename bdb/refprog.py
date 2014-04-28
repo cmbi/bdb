@@ -12,7 +12,7 @@ from bdb.pdb.parser import (parse_pdb_file, parse_other_ref_remarks, is_bmsqav,
                             parse_num_tls_groups, parse_ref_prog,
                             is_tls_residual, is_tls_sum)
 from bdb.bdb_utils import write_whynot
-from bdb.check_beq import check_beq, determine_b_group, report_beq
+from bdb.check_beq import check_beq, report_beq
 
 
 _log = logging.getLogger(__name__)
@@ -570,9 +570,6 @@ def get_refi_data(pdb_records, structure, pdb_id):
             is_bdb_includable = True
             assume_iso = True
     pdb_info.update(reproduced)
-
-    b_group = determine_b_group(structure, pdb_id)
-    pdb_info.update(b_group)
 
     prog = pdb_info["refprog"]
     prog_inter = None

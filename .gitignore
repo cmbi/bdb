@@ -62,3 +62,4 @@ Session.vim
 # bdb
 bdb.log
 *.whynot
+run.bash

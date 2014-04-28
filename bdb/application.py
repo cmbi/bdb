@@ -10,7 +10,8 @@ import sys
 
 from bdb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
                            get_bdb_entry_outdir, write_whynot)
-from bdb.check_beq import get_structure, write_multiplied_8pipi
+from bdb.check_beq import (determine_b_group, get_structure,
+                           write_multiplied_8pipi)
 from bdb.expdta import check_exp_methods
 from bdb.pdb.parser import parse_pdb_file
 from bdb.refprog import get_refi_data
@@ -54,6 +55,11 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
     if expdta["expdta_useful"]:
         refi_data = get_refi_data(pdb_records, structure, pdb_id)
         bdbd.update(refi_data)
+
+        # Info about B-factor group type
+        b_group = determine_b_group(structure, pdb_id)
+        bdbd.update(b_group)
+
 
         # Write the bdb metadata to a json file
         try:
