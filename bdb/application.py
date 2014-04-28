@@ -10,7 +10,7 @@ import sys
 
 from bdb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
                            get_bdb_entry_outdir, write_whynot)
-from bdb.check_beq import write_multiplied_8pipi
+from bdb.check_beq import get_structure, write_multiplied_8pipi
 from bdb.expdta import check_exp_methods
 from bdb.pdb.parser import parse_pdb_file
 from bdb.refprog import get_refi_data
@@ -32,7 +32,7 @@ def init_logger(pdb_id, verbose):
         format=fmt)
 
 
-def create_bdb_entry(pdb_file_path, pdb_id):
+def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
     """Create a bdb entry.
 
     Return True when a bdb has been created successfully.
@@ -40,15 +40,19 @@ def create_bdb_entry(pdb_file_path, pdb_id):
 
     _log.debug("Creating bdb entry...")
 
-    # Parse the given pdb file into a dict.
+    # Parse the given pdb file into a dict...
     pdb_records = parse_pdb_file(pdb_file_path)
+
+    # and a Biopython structure
+    structure = get_structure(pdb_file_path, pdb_id, verbose)
+
 
     bdbd = {"pdb_id": pdb_id}
     expdta = check_exp_methods(pdb_records, pdb_id)
     bdbd.update(expdta)
     created_bdb_file = False
     if expdta["expdta_useful"]:
-        refi_data = get_refi_data(pdb_file_path, pdb_id)
+        refi_data = get_refi_data(pdb_records, structure, pdb_id)
         bdbd.update(refi_data)
 
         # Write the bdb metadata to a json file
@@ -64,7 +68,6 @@ def create_bdb_entry(pdb_file_path, pdb_id):
         if refi_data["is_bdb_includable"]:
             bdb_file_path = os.path.join(pyconfig.get("BDB_FILE_DIR_PATH"),
                     pdb_id + ".bdb")
-            # TODO do we need extractor? or tlsextract (ccp4)
             if refi_data["req_tlsanl"]:
                 if run_tlsanl(
                         pdb_file_path=pdb_file_path,
@@ -76,7 +79,8 @@ def create_bdb_entry(pdb_file_path, pdb_id):
                 if write_multiplied_8pipi(
                         pdb_file_path=pdb_file_path,
                         xyzout=bdb_file_path,
-                        pdb_id=pdb_id):
+                        pdb_id=pdb_id,
+                        verbose=verbose):
                     created_bdb_file = True
             elif refi_data["assume_iso"]:
                 shutil.copy(pdb_file_path, bdb_file_path)
@@ -123,7 +127,8 @@ def main():
     #       via a function.
     import requirements
 
-    if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id):
+    if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id,
+            verbose=args.verbose):
         _log.debug("Finished bdb entry.")
         sys.exit(0)
     else:

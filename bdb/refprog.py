@@ -486,12 +486,15 @@ def filter_progs(pin, pv):
     return pin, pv
 
 
-def get_refi_data(pdb_file_path, pdb_id):
+def get_refi_data(pdb_records, structure, pdb_id):
     """Determine whether this PDB file can be used in the bdb project.
 
     The decision is based on refinement details parsed from the header.
+
     If entries have ANISOU records, Beq values are compared with
     the B-factor values in the ATOM records.
+    Warning: it is assumed that B-factors are full and isotropic if they can be
+    reproduced from Beq values.
 
     Return a dict containing refinement info.
     "assume_iso"   : whether the PDB file should be assumed to have
@@ -502,7 +505,7 @@ def get_refi_data(pdb_file_path, pdb_id):
     "b_type"       : B VALUE TYPE. Can be "residual", "unverified" or None.
     "beq_identical": Percentage of Beq values (from ANISOU records) identical
                      to B-factor values (ATOM records). None without ANISOU.
-    "calpha_only"  : True if more than 75% of the atoms in the chain are ca.
+    "calpha_only"  : True if more than 75% of the atoms in the chain are CA.
     "correct_uij"  : False if a non-standard combination of the Uij values in
                      the ANISOU records was necessary to reproduce the
                      B-factors.
@@ -514,6 +517,7 @@ def get_refi_data(pdb_file_path, pdb_id):
     "other_refinement_remarks"
                    : OTHER REFINEMENT REFMARKS in REMARK 3
                      as a single string.
+    "phos_only"    : True if more than 75% of the atoms in the chain are P.
     "prog_inter"   : a list with interpreted refinement programs(s) if not None
     "prog_last"    : a list with the guessed last-used refinement program. Can
                      be empty if no refinement programs were found in REMARK 3.
@@ -537,9 +541,7 @@ def get_refi_data(pdb_file_path, pdb_id):
     is_bdb_includable = False
     _log.debug("Parsing refinement program...")
 
-    # TODO pass records and PDBStructure as function arguments
     # Parse the pdb records for refinement program data
-    pdb_records = parse_pdb_file(pdb_file_path)
     format_vers, format_date = parse_format_date_version(pdb_records)
     other_refinement_remarks = parse_other_ref_remarks(pdb_records)
     pdb_info = {
@@ -557,19 +559,18 @@ def get_refi_data(pdb_file_path, pdb_id):
     assume_iso = False
     reproduced = {"beq_identical": None, "correct_uij": None}
 
+    _log.debug("Interpreting PDB file...")
+
     # save some time
     if pdb_info["has_anisou"]:
-        reproduced = check_beq(pdb_file_path, pdb_id)
+        reproduced = check_beq(structure, pdb_id)
         report_beq(pdb_id, reproduced)
         if reproduced["beq_identical"] > 0.9999:
             is_bdb_includable = True
-            # TODO can we indeed assume this?
-            # Any contra examples of residual ANISOU records?
             assume_iso = True
     pdb_info.update(reproduced)
 
-    b_group = {"protein_b": None, "nucleic_b": None, }
-    b_group = determine_b_group(pdb_file_path, pdb_id)
+    b_group = determine_b_group(structure, pdb_id)
     pdb_info.update(b_group)
 
     prog = pdb_info["refprog"]
@@ -1341,7 +1342,13 @@ if __name__ == "__main__":
             print("p:", p, "i:", i, "v:", v)
     else:
         # Run mode
-        if do_refprog(args.pdb_file_path, pdb_id):
+
+        # Parse the given pdb file into a dict...
+        pdb_records = parse_pdb_file(args.pdb_file_path)
+
+        # and a Biopython structure
+        structure = get_structure(args.pdb_file_path, pdb_id, args.verbose)
+        if get_refi_data(pdb_records, structure, pdb_id):
             sys.exit(0)
         else:
             sys.exit(1)
