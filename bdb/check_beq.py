@@ -8,14 +8,12 @@ import re
 import shutil
 
 import Bio.PDB
-import numpy
+import numpy as np
 
 from bdb.pdb.parser import get_pdb_header_and_trailer
 
 
 _log = logging.getLogger(__name__)
-
-UF = 8*3.14159265359**2
 
 
 def check_beq(pdb_file_path, pdb_id=None, verbose=False):
@@ -47,9 +45,9 @@ def check_beq(pdb_file_path, pdb_id=None, verbose=False):
                 has_anisou = True
                 # Beq = 8*pi**2*Ueq
                 # Ueq = 1/3<u.u> == 1/3<|u|**2> = 1/3(U11+U22+U33)
-                beq = UF * sum(anisou[0:3]) / 3
+                beq =  8*np.pi**2 * sum(anisou[0:3]) / 3
                 b = atom.get_bfactor()
-                if numpy.isclose(b, beq, atol=margin):
+                if np.isclose(b, beq, atol=margin):
                     eq = eq + 1
                 elif check_combinations(anisou, b, margin, pdb_id):
                     """ e.g. 2a83, 2p6e, 2qik, 3bik, 3d95, 3d96, 3g5t
@@ -96,8 +94,8 @@ def check_combinations(anisou, b, margin, pdb_id=None):
         if c == (0, 1, 2):  # we have already calculated this
             pass
 
-        beq = UF * (anisou[c[0]] + anisou[c[1]] + anisou[c[2]])/3
-        if numpy.isclose(b, beq, atol=margin):
+        beq = 8*np.pi**2 * (anisou[c[0]] + anisou[c[1]] + anisou[c[2]])/3
+        if np.isclose(b, beq, atol=margin):
             reproduced = True
             _log.debug(("B-factor could only be reproduced by combining "
                         "non-standard Uij values {0:d} {1:d} {2:d}.".format(
@@ -182,21 +180,21 @@ def determine_b_group_chain(chain):
     individual        most PDB files
     (margin 0.01 Angstrom**2)
 
-    Warning: the current approach is rather greedy as only the first four
+    Warning: the current approach is rather greedy as only the first ten
     residues of the chain are taken into account. A uniform parameterization
     accross the chain is assumed. If multiple domains with different overall
     B-factors are present in the same chain, the ouput will still be overall.
 
     Note: if only the first three residues would have been considered,
-    the approach would have been too greedy for 1hlz chain B
+    the approach would have been too greedy for 1hlz chain B or 1av1
     """
     margin = 0.01
     residues = chain.get_residues()
     group = "individual"
     b_res = list()
     i = 0
-    max_res = 4
-    # 4 useful residues should be sufficient to make a decision
+    max_res = 10
+    # 10 useful residues should be sufficient to make a decision
 
     # TODO: Summarise what this loop is doing. It's not trivial.
     while (i < max_res):
@@ -230,23 +228,23 @@ def determine_b_group_chain(chain):
             # Determine the B-factor type for this residue if it is not CA-only
             if len(b_atom) > 1:
                 b_atom = sorted(b_atom)
-                if numpy.isclose(b_atom[-1], b_atom[0], atol=margin):
+                if np.isclose(b_atom[-1], b_atom[0], atol=margin):
                     group = "residue_1ADP"
                 elif len(b_atom) > 3 and \
-                        numpy.allclose(
+                        np.allclose(
                             [b_atom[-1], b_atom[1]],
                             [b_atom[-2], b_atom[0]],
                             atol=margin,) and \
-                        not numpy.isclose(
+                        not np.isclose(
                             b_atom[-2],
                             b_atom[1],
                             atol=margin,):
                     group = "residue_2ADP"
                 else:
                     group = "individual"
-    if len(b_res) > max_res - 1 and numpy.isclose(
+    if len(b_res) > max_res - 1 and np.isclose(
             b_res[0][0], b_res[-1][0], atol=margin):
-        if numpy.isclose(b_res[-1][-1], 0):
+        if np.isclose(b_res[-1][-1], 0):
             group = "no_b-factors"
         else:
             group = "overall"
@@ -297,7 +295,7 @@ def determine_b_group_chain_greedy(chain):
                     if is_heavy_backbone(atom):
                         b_back.append(atom.get_bfactor())
                         if len(b_back) > 1:  # Whithin backbone
-                            if not numpy.isclose(
+                            if not np.isclose(
                                     b_back[0],
                                     b_back[1],
                                     atol=margin
@@ -308,7 +306,7 @@ def determine_b_group_chain_greedy(chain):
                     else:
                         b_side.append(atom.get_bfactor())
                         if len(b_side) > 1:  # Whithin side-chain
-                            if not numpy.isclose(
+                            if not np.isclose(
                                     b_side[0],
                                     b_side[1],
                                     atol=margin
@@ -318,7 +316,7 @@ def determine_b_group_chain_greedy(chain):
                                 break
                     if len(b_back) > 0 and len(b_side) > 0:
                         # Between backbone and side-chain
-                        if not numpy.isclose(
+                        if not np.isclose(
                                 b_back[0],
                                 b_side[0],
                                 atol=margin
@@ -332,7 +330,7 @@ def determine_b_group_chain_greedy(chain):
             # b_back.extend(b_side)
             b_res.append(b_back)
             i = i + 1  # useful atoms in this residue
-    if len(b_res) > max_res - 1 and numpy.isclose(
+    if len(b_res) > max_res - 1 and np.isclose(
             b_res[0][0], b_res[-1][0], atol=margin):
         group = "overall"
     return group
@@ -382,7 +380,7 @@ def is_calpha_trace(chain):
             ca.append(1)
         else:
             ca.append(0)
-    ca_ratio = numpy.count_nonzero(ca) / len(ca)
+    ca_ratio = np.count_nonzero(ca) / len(ca)
     return ca_ratio >= 0.75
 
 
@@ -432,7 +430,7 @@ def is_protein_chain(chain):
 def multiply_bfactors_8pipi(structure):
     """Multiply B-factors with 8*pi**2."""
     for atom in structure.get_atoms():
-        atom.set_bfactor(UF * atom.get_bfactor())
+        atom.set_bfactor(8*np.pi**2 * atom.get_bfactor())
     return structure
 
 

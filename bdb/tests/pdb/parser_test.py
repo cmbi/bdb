@@ -12,7 +12,7 @@ def test_parser_invalid_file():
 
 
 def test_parser():
-    pdb_records = parse_pdb_file("bdb/tests/pdb/1crn.pdb")
+    pdb_records = parse_pdb_file("bdb/tests/pdb/files/1crn.pdb")
     eq_(len(pdb_records), 27)
     eq_(len(pdb_records["HEADER"]), 1)
     eq_(len(pdb_records["EXPDTA"]), 1)

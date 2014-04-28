@@ -291,7 +291,7 @@ def decide_refprog(pdb_info, pdb_id):
                     write_whynot(pdb_id, message)
                     _log.warn("{}.".format(message))
                 # In REFMAC, we ASSUME that TLS- and full anisotropic
-                # refinement are mutually exclusive for now
+                # refinement are mutually exclusive for now [logging]
                 elif has_anisou:
                     message = "REFMAC: probably full/mixed "\
                               "anisotropic refinement. " + beq_mess
@@ -1317,7 +1317,7 @@ if __name__ == "__main__":
 
     Exit with an exit code of 1 if the refinement program could not be found,
     if it cannot be parsed, if it contains multiple programs (and it cannot be
-    decided which one was used last) or if the program cannot be used in the
+    decided which one was used last), or if the program cannot be used in the
     bdb project.
     """
     parser = argparse.ArgumentParser(description="Parse refinement program")

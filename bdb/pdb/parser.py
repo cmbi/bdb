@@ -219,8 +219,8 @@ def is_tls_residual(pdb_records, other_refinement_remarks):
     True if it is mentioned in the TLS details or elsewhere that the ATOM
     records contain residual B-factors only.
 
-    First the pdb REMARK records are checked. If no evidence is found, the
-    other refinement remarks are checked.
+    First the REMARK 3 records are checked for conventional messages. If no
+    evidence is found, the other refinement remarks are checked.
     """
     for record in pdb_records["REMARK"]:
         if RE_TLS_RES.search(record):
@@ -245,8 +245,8 @@ def is_tls_sum(pdb_records, other_refinement_remarks):
     True if it is mentioned somewhere in REMARK 3 that the ATOM records contain
     the sum of TLS and residual B-factors
 
-    First the pdb REMARK records are checked. If no evidence is found, the
-    other refinement remarks are checked.
+    First the REMARK 3 records are checked for conventional messages. If no
+    evidence is found, the other refinement remarks are checked.
     """
     for record in pdb_records["REMARK"]:
         if RE_SUM_TLS_RES.search(record):

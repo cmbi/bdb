@@ -13,7 +13,7 @@ from bdb.bdb_utils import write_whynot
 _log = logging.getLogger(__name__)
 
 
-def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",
+def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
                verbose_output=False):
     """Run TLSANL.
 
@@ -28,7 +28,6 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",
     Detailed documentation for TLSANL can be found at
     http://www.ccp4.ac.uk/html/tlsanl.html.
     """
-    pdb_id = pdb_file_path if pdb_id is None else pdb_id
     _log.info("Preparing TLSANL run...")
     success = False
     keyworded_input = "BINPUT t\nBRESID t\nISOOUT FULL\nNUMERIC\nEND\n"
@@ -50,16 +49,16 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id=None, log_out_dir=".",
     # TODO categorize TLSANL problems (parse tlsanl.log)
     if p.returncode != 0:
         message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
-        write_whynot(pdb_id, message, directory=log_out_dir)
+        write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
     elif os.stat(xyzout).st_size <= 2000:
         # from script at http://deposit.rcsb.org/adit/REFMAC.html
         message = "TLSANL problem"
-        write_whynot(pdb_id, message, directory=log_out_dir)
+        write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
     elif os.stat(os.path.join(log_out_dir, "tlsanl.err")).st_size > 0:
         message = "TLSANL problem"
-        write_whynot(pdb_id, message, directory=log_out_dir)
+        write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
     else:
         success = True
