@@ -1,8 +1,8 @@
 from nose.tools import eq_, ok_, raises
 
-from bdb.refprog import (is_bdb_includable_refprog, except_refprog_warn,
-                         filter_progs, last_used, one_of_the_two,
-                         parse_refprog)
+from bdb.refprog import (decide_refprog, decide_refprog_refmac, decide_refprog_restrain, except_refprog_warn,
+                         filter_progs, last_used, is_bdb_includable_refprog,
+                         one_of_the_two, parse_refprog)
 
 
 def test_is_bdb_includable_refprog_none():
@@ -39,6 +39,383 @@ def test_is_bdb_includable_refprog_phenix():
     refprog = "PHENIX"
     result = is_bdb_includable_refprog(refprog)
     eq_(result, True)
+
+
+def test_decide_refprog_refmac_remediation_residual():
+    pdb_info = {"format_vers": 3.30, "b_type": "residual"}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, False, True)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_remediation_unverified():
+    pdb_info = {"format_vers": 3.30, "b_type": "unverified"}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_remediation_full():
+    pdb_info = {"format_vers": 3.30, "b_type": None}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, True, False)
+    eq_(result, expected)
+
+    pdb_info = {"format_vers": 3.30, "b_type": "something"}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, True, False)
+    eq_(result, expected)
+
+    pdb_info = {"format_vers": 3.30, "b_type": None, "has_anisou": True}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, True, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_residual():
+    pdb_info = {"format_vers": "not3.30", "b_type": "residual"}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, False, True)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_unverified():
+    pdb_info = {"format_vers": "not3.30", "b_type": "unverified"}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_residual_and_full():
+    pdb_info = {"format_vers": "not3.30", "b_type": None,
+                "tls_residual": True, "tls_sum": True}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_tls_residual_anisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
+                "tls_residual": True, "tls_sum": False, "has_anisou": True}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_tls_residual_noanisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
+                "tls_residual": True, "tls_sum": False, "has_anisou": False}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, False, True)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_tls_sum_anisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
+                "tls_residual": False, "tls_sum": True, "has_anisou": True}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_tls_residual_noanisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
+                "tls_residual": False, "tls_sum": True, "has_anisou": False}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, True, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_tls_bexcept():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
+                "tls_residual": False, "tls_sum": False,
+                "other_refinement_remarks": "RESIDUAL "}
+    # if no KeyError is thrown, the correct WHY NOT message is written
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info["other_refinement_remarks"] = "RESIDUALS "
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info["other_refinement_remarks"] = " SUM  "
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+@raises(KeyError)
+def test_decide_refprog_refmac_tls_nobexcept():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
+                "tls_residual": False, "tls_sum": False,
+                "other_refinement_remarks": "MAXIMUM LIKELIHOOD RESIDUALS"}
+    decide_refprog_refmac(pdb_info, "test")
+
+    pdb_info["other_refinement_remarks"] = "RESIDUAL FEATURES"
+    decide_refprog_refmac(pdb_info, "test")
+
+    pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRONS"
+    decide_refprog_refmac(pdb_info, "test")
+
+    pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRON DENSITY"
+    decide_refprog_refmac(pdb_info, "test")
+
+    pdb_info["other_refinement_remarks"] = "RESIDUAL DENSITY "
+    decide_refprog_refmac(pdb_info, "test")
+
+
+def test_decide_refprog_refmac_tls_nohints_anisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
+                "tls_residual": False, "tls_sum": False, "has_anisou": True,
+                "other_refinement_remarks": ""}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_tls_nohints_noanisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
+                "tls_residual": False, "tls_sum": False, "has_anisou": False,
+                "other_refinement_remarks": ""}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_tlsremark_anisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": False, "tls_sum": False, "has_anisou": True,
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_tlsremark_noanisou_sum():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": False, "tls_sum": True, "has_anisou": False,
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, True, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_tlsremark_noanisou_residual():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": True, "tls_sum": False, "has_anisou": False,
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, False, True)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_tlsremark_noanisou_nohints():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": False, "tls_sum": False, "has_anisou": False,
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_residual_anisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": True, "tls_sum": False, "has_anisou": True,
+                "other_refinement_remarks": ""}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_residual_noanisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": True, "tls_sum": False, "has_anisou": False,
+                "other_refinement_remarks": ""}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_sum_anisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": False, "tls_sum": True, "has_anisou": True,
+                "other_refinement_remarks": ""}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_sum_noanisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": False, "tls_sum": True, "has_anisou": False,
+                "other_refinement_remarks": ""}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_bexcept():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+            "tls_residual": False, "tls_sum": False, "has_anisou": True,
+                "other_refinement_remarks": "RESIDUAL B-FACTOR"}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info["other_refinement_remarks"] = "RESIDUALS U-VALUES"
+    pdb_info["has_anisou"] = False
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info["other_refinement_remarks"] = " SUM  AND U-VALUES"
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+@raises(KeyError)
+def test_decide_refprog_refmac_notls_nobexcept():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": False, "tls_sum": False,
+                "other_refinement_remarks": "RESIDUAL"}
+    # if no KeyError is thrown, the correct WHY NOT message is written
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info["other_refinement_remarks"] = "RESIDUALS"
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info["other_refinement_remarks"] = " SUM  "
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_nohints_anisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": False, "tls_sum": False, "has_anisou": True,
+                "other_refinement_remarks": ""}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_refmac_notls_nohints_noanisou():
+    pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": None,
+                "tls_residual": False, "tls_sum": False, "has_anisou": False,
+                "other_refinement_remarks": ""}
+    result = decide_refprog_refmac(pdb_info, "test")
+    expected = (True, True, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_restrain_u():
+    pdb_info = {"other_refinement_remarks": " THE QUANTITY PRESENTED IN THE "
+            "TEMPERATURE FACTOR FIELD IS U.",
+            "b_msqav": False,
+            "b_type": None,
+            "has_anisou": False,
+            "tls_groups": None,
+            "tls_residual": False,
+            "tls_sum": False}
+    result = decide_refprog_restrain(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_restrain_uu():
+    pdb_info = {"b_msqav": True}
+    result = decide_refprog_restrain(pdb_info, "test")
+    expected = (True, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_restrain_nothandled():
+    pdb_info_def = {"other_refinement_remarks": "",
+            "b_msqav": False,
+            "b_type": None,
+            "has_anisou": False,
+            "tls_groups": None,
+            "tls_residual": False,
+            "tls_sum": False}
+
+    pdb_info = pdb_info_def.copy()
+    pdb_info["b_type"] = "residual"
+    result = decide_refprog_restrain(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info = pdb_info_def.copy()
+    pdb_info["has_anisou"] = True
+    result = decide_refprog_restrain(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info = pdb_info_def.copy()
+    pdb_info["tls_groups"] = 1
+    result = decide_refprog_restrain(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info = pdb_info_def.copy()
+    pdb_info["tls_residual"] = True
+    result = decide_refprog_restrain(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+    pdb_info = pdb_info_def.copy()
+    pdb_info["tls_sum"] = True
+    result = decide_refprog_restrain(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_restrain_useful():
+    pdb_info_def = {"other_refinement_remarks": "",
+            "b_msqav": False,
+            "b_type": None,
+            "has_anisou": False,
+            "tls_groups": None,
+            "tls_residual": False,
+            "tls_sum": False}
+    result = decide_refprog_restrain(pdb_info_def, "test")
+    expected = (True, True, False)
+    eq_(result, expected)
+
+
+@raises(AssertionError)
+def test_decide_refprog_type_error_list():
+    pdb_info = {"prog_last": "notalist"}
+    decide_refprog(pdb_info, "test")
+
+    pdb_info = {"prog_last": 1}
+    decide_refprog(pdb_info, "test")
+
+
+@raises(AssertionError)
+def test_decide_refprog_type_error_string():
+    pdb_info = {"prog_last": [1]}
+    decide_refprog(pdb_info, "test")
+
+
+def test_decide_refprog_too_many():
+    pdb_info = {"prog_last": ["1", "2"]}
+    result = decide_refprog(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
+
+
+def test_decide_refprog_too_few():
+    pdb_info = {"prog_last": []}
+    result = decide_refprog(pdb_info, "test")
+    expected = (False, False, False)
+    eq_(result, expected)
 
 
 def test_except_refprog_warn():
