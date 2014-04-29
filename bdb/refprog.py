@@ -1096,7 +1096,7 @@ def parse_refprog(refprog, pdb_id):
             # SHELXL 97
             # SHELXL97
             # SHELX-L
-            s1 = re.search(r"^SHELX(-?[HLS]?[\- ]?([0-9\-]{2,4})?)$", p)
+            s1 = re.search(r"^SHELX[- ]?([HLS]?[\- ]?([0-9\-]{2,4})?)$", p)
             if s0:
                 vers[i] = "-"
             elif s1:

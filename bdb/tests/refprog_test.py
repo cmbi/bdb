@@ -775,13 +775,203 @@ def test_parse_refprog_phenix():
     expected = (["PHENIX.REFINE: 1.8AB"], ["PHENIX.REFINE"], ["1.8AB"])
     eq_(result, expected)
 
-    refprog = "PHENIX (1.8)"
+    refprog = "PHENIX (1.8_1060)"
     result = parse_refprog(refprog, "test")
-    expected = (["PHENIX (1.8)"], ["PHENIX.REFINE"], ["1.8"])
+    expected = (["PHENIX (1.8_1060)"], ["PHENIX.REFINE"], ["1.8_1060"])
     eq_(result, expected)
 
     refprog = "PHENIX (PHENIX.REFINE: 1.8)"
     result = parse_refprog(refprog, "test")
     expected = (["PHENIX (PHENIX.REFINE: 1.8)"], ["PHENIX.REFINE"], ["1.8"])
     eq_(result, expected)
+
+    refprog = "AND PHENIX.REFINE"
+    result = parse_refprog(refprog, "test")
+    expected = (["PHENIX.REFINE"], ["PHENIX.REFINE"], ["-"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_buster():
+    refprog = "BUSTER"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER"], ["BUSTER"], ["-"])
+    eq_(result, expected)
+
+    refprog = "AUTOBUSTER 4"
+    result = parse_refprog(refprog, "test")
+    expected = (["AUTOBUSTER 4"], ["BUSTER"], ["4"])
+    eq_(result, expected)
+
+    refprog = "BUSTER 2.10.0"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER 2.10.0"], ["BUSTER"], ["2.10.0"])
+    eq_(result, expected)
+
+    refprog = "BUSTER-TNT 2.11.2"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER-TNT 2.11.2"], ["BUSTER"], ["2.11.2"])
+    eq_(result, expected)
+
+    refprog = "BUSTER-TNT 2.X"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER-TNT 2.X"], ["BUSTER"], ["2.X"])
+    eq_(result, expected)
+
+    refprog = "BUSTER-TNT V. 1.1.1"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER-TNT V. 1.1.1"], ["BUSTER"], ["1.1.1"])
+    eq_(result, expected)
+
+    refprog = "BUSTER-TNT BUSTER 2.8.0"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER-TNT BUSTER 2.8.0"], ["BUSTER"], ["2.8.0"])
+    eq_(result, expected)
+
+    refprog = "BUSTER TNT"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER TNT"], ["BUSTER"], ["-"])
+    eq_(result, expected)
+
+    refprog = "BUSTER/TNT"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER/TNT"], ["BUSTER"], ["-"])
+    eq_(result, expected)
+
+    refprog = "AUTOBUSTER"
+    result = parse_refprog(refprog, "test")
+    expected = (["AUTOBUSTER"], ["BUSTER"], ["-"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_tnt():
+    refprog = "TNT"
+    result = parse_refprog(refprog, "test")
+    expected = (["TNT"], ["TNT"], ["-"])
+    eq_(result, expected)
+
+    refprog = "TNT V. 5-E"
+    result = parse_refprog(refprog, "test")
+    expected = (["TNT V. 5-E"], ["TNT"], ["5-E"])
+    eq_(result, expected)
+
+    refprog = "TNT 5.6.1"
+    result = parse_refprog(refprog, "test")
+    expected = (["TNT 5.6.1"], ["TNT"], ["5.6.1"])
+    eq_(result, expected)
+
+    refprog = "TNT 5F"
+    result = parse_refprog(refprog, "test")
+    expected = (["TNT 5F"], ["TNT"], ["5F"])
+    eq_(result, expected)
+
+    refprog = "TNT V. 5-F PRERELEASE"
+    result = parse_refprog(refprog, "test")
+    expected = (["TNT V. 5-F PRERELEASE"], ["TNT"], ["5-F PRERELEASE"])
+    eq_(result, expected)
+
+    refprog = "TNT 5-F PRERELEASE"
+    result = parse_refprog(refprog, "test")
+    expected = (["TNT 5-F PRERELEASE"], ["TNT"], ["5-F PRERELEASE"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_shelx():
+    refprog = "SHELX"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELX"], ["SHELX"], ["-"])
+    eq_(result, expected)
+
+    refprog = "SHELX97"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELX97"], ["SHELX"], ["97"])
+    eq_(result, expected)
+
+    refprog = "SHELXH"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELXH"], ["SHELX"], ["H"])
+    eq_(result, expected)
+
+    refprog = "SHELXS"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELXS"], ["SHELX"], ["S"])
+    eq_(result, expected)
+
+    refprog = "SHELXL"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELXL"], ["SHELX"], ["L"])
+    eq_(result, expected)
+
+    refprog = "SHELX-97"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELX-97"], ["SHELX"], ["97"])
+    eq_(result, expected)
+
+    refprog = "SHELXL-97"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELXL-97"], ["SHELX"], ["L-97"])
+    eq_(result, expected)
+
+    refprog = "SHELXH-97"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELXH-97"], ["SHELX"], ["H-97"])
+    eq_(result, expected)
+
+    refprog = "SHELX-97-1"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELX-97-1"], ["SHELX"], ["97-1"])
+    eq_(result, expected)
+
+    refprog = "SHELX 97-1"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELX 97-1"], ["SHELX"], ["97-1"])
+    eq_(result, expected)
+
+    refprog = "SHELXL 97"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELXL 97"], ["SHELX"], ["L 97"])
+    eq_(result, expected)
+
+    refprog = "SHELXL97"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELXL97"], ["SHELX"], ["L97"])
+    eq_(result, expected)
+
+    refprog = "SHELX-L"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELX-L"], ["SHELX"], ["L"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_coot():
+    refprog = "COOT"
+    result = parse_refprog(refprog, "test")
+    expected = (["COOT"], ["COOT"], ["-"])
+    eq_(result, expected)
+
+    refprog = "COOT 0.1-3-PRE-1"
+    result = parse_refprog(refprog, "test")
+    expected = (["COOT 0.1-3-PRE-1"], ["COOT"], ["0.1-3-PRE-1"])
+    eq_(result, expected)
+
+    refprog = "COOT 0.0.33"
+    result = parse_refprog(refprog, "test")
+    expected = (["COOT 0.0.33"], ["COOT"], ["0.0.33"])
+    eq_(result, expected)
+
+    refprog = "COOT V. 0.0.33"
+    result = parse_refprog(refprog, "test")
+    expected = (["COOT V. 0.0.33"], ["COOT"], ["0.0.33"])
+    eq_(result, expected)
+
+    refprog = "COOT $"
+    result = parse_refprog(refprog, "test")
+    expected = (["COOT $"], ["COOT"], ["np"])
+    eq_(result, expected)
+
+
+
+
+
+
+
 
