@@ -38,6 +38,8 @@ U_PAT = re.compile(r"""
 def is_bdb_includable_refprog(refprog):
     """Check if the refinement program can be included in the bdb.
 
+    Warning: always return True now, might be changed later after inspection.
+
     Return a Boolean.
     """
     # useful_pat = re.compile(r"""
@@ -49,7 +51,6 @@ def is_bdb_includable_refprog(refprog):
     #     )$
     # """, re.VERBOSE)
     # return re.search(useful_pat, refprog)
-    # TODO: Why always return true?
     return True
 
 
@@ -506,19 +507,15 @@ def get_refi_data(pdb_records, structure, pdb_id):
     "b_type"       : B VALUE TYPE. Can be "residual", "unverified" or None.
     "beq_identical": Percentage of Beq values (from ANISOU records) identical
                      to B-factor values (ATOM records). None without ANISOU.
-    "calpha_only"  : True if more than 75% of the atoms in the chain are CA.
     "correct_uij"  : False if a non-standard combination of the Uij values in
                      the ANISOU records was necessary to reproduce the
                      B-factors.
     "format_date"  : PDB format date
     "format_vers"  : PDB format version
     "has_anisou"   : True if ANISOU records are present in the PDB file.
-    "nucleic_b"    : a string that indicates the B-factor type for the nucleic
-                     acid chain(s) in this PDB file (if present)
     "other_refinement_remarks"
                    : OTHER REFINEMENT REFMARKS in REMARK 3
                      as a single string.
-    "phos_only"    : True if more than 75% of the atoms in the chain are P.
     "prog_inter"   : a list with interpreted refinement programs(s) if not None
     "prog_last"    : a list with the guessed last-used refinement program. Can
                      be empty if no refinement programs were found in REMARK 3.
@@ -526,8 +523,6 @@ def get_refi_data(pdb_records, structure, pdb_id):
                      in the list could not be made.
     "prog_vers"    : a list with version of the
                      refinement programs(s) if not None
-    "protein_b"    : a string that indicates the B-factor type for the protein
-                     chain(s) in this PDB file (if present)
     "ref_prog"     : a list with refinement programs(s) if not None
     "refprog"      : the value of the refinement program record as a string.
     "is_bdb_includable"
@@ -749,7 +744,6 @@ def parse_refprog(refprog, pdb_id):
 
     """
     # Exceptions
-    # This statement is for testing purposes only
     if refprog == "NULL" or refprog == "NONE" or \
             refprog == "NO REFINEMENT":
         except_refprog_warn(pdb_id)
@@ -1013,7 +1007,7 @@ def parse_refprog(refprog, pdb_id):
             # ... or
             # "PHENIX (<version>)"
             # "PHENIX (PHENIX.REFINE: <version>)"
-            s1 = re.search(
+            s2 = re.search(
                 r"^PHENIX \((?:PHENIX.REFINE: )?([.\-_0-9A-Z]+)\)$", p)
             # ... or without version
             # "PHENIX"
@@ -1021,16 +1015,17 @@ def parse_refprog(refprog, pdb_id):
             # "PHENIX.REFINEMENT"
             # "PHENIX (PHENIX.REFINE)"
             # "PHENIX.REFINE (PHENIX.REFINE)" is also matched
-            s2 = re.search(
-                r"^PHENIX(?:.REFINE(?:MENT)?)?(?: \(PHENIX.REFINE\))?$", p)
+            # "PHENIX (PHENIX)" as well
+            s1 = re.search(
+                r"^PHENIX(?:.REFINE(?:MENT)?)?(?: \(PHENIX(.REFINE)?\))?$", p)
             if s0:
                 if s0.group(1) != "NULL":
                     vers[i] = s0.group(1)
             elif s1:
-                if s1.group(1) != "NULL":
-                    vers[i] = s1.group(1)
-            elif s2:
                 vers[i] = "-"
+            elif s2:
+                if s2.group(1) != "NULL":
+                    vers[i] = s2.group(1)
             # ... and otherwise we cannot (yet) handle this version format
             else:
                 vers[i] = "np"
