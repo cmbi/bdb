@@ -969,9 +969,107 @@ def test_parse_refprog_coot():
     eq_(result, expected)
 
 
+def test_parse_refprog_o():
+    refprog = "O"
+    result = parse_refprog(refprog, "test")
+    expected = (["O"], ["O"], ["-"])
+    eq_(result, expected)
+
+    refprog = "O 9.0.7"
+    result = parse_refprog(refprog, "test")
+    expected = (["O 9.0.7"], ["O"], ["np"])
+    eq_(result, expected)
+
+    refprog = "O9.0.7"
+    result = parse_refprog(refprog, "test")
+    expected = (["O9.0.7"], ["O"], ["9.0.7"])
+    eq_(result, expected)
 
 
+def test_parse_refprog_profft():
+    refprog = "PROFFT"
+    result = parse_refprog(refprog, "test")
+    expected = (["PROFFT"], ["PROLSQ"], ["PROFFT"])
+    eq_(result, expected)
+
+    refprog = "PROFFT (MODIFIED BY Z.OTWINOWSKI)"
+    result = parse_refprog(refprog, "test")
+    expected = ([refprog], ["PROLSQ"], ["PROFFT MODIFIED BY Z.OTWINOWSKI"])
+    eq_(result, expected)
+
+    refprog = "PROFFT anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["PROFFT ANYTHING ELSE"], ["PROLSQ"], ["np"])
+    eq_(result, expected)
 
 
+def test_parse_refprog_prolsq():
+    refprog = "PROLSQ"
+    result = parse_refprog(refprog, "test")
+    expected = (["PROLSQ"], ["PROLSQ"], ["PROLSQ"])
+    eq_(result, expected)
+
+    refprog = "PROLSQ (MODIFIED BY G.J.QUIGLEY)"
+    result = parse_refprog(refprog, "test")
+    expected = ([refprog], ["PROLSQ"], ["PROLSQ MODIFIED BY G.J.QUIGLEY"])
+    eq_(result, expected)
+
+    refprog = "PROLSQ anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["PROLSQ ANYTHING ELSE"], ["PROLSQ"], ["np"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_protin():
+    refprog = "PROTIN"
+    result = parse_refprog(refprog, "test")
+    expected = (["PROTIN"], ["PROLSQ"], ["PROLSQ"])
+    eq_(result, expected)
+
+    refprog = "PROTIN anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["PROTIN ANYTHING ELSE"], ["PROLSQ"], ["np"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_nuclsq():
+    refprog = "NUCLSQ"
+    result = parse_refprog(refprog, "test")
+    expected = (["NUCLSQ"], ["PROLSQ"], ["NUCLSQ"])
+    eq_(result, expected)
+
+    refprog = "NUCLSQ (MODIFIED BY G.J.QUIGLEY)"
+    result = parse_refprog(refprog, "test")
+    expected = ([refprog], ["PROLSQ"], ["NUCLSQ MODIFIED BY G.J.QUIGLEY"])
+    eq_(result, expected)
+
+    refprog = "NUCLSQ anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["NUCLSQ ANYTHING ELSE"], ["PROLSQ"], ["np"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_nuclin():
+    refprog = "NUCLIN"
+    result = parse_refprog(refprog, "test")
+    expected = (["NUCLIN"], ["PROLSQ"], ["NUCLSQ"])
+    eq_(result, expected)
+
+    refprog = "PROTIN anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["PROTIN ANYTHING ELSE"], ["PROLSQ"], ["np"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_gprlsa():
+    refprog = "GPRLSA"
+    result = parse_refprog(refprog, "test")
+    expected = (["GPRLSA"], ["PROLSQ"], ["GPRLSA"])
+    eq_(result, expected)
+
+    refprog = "GPRLSA anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["GPRLSA ANYTHING ELSE"], ["PROLSQ"], ["np"])
+    eq_(result, expected)
 
 

@@ -1225,7 +1225,7 @@ def parse_refprog(refprog, pdb_id):
                 vers[i] = "np"
         elif re.match("NUCLIN", p):
             prog_inter[i] = "PROLSQ"
-            vers[i] = "NUCLIN" if re.search(r"^NUCLIN$", p) else "np"
+            vers[i] = "NUCLSQ" if re.search(r"^NUCLIN$", p) else "np"
         elif re.match("GPRLSA", p):
             prog_inter[i] = "PROLSQ"
             vers[i] = "GPRLSA" if re.search(r"^GPRLSA$", p) else "np"
