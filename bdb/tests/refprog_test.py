@@ -1326,6 +1326,23 @@ def test_parse_refprog_shelx():
     eq_(result, expected)
 
 
+def test_parse_refprog_arpwarp():
+    refprog = "ARP/WARP"
+    result = parse_refprog(refprog, "test")
+    expected = (["ARP/WARP"], ["ARP/WARP"], ["-"])
+    eq_(result, expected)
+
+    refprog = "ARP/WARP V. 1.0"
+    result = parse_refprog(refprog, "test")
+    expected = (["ARP/WARP V. 1.0"], ["ARP/WARP"], ["1.0"])
+    eq_(result, expected)
+
+    refprog = "ARP/WARP 1.0"
+    result = parse_refprog(refprog, "test")
+    expected = (["ARP/WARP 1.0"], ["ARP/WARP"], ["np"])
+    eq_(result, expected)
+
+
 def test_parse_refprog_coot():
     refprog = "COOT"
     result = parse_refprog(refprog, "test")
