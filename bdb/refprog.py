@@ -1249,7 +1249,7 @@ def parse_refprog(refprog, pdb_id):
             # ... and otherwise we cannot (yet) handle this version format
             else:
                 vers[i] = "np"
-        elif re.match("^HKL-?3000$", p):
+        elif re.match("HKL-?3000", p):
             prog_inter[i] = "HKL-3000"
             # if one of the programs is HKL-3000, we expect
             # "HKL-3000"
@@ -1279,7 +1279,7 @@ def parse_refprog(refprog, pdb_id):
                 # Now we only distinguish RESTRAIN from RESTRAINED
                 # Other exceptions will be logged
                 if re.search(r"^" + r + "(?!ED)", p):
-                    prog_inter[i] = p
+                    prog_inter[i] = r
                     vers[i] = "-" if re.search(r"^" + r + "$", p) else "np"
                     other = False
             if other:

@@ -510,6 +510,13 @@ def test_parse_refprog_no_versions():
         eq_(result, expected)
 
 
+def test_parse_refprog_no_versions_with_version():
+    refprog = "CCP4 VERSION"
+    result = parse_refprog(refprog, "test")
+    expected = ([refprog], ["CCP4"], ["np"])
+    eq_(result, expected)
+
+
 def test_parse_refprog_refmac():
     refprog = "refamc"
     result = parse_refprog(refprog, "test")
@@ -1073,3 +1080,85 @@ def test_parse_refprog_gprlsa():
     eq_(result, expected)
 
 
+def test_parse_refprog_deriv():
+    refprog = "DERIV"
+    result = parse_refprog(refprog, "test")
+    expected = (["DERIV"], ["PROLSQ"], ["DERIV"])
+    eq_(result, expected)
+
+    refprog = "DERIV anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["DERIV ANYTHING ELSE"], ["PROLSQ"], ["np"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_cerius():
+    refprog = "CERIUS"
+    result = parse_refprog(refprog, "test")
+    expected = (["CERIUS"], ["CERIUS"], ["-"])
+    eq_(result, expected)
+
+    refprog = "CERIUS 2"
+    result = parse_refprog(refprog, "test")
+    expected = (["CERIUS 2"], ["CERIUS"], ["2"])
+    eq_(result, expected)
+
+    refprog = "CERIUS2"
+    result = parse_refprog(refprog, "test")
+    expected = (["CERIUS2"], ["CERIUS"], ["2"])
+    eq_(result, expected)
+
+    refprog = "CERIUS anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["CERIUS ANYTHING ELSE"], ["CERIUS"], ["np"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_hkl3000():
+    refprog = "HKL-3000"
+    result = parse_refprog(refprog, "test")
+    expected = (["HKL-3000"], ["HKL-3000"], ["-"])
+    eq_(result, expected)
+
+    refprog = "HKL3000"
+    result = parse_refprog(refprog, "test")
+    expected = (["HKL3000"], ["HKL-3000"], ["-"])
+    eq_(result, expected)
+
+    refprog = "HKL-3000 anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["HKL-3000 ANYTHING ELSE"], ["HKL-3000"], ["np"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_gromos():
+    refprog = "GROMOS"
+    result = parse_refprog(refprog, "test")
+    expected = (["GROMOS"], ["GROMOS"], ["-"])
+    eq_(result, expected)
+
+    refprog = "GROMOS87"
+    result = parse_refprog(refprog, "test")
+    expected = (["GROMOS87"], ["GROMOS"], ["87"])
+    eq_(result, expected)
+
+    refprog = "GROMOS anything else"
+    result = parse_refprog(refprog, "test")
+    expected = (["GROMOS ANYTHING ELSE"], ["GROMOS"], ["np"])
+    eq_(result, expected)
+
+
+def test_parse_refprog_other():
+    refprogs = ["AGARWAL FAST-FOURIER TRANSFORM LEAST-SQUARES",
+                "HENDRICKSON-KONNERT LEAST-SQUARES REFINEMENT",
+                "* OF T. A. JONES.  THE R VALUE IS 0.180.",
+                "RESTRAINED RECIPROCAL-SPACE LEAST-SQUARES",
+                "SIMULATED ANNEALING METHOD",
+                "CONSTRAINED RECIPROCAL-SPACE LEAST-SQUARES",
+                "FAST-FOURIER LEAST-SQUARES REFINEMENT",
+                "JACK-LEVITT",
+                "REAL-SPACE REFINEMENT",
+                "SOME OTHER REFPROG",]
+    for p in refprogs:
+        result = parse_refprog(p, "test")
+        expected = ([p], ["OTHER"], ["np"])
