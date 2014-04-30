@@ -10,7 +10,7 @@ from bdb.check_beq import (check_beq, check_combinations, determine_b_group,
 import numpy as np
 
 
-def testo_check_beq_atom_none():
+def test_check_beq_atom_none():
     #TODO
     pass
 

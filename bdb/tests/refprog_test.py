@@ -1,6 +1,7 @@
 from nose.tools import eq_, ok_, raises
 
-from bdb.refprog import (decide_refprog, decide_refprog_refmac, decide_refprog_restrain, except_refprog_warn,
+from bdb.refprog import (decide_refprog, decide_refprog_refmac,
+                         decide_refprog_restrain, except_refprog_warn,
                          filter_progs, last_used, is_bdb_includable_refprog,
                          one_of_the_two, parse_refprog)
 
