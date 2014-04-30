@@ -156,7 +156,11 @@ def test_parse_other_ref_remarks_none():
     eq_(other_ref_remarks, None)
 
 
-def test_is_bmsqav_true():
+def test_is_bmsqav_true_1():
+    """Tests that b_msqav is correctly parsed from REMARK 3 records.
+
+    e.g. 1czi, 1ent, 1smr, 4ape, etc.
+    """
     ref_remarks = "THE QUANTITY GIVEN IN THE TEMPERATURE\n" \
         "FACTOR FIELD OF THE *ATOM* AND *HETATM* RECORDS BELOW IS U**2," \
         "WHICH IS THE MEAN-SQUARE AMPLITUDE OF ATOMIC VIBRATION. THE" \
@@ -165,9 +169,43 @@ def test_is_bmsqav_true():
         "THE REFINEMENT THAT SOME ARE SLIGHTLY NEGATIVE."
     eq_(is_bmsqav(ref_remarks), True)
 
+    ref_remarks = "MEAN-SQUARE AMPLITUDE OF ATOMIC VIBRATION"
+    eq_(is_bmsqav(ref_remarks), True)
+
+
+def test_is_bmsqav_true_2():
+    """Tests that b_msqav is correctly parsed from REMARK 3 records.
+
+    e.g. 1eed and 5pep
+    """
+    ref_remarks = "THE ATOMIC TEMPERATURE FACTORS IN THIS ENTRY ARE GIVEN AS" \
+            "U VALUES NOT B VALUES.  B VALUES MAY BE CALCULATED BY THE" \
+            "THE FOLLOWING: BISO (BISO = 8 PI==2== UISO)."
+    eq_(is_bmsqav(ref_remarks), True)
+
+    ref_remarks = "ISOTROPIC UISO VALUES ARE PROVIDED IN THE FIELD THAT" \
+            "U VALUES NOT B VALUES.  B VALUES MAY BE CALCULATED BY THE" \
+            "USUALLY CONTAINS B VALUES."
+    eq_(is_bmsqav(ref_remarks), True)
+
+    ref_remarks = "U**2"
+    eq_(is_bmsqav(ref_remarks), True)
+
+    ref_remarks = "UISO"
+    eq_(is_bmsqav(ref_remarks), True)
+
 
 def test_is_bmsqav_false():
     ref_remarks = ""
+    eq_(is_bmsqav(ref_remarks), False)
+
+    ref_remarks = "AMPLITUDE OF ATOMIC VIBRATION"
+    eq_(is_bmsqav(ref_remarks), False)
+
+    ref_remarks = "U*2"
+    eq_(is_bmsqav(ref_remarks), False)
+
+    ref_remarks = "U ISO"
     eq_(is_bmsqav(ref_remarks), False)
 
 
