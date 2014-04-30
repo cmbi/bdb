@@ -3,7 +3,7 @@ from nose.tools import eq_, raises
 from bdb.pdb.parser import (parse_pdb_file, parse_exp_methods, parse_btype,
                             parse_other_ref_remarks, is_bmsqav,
                             parse_format_date_version, parse_num_tls_groups,
-                            parse_ref_prog)
+                            parse_ref_prog, is_tls_residual, is_tls_sum)
 
 
 @raises(ValueError)
@@ -112,6 +112,13 @@ def test_parse_btype_unverified_trailing_whitespace():
     eq_(btype, "unverified")
 
 
+def test_parse_btype_unverified_trailing_whitespace():
+    """Trivially test that the btype value is None if not present."""
+    records = {"REMARK": ["  3               ", ]}
+    btype = parse_btype(records)
+    eq_(btype, None)
+
+
 def test_parse_other_ref_remarks():
     """
     Tests that other refinement remarks are concatenated correctly from the
@@ -186,10 +193,10 @@ def test_parse_format_date_version_none():
 
 def test_parse_format_date_version_string():
     records = {"REMARK":
-               ["  4 1ABC COMPLIES WITH FORMAT V. ABC, 13-JUL-11", ]}
+               ["  4 1ABC COMPLIES WITH FORMAT V. 3.30.1, 13-JUL-11", ]}
     (f_vers, f_date) = parse_format_date_version(records)
     eq_(f_vers, None)
-    eq_(f_date, None)
+    eq_(f_date, "13-JUL-11")
 
 
 def test_parse_num_tls_groups():
@@ -256,3 +263,290 @@ def test_parse_ref_prog_none_trailing_whitespace():
     records = {"REMARK": ["  3   PROGRAM     : NONE                       ", ]}
     ref_prog = parse_ref_prog(records)
     eq_(ref_prog, None)
+
+
+def test_is_tls_residual_remark3():
+    """Tests that tls_residual is correctly parsed from REMARK 3 records."""
+    records = {"REMARK": ["  3   ATOM RECORD CONTAINS RESIDUAL B FACTORS ONLY",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+
+def test_is_tls_residual_false():
+    """Tests that tls_residual is correctly parsed from REMARK 3 records."""
+    records = {"REMARK": ["  3                             ", ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, False)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: NULL                                      ",
+        "  4                                                                      ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, False)
+
+
+def test_is_tls_residual_other1():
+    """Tests that tls_residual is correctly parsed from REMARK 3 records."""
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: RESIDUAL B FACTORS ONLY                   ",
+        "  4                                                                      ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: RESIDUAL   U-  VALUE   ONLY               ",
+        "  4                                                                      ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: RESIDUAL B FACTORS ON LY                  ",
+        "  4                                                                      ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, False)
+
+
+def test_is_tls_residual_other2():
+    """Tests that tls_residual is correctly parsed from REMARK 3 records.
+
+    e.g. 2qnr
+    """
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: 1. HYDROGENS HAVE BEEN ADDED IN THE       ",
+        "  3  RIDING POSITIONS. 2. COOT, O, MOLPROBITY PROGRAMS HAVE ALSO BEEN    ",
+        "  3  USED IN THE REFINEMENT. 3. ATOMIC B-FACTORS SHOWN ARE RESIDUALS     ",
+        "  3  FROM TLS REFINEMENT. 4. CAVEAT: RESIDUES 84-89 IN CHAIN A AND 74-   ",
+        "  3  90 IN CHAIN B COULD NOT BE RELIABLY ASSIGNED IN THE AMINO ACID      ",
+        "  3  SEQUENCE AND WERE MODELED AS ALANINES.                              ",
+        "  4                                                                      ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS:   ATOMIC B-VALUE   ARE  RESIDUALS FROM    ",
+        "  3  TLS REFINEMENT                                                      ",
+        "  4                                                                      ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: ATOMIC B VALUES ARE RESIDUALS FROM TLS    ",
+        "  4                                                                      ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: ATOMIC U-VALUES ARE RESIDUALS             ",
+        "  4                                                                      ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+
+def test_is_tls_residual_other3():
+    """Tests that tls_residual is correctly parsed from REMARK 3 records.
+
+    The second example is taken from 1uwv.
+    """
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: B FACTORS ARE RESIDUAL B-FACTORS          ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: HYDROGENS HAVE BEEN ADDED IN THE          ",
+        "  3  RIDING POSITIONS. B-FACTORS ARE RESIDUAL B-FACTORS, (WHICH DO       ",
+        "  3  NOT INCLUDE THE CONTRIBUTION FROM THE TLS PARAMETERS). USE          ",
+        "  3  TLSANL (DISTRIBUTED WITH CCP4) TO OBTAIN THE FULL B-FACTOR.         ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: HYDROGENS HAVE BEEN ADDED IN THE          ",
+        "  3  RIDING POSITIONS. B-FACTORS ARE RESIDUAL B-FACTORS, (WHICH DO       ",
+        "  3  NOT INCLUDE THE CONTRIBUTION FROM THE TLS PARAMETERS).              ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: HYDROGENS HAVE BEEN ADDED IN THE          ",
+        "  3  RIDING POSITIONS. B-FACTORS ARE RESIDUAL B-FACTORS,                 ",
+        "  3  USE TLSANL (DISTRIBUTED WITH CCP4) TO OBTAIN THE FULL B-FACTOR.     ",
+        ]}
+    tls_residual = is_tls_residual(records)
+    eq_(tls_residual, True)
+
+
+def test_is_tls_sum_remark3():
+    """Tests that tls_sum is correctly parsed from REMARK 3 records."""
+    records = {"REMARK": ["  3   ATOM RECORD CONTAINS SUM OF TLS AND "
+                          "RESIDUAL B FACTORS",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+
+def test_is_tls_sum_false():
+    """Tests that tls_sum is correctly parsed from REMARK 3 records."""
+    records = {"REMARK": ["  3                             ", ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, False)
+
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: NULL                                      ",
+        "  4                                                                      ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, False)
+
+
+def test_is_tls_sum_other1():
+    """Tests that tls_sum is correctly parsed from REMARK 3 records.
+
+    e.g. 2r99
+    """
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: HYDROGENS HAVE BEEN ADDED IN THE          ",
+        "  3  RIDING POSITIONS, ATOM RECORD CONTAINS SUM OF TLS AND RESIDUAL      ",
+        "  3  B FACTORS, ANISOU RECORD CONTAINS SUM OF TLS AND RESIDUAL U         ",
+        "  3  FACTORS                                                             ",
+        "  4                                                                      ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS:                                           ",
+        "  3  SUM OF   TLS    AND RESIDUAL   U  VALUE                             ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+
+def test_is_tls_sum_other2():
+    """Tests that tls_sum is correctly parsed from REMARK 3 records."""
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS:                                           ",
+        "  3  B FACTORS WITH  TLS      ADDED                            ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+
+def test_is_tls_sum_other3():
+    """Tests that tls_sum is correctly parsed from REMARK 3 records.
+
+    e.g. 2wnj
+    """
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: HYDROGENS HAVE BEEN ADDED IN THE          ",
+        "  3   RIDING POSITIONS. GLOBAL B-FACTORS, CONTAINING RESIDUAL            ",
+        "  3   AND TLS COMPONENT HAVE BEEN DEPOSITED                              ",
+        "  4                                                                      ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS:                                           ",
+        "  3  B-FACTORS RESIDUAL + TLS COMPONENTS                                 ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+
+def test_is_tls_sum_other4():
+    """Tests that tls_sum is correctly parsed from REMARK 3 records.
+
+    The example is taken from 2ix9.
+    """
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS: HYDROGENS HAVE BEEN ADDED IN THE          ",
+        "  3  RIDING POSITIONS.B FACTORS CORRESPOND TO THE OVERALL B FACTORS      ",
+        "  3  EQUAL TO THE RESIDUAL PLUS THE TLS COMPONENT.                       ",
+        "  4                                                                      ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS: RESIDUAL PLUS TLS          ",
+        "  4                                                                      ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+
+def test_is_tls_sum_other5():
+    """Tests that tls_sum is correctly parsed from REMARK 3 records.
+
+    The example is taken from 3msq.
+    """
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS:                                           ",
+        "  3  INCORPORATION. 2. B-FACTORS CONTAIN BOTH TLS AND RESIDUAL           ",
+        "  3  COMPONENTS.                                                         ",
+        "  4                                                                      ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS:                                           ",
+        "  3  B FACTOR CONTAINS TLS AND RESIDUAL COMPONENTS                       ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+
+def test_is_tls_sum_other6():
+    """Tests that tls_sum is correctly parsed from REMARK 3 records.
+
+    The example is taken from 1ocx.
+    """
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS: HYDROGENS HAVE BEEN ADDED IN THE          ",
+        "  3  RIDING POSITIONS. INDIVIDUAL B-FACTOR REFINEMENT WAS PRECEEDED      ",
+        "  3  BY TLS REFINEMENT IN WHICH EACH MONOMER WAS DIVIDED INTO THREE      ",
+        "  3  TLS GROUPS. THE DEPOSITED STRUCTURE SHOWS ANISOTROPIC B             ",
+        "  3  FACTORS THAT RESULT FROM THE COMBINATION OF THE TLS COMPONENTS      ",
+        "  3  WITH THE RESIDUAL INDIVIDUAL B FACTORS. THE CCP4 PROGRAM            ",
+        "  3  TLSANAL WAS USED TO COMBINE THE TWO.                                ",
+        "  4                                                                      ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+
+    records = {"REMARK": [
+        "  3  OTHER REFINEMENT REMARKS:                                           ",
+        "  3  COMBINATION OF TLS COMPONENT WITH RESIDUAL B FACTOR                 ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, True)
+

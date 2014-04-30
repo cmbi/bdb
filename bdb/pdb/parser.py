@@ -7,36 +7,53 @@ RE_BTYPE = re.compile(r"^  3   B VALUE TYPE : (?P<btype>.*)")
 RE_REF_PROG = re.compile(r"^  3   PROGRAM     : (?P<refprogs>.*)")
 RE_REF_REMARKS = re.compile(r"^  3  OTHER REFINEMENT REMARKS: (?!NULL|NONE)")
 RE_B_MSQAV = re.compile(r"(MEAN-SQUARE AMPLITUDE OF ATOMIC VIBRATION|"
-                        "U\*\*2|UISO)")
+                         "U\*\*2|UISO)")
 RE_FORMAT = re.compile(r"^  4 [0-9A-Z]{4} COMPLIES WITH FORMAT V. "
-                       "(?P<version>[\d.]+), "
-                       "(?P<date>\d{2}-[A-Z]{3}-\d{2})")
+                        "(?P<version>[\d.]+), "
+                        "(?P<date>\d{2}-[A-Z]{3}-\d{2})")
 RE_TLS_GROUPS = re.compile(r"^  3   NUMBER OF TLS GROUPS  : (\d+)\s*$")
 RE_TLS_RES = re.compile(r"^  3   ATOM RECORD CONTAINS RESIDUAL B FACTORS ONLY")
 RE_TLS_RES_1 = re.compile(r"RESIDUAL\s+([BU]-?\s*(FACTORS?|VALUES?)\s+)?ONLY")
-RE_TLS_RES_2 = re.compile(r"ATOMIC\s+[BU]-?\s*(FACTORS?|VALUES?)\s+ARE"
-                          "\s+RESIDUALS(\s+FROM\s+TLS(\s+REFINEMENT)?)?")
+RE_TLS_RES_2 = re.compile(r"ATOMIC\s+[BU]-?\s*(FACTORS?|VALUES?)\s+(SHOWN\s+)?"
+                           "ARE\s+RESIDUALS(\s+FROM\s+TLS(\s+REFINEMENT)?)?")
 RE_TLS_RES_3 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s+ARE\s+RESIDUAL"
-                          "\s+[BU]-?\s*(FACTORS?|VALUES?),?"
-                          "(\(?WHICH\s+DO\s+NOT\s+"
-                          "INCLUDE\s+THE\s+CONTRIBUTION\s+FROM\s+THE\s+TLS"
-                          "\s+PARAMETERS\)?)?(.?\s+USE\s+TLSANL(\s+\(?\s*"
-                          "DISTRIBUTED\s+WITH\s+CCP4\)?)?\s+TO\s+OBTAIN\s+"
-                          "THE\s+(FULL\s+)?[BU]-?\s*(FACTORS?|VALUES?))?")
-RE_TLS_RES_4 = re.compile(r"([BU]-?\s*(FACTORS?|VALUES?)\s+CORRESPOND\s+"
+                           "\s+[BU]-?\s*(FACTORS?|VALUES?),?"
+                           "(\s+\(?WHICH\s+DO\s+NOT\s+"
+                           "INCLUDE\s+THE\s+CONTRIBUTION\s+FROM\s+THE\s+TLS"
+                           "\s+PARAMETERS\)?)?.?(\s+USE\s+TLSANL(\s+\(?\s*"
+                           "DISTRIBUTED\s+WITH\s+CCP4\)?)?\s+TO\s+OBTAIN\s+"
+                           "THE\s+(FULL\s+)?[BU]-?\s*(FACTORS?|VALUES?))?")
+RE_TLS_SUM = re.compile(r"^  3   ATOM RECORD CONTAINS SUM OF TLS "
+                         "AND RESIDUAL B FACTORS")
+RE_TLS_SUM_1 = re.compile(r"SUM\s+OF\s+TLS\s+AND\s+RESIDUAL\s+"
+                               "[BU]-?\s*(FACTORS?|VALUES?)")
+RE_TLS_SUM_2 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s*:?\s+WITH\s+"
+                               "TLS\s+ADDED")
+RE_TLS_SUM_3 = re.compile(r"(GLOBAL\s+)?[BU]-?\s*(FACTORS?|VALUES?),?\s*"
+                               "(CONTAINING\s+)?RESIDUALS?\s+(AND|\+)\s+TLS\s+"
+                               "COMPONENTS?(HAVE\s+BEEN\s+DEPOSITED)?")
+RE_TLS_SUM_4 = re.compile(r"([BU]-?\s*(FACTORS?|VALUES?)\s+CORRESPOND\s+"
                           "TO\s+(THE\s+)?OVERALL?"
                           "[BU]-?\s*(FACTORS?|VALUES?)\s+EQUAL\s+TO\s+"
-                          "THE\s+)?RESIDUAL[S]?\s+PLUS\s+(THE\s+)?TLS\s+"
-                          "(COMPONENT)?")
-RE_SUM_TLS_RES = re.compile(r"^REMARK   3   ATOM RECORD CONTAINS SUM OF TLS"
-                            "AND RESIDUAL B FACTORS")
-RE_SUM_TLS_RES_1 = re.compile(r"SUM\s+OF\s+TLS\s+AND\s+RESIDUAL\s+"
-                              "[BU]-?\s*(FACTORS?|VALUES?)")
-RE_SUM_TLS_RES_2 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s*:?\s+WITH\s+"
-                              "TLS\s+ADDED")
-RE_SUM_TLS_RES_3 = re.compile(r"(GLOBAL\s+)?[BU]-?\s*(FACTORS?|VALUES?),?\s*"
-                              "(CONTAINING\s+)?RESIDUALS?\s+(AND|\+)\s+TLS\s+"
-                              "COMPONENTS?(HAVE\s+BEEN\s+DEPOSITED)?")
+                          "THE\s+)?RESIDUAL[S]?\s+PLUS\s+(THE\s+)?TLS"
+                          "(\s+COMPONENT)?")
+RE_TLS_SUM_5 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s*CONTAINS?\s+"
+                           "(BOTH\s+)?TLS\s+AND\s+RESIDUALS?\s+COMPONENTS?.?")
+RE_TLS_SUM_6 = re.compile(r"""
+        (
+            (ANISOTROPIC\s+)?
+            [BU]-?\s*(FACTORS?|VALUES?)\s+
+            (THAT\s+RESULT\s+FROM\s+)?
+        )?
+        (THE\s+)?
+        COMBINATION\s+
+        (OF\s+)?(THE\s+)?
+        TLS\s+COMPONENTS?\s+
+        (WITH\s+)?(THE\s+)?
+        (RESIDUAL\s+)?
+        (INDIVIDUAL\s+)?
+        [BU]-?\s*(FACTORS?|VALUES?)\s*.?\s*
+        """, re.VERBOSE)
 
 _log = logging.getLogger(__name__)
 
@@ -155,9 +172,9 @@ def parse_format_date_version(pdb_records):
             format_vers = m.group("version")
             try:
                 format_vers = float(format_vers)
-            except ValueError:
+            except (ValueError):
                 _log.error("Unexpected value encountered for REMARK 4 FORMAT "
-                           "VERSION: {0:f}. None returned", format_vers)
+                           "VERSION: %s. None returned", format_vers)
                 format_vers = None
             return format_vers, format_date
     return None, None
@@ -211,7 +228,7 @@ def is_bmsqav(other_refinement_remarks):
     return False
 
 
-def is_tls_residual(pdb_records, other_refinement_remarks):
+def is_tls_residual(pdb_records):
     """
     True if it is mentioned in the TLS details or elsewhere that the ATOM
     records contain residual B-factors only.
@@ -223,6 +240,7 @@ def is_tls_residual(pdb_records, other_refinement_remarks):
         if RE_TLS_RES.search(record):
             return True
 
+    other_refinement_remarks = parse_other_ref_remarks(pdb_records)
     if other_refinement_remarks is None:
         return False
 
@@ -232,12 +250,10 @@ def is_tls_residual(pdb_records, other_refinement_remarks):
         return True
     if RE_TLS_RES_3.search(other_refinement_remarks):
         return True
-    if RE_TLS_RES_4.search(other_refinement_remarks):
-        return True
     return False
 
 
-def is_tls_sum(pdb_records, other_refinement_remarks):
+def is_tls_sum(pdb_records):
     """
     True if it is mentioned somewhere in REMARK 3 that the ATOM records contain
     the sum of TLS and residual B-factors
@@ -246,17 +262,24 @@ def is_tls_sum(pdb_records, other_refinement_remarks):
     evidence is found, the other refinement remarks are checked.
     """
     for record in pdb_records["REMARK"]:
-        if RE_SUM_TLS_RES.search(record):
+        if RE_TLS_SUM.search(record):
             return True
 
+    other_refinement_remarks = parse_other_ref_remarks(pdb_records)
     if other_refinement_remarks is None:
         return False
 
-    if RE_SUM_TLS_RES_1.search(other_refinement_remarks):
+    if RE_TLS_SUM_1.search(other_refinement_remarks):
         return True
-    if RE_SUM_TLS_RES_2.search(other_refinement_remarks):
+    if RE_TLS_SUM_2.search(other_refinement_remarks):
         return True
-    if RE_SUM_TLS_RES_3.search(other_refinement_remarks):
+    if RE_TLS_SUM_3.search(other_refinement_remarks):
+        return True
+    if RE_TLS_SUM_4.search(other_refinement_remarks):
+        return True
+    if RE_TLS_SUM_5.search(other_refinement_remarks):
+        return True
+    if RE_TLS_SUM_6.search(other_refinement_remarks):
         return True
     return False
 

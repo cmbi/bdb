@@ -598,8 +598,8 @@ def get_refi_data(pdb_records, structure, pdb_id):
         "b_msqav": is_bmsqav(other_refinement_remarks),
         "refprog": parse_ref_prog(pdb_records),
         "tls_groups": parse_num_tls_groups(pdb_records),
-        "tls_residual": is_tls_residual(pdb_records, other_refinement_remarks),
-        "tls_sum": is_tls_sum(pdb_records, other_refinement_remarks)}
+        "tls_residual": is_tls_residual(pdb_records),
+        "tls_sum": is_tls_sum(pdb_records)}
 
     assume_iso = False
     reproduced = {"beq_identical": None, "correct_uij": None}
