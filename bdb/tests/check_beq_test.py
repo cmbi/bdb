@@ -1,10 +1,59 @@
 from nose.tools import eq_, ok_, raises
 
-from bdb.check_beq import (determine_b_group, get_structure, is_calpha_trace,
-                           is_phos_trace)
+from bdb.check_beq import (check_beq, determine_b_group, get_structure,
+                           is_calpha_trace, is_phos_trace)
+
+
+def testo_check_beq_atom_none():
+    #TODO
+    pass
+
+
+def test_check_beq_identical():
+    """Tests check_beq.
+
+    e.g. 3zzw, 3zit, 2yjl, etc. etc. etc.
+    """
+    pdb_file_path = "bdb/tests/pdb/files/3zzw.pdb"
+    pdb_id = "3zzw"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = check_beq(structure, pdb_id)
+    eq_(result["beq_identical"], 1.0)
+    eq_(result["correct_uij"], True)
+
+
+def test_check_beq_incorrect_uij():
+    """Tests check_beq.
+
+    e.g. 2a83, 2p6e, 2qik, 3bik, 3d95, 3d96, 3g5t, etc.
+    """
+    pdb_file_path = "bdb/tests/pdb/files/2a83.pdb"
+    pdb_id = "2a83"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = check_beq(structure, pdb_id)
+    eq_(result["beq_identical"], 0.9419321685508736)
+    eq_(result["correct_uij"], False)
+
+
+def test_check_beq_not_identical():
+    """Tests check_beq.
+
+    e.g 1g8t, 1kr7, 1llr, 1mgr, 1o9g, 1pm1, 1q7l, 1qjp,
+    1s2p, 1si6, 1sxu, 1sxy, 1sy0, 1sy2, 1ug6, 1x9q, 2a83, 2acp,
+    2at5, 2bwi, 2ceu, 2fri, 2frj, 2hmn, 2htx, 2j73, 2p6e, 2p6f,
+    2p6g, 2qfn, 2qik, 2v0a, 2xgb, 2xl6, 2xle, 2xlw, 3bwo, 3dqy,
+    3fde, 3g5t, 3jql, 3nju, 3nna, 3oxp, etc.
+    """
+    pdb_file_path = "bdb/tests/pdb/files/1g8t.pdb"
+    pdb_id = "1g8t"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = check_beq(structure, pdb_id)
+    eq_(result["beq_identical"], 0.999124343257443)
+    eq_(result["correct_uij"], True)
 
 
 def test_determine_b_group_protein_overall():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1etu.pdb"
     pdb_id = "1etu"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -15,7 +64,9 @@ def test_determine_b_group_protein_overall():
 
 
 def test_determine_b_group_protein_overall_2():
-    """ 1az2 is has 16.67 for all N CA and C atoms
+    """Tests that b_group is correctly determined.
+
+        1az2 is has 16.67 for all N CA and C atoms
         and 20.54 for O and side-chain atoms.
         overall is probably the best term.
     """
@@ -29,7 +80,9 @@ def test_determine_b_group_protein_overall_2():
 
 
 def test_determine_b_group_protein_overall_3():
-    """ 1c2y has the same B-factor everywhere,
+    """Tests that b_group is correctly determined.
+
+        1c2y has the same B-factor everywhere,
         except for some THR and LEU atoms end-of-side-chain
         overall is probably the best term.
     """
@@ -43,6 +96,7 @@ def test_determine_b_group_protein_overall_3():
 
 
 def test_determine_b_group_protein_1ADP():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1av1.pdb"
     pdb_id = "1av1"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -51,6 +105,7 @@ def test_determine_b_group_protein_1ADP():
 
 
 def test_determine_b_group_nucleic_None():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1av1.pdb"
     pdb_id = "1av1"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -59,6 +114,7 @@ def test_determine_b_group_nucleic_None():
 
 
 def test_determine_b_group_nucleic_2ADP():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1hlz.pdb"
     pdb_id = "1hlz"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -69,6 +125,7 @@ def test_determine_b_group_nucleic_2ADP():
 
 
 def test_determine_b_group_protein_individual():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
     pdb_id = "1crn"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -79,6 +136,7 @@ def test_determine_b_group_protein_individual():
 
 
 def test_determine_b_group_nucleic_individual():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
     pdb_id = "100d"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -89,6 +147,7 @@ def test_determine_b_group_nucleic_individual():
 
 
 def test_determine_b_group_protein_no_b_factors():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1mcb.pdb"
     pdb_id = "1mcb"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -99,6 +158,7 @@ def test_determine_b_group_protein_no_b_factors():
 
 
 def test_determine_b_group_calpha_false():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1av1.pdb"
     pdb_id = "1av1"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -107,6 +167,7 @@ def test_determine_b_group_calpha_false():
 
 
 def test_determine_b_group_calpha_true():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1a1q.pdb"
     pdb_id = "1a1q"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -115,6 +176,7 @@ def test_determine_b_group_calpha_true():
 
 
 def test_determine_b_group_calpha_true_2():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1efg.pdb"
     pdb_id = "1efg"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -125,6 +187,7 @@ def test_determine_b_group_calpha_true_2():
     eq_(result["phos_only"], False)
 
 def test_determine_b_group_calpha_true_3():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/1efg.pdb"
     pdb_id = "1efg"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -134,6 +197,7 @@ def test_determine_b_group_calpha_true_3():
 
 
 def test_determine_b_group_calpha_true_phos_true():
+    """Tests that b_group is correctly determined."""
     pdb_file_path = "bdb/tests/pdb/files/3cw1.pdb"
     pdb_id = "3cw1"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -146,24 +210,28 @@ def test_determine_b_group_calpha_true_phos_true():
 
 @raises(IOError)
 def test_get_structure_invalid_path():
+    """Tests get_structure."""
     pdb_file_path = "1crn.pdb"
     pdb_id = "1crn"
     structure = get_structure(pdb_file_path, pdb_id, verbose=True)
 
 
 def test_get_structure_pdbid_none():
+    """Tests get_structure."""
     pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
     pdb_id = None
     ok_(get_structure(pdb_file_path, pdb_id, verbose=True))
 
 
 def test_get_structure_parse_error():
+    """Tests get_structure."""
     pdb_file_path = "bdb/tests/pdb/files/4aph.pdb"
     pdb_id = "4aph"
     eq_(get_structure(pdb_file_path, pdb_id, verbose=False), None)
 
 
 def test_is_calpha_trace_true():
+    """Tests is_calpha_trace."""
     pdb_file_path = "bdb/tests/pdb/files/1efg.pdb"
     pdb_id = "1efg"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -173,6 +241,7 @@ def test_is_calpha_trace_true():
 
 
 def test_is_calpha_trace_true_unk():
+    """Tests is_calpha_trace."""
     pdb_file_path = "bdb/tests/pdb/files/1efg.pdb"
     pdb_id = "1efg"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -184,6 +253,7 @@ def test_is_calpha_trace_true_unk():
 
 
 def test_is_calpha_trace_true_2():
+    """Tests is_calpha_trace."""
     pdb_file_path = "bdb/tests/pdb/files/3cw1.pdb"
     pdb_id = "3cw1"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -198,6 +268,7 @@ def test_is_calpha_trace_true_2():
 
 
 def test_is_calpha_trace_false_prot():
+    """Tests is_calpha_trace."""
     pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
     pdb_id = "1crn"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -207,6 +278,7 @@ def test_is_calpha_trace_false_prot():
 
 
 def test_is_calpha_trace_false_nuc():
+    """Tests is_calpha_trace."""
     pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
     pdb_id = "100d"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -217,10 +289,12 @@ def test_is_calpha_trace_false_nuc():
 
 @raises(AttributeError)
 def test_is_calpha_trace_none():
+    """Tests is_calpha_trace."""
     result = is_calpha_trace(None)
 
 
 def test_is_phos_trace_true():
+    """Tests is_phos_trace."""
     pdb_file_path = "bdb/tests/pdb/files/3cw1.pdb"
     pdb_id = "3cw1"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -233,6 +307,7 @@ def test_is_phos_trace_true():
 
 
 def test_is_phos_trace_false_nuc_chain():
+    """Tests is_phos_trace."""
     pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
     pdb_id = "100d"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -242,6 +317,7 @@ def test_is_phos_trace_false_nuc_chain():
 
 
 def test_is_phos_trace_false_prot_chain():
+    """Tests is_phos_trace."""
     pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
     pdb_id = "1crn"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -252,6 +328,7 @@ def test_is_phos_trace_false_prot_chain():
 
 @raises(AttributeError)
 def test_is_phos_trace_none():
+    """Tests is_phos_trace."""
     result = is_phos_trace(None)
 
 

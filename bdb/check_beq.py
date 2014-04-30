@@ -16,7 +16,6 @@ from bdb.pdb.parser import get_pdb_header_and_trailer
 _log = logging.getLogger(__name__)
 
 
-# TODO: This is super-easy to unit test.
 def check_beq(structure, pdb_id):
     """Determine if Beq values are the same as the reported B-factors.
 
@@ -37,42 +36,38 @@ def check_beq(structure, pdb_id):
     reproduced = 0.0
     correct_uij = True
     for atom in structure.get_atoms():
-        if atom is not None:
-            anisou = atom.get_anisou()
-            if anisou is not None:
-                has_anisou = True
-                # Beq = 8*pi**2*Ueq
-                # Ueq = 1/3<u.u> == 1/3<|u|**2> = 1/3(U11+U22+U33)
-                beq =  8*np.pi**2 * sum(anisou[0:3]) / 3
-                b = atom.get_bfactor()
-                if np.isclose(b, beq, atol=margin):
-                    eq = eq + 1
-                elif check_combinations(anisou, b, margin, pdb_id):
-                    """ e.g. 2a83, 2p6e, 2qik, 3bik, 3d95, 3d96, 3g5t
-                    """
-                    eq = eq + 1
-                    correct_uij = False
-                    _log.debug("B-factor reproduced by non-standard "
-                               "combination of Uij values in the ANISOU "
-                               "record of ATOM: {0:s}".format(
-                        atom.get_full_id()))
-                else:
-                    """ e.g 1g8t, 1kr7, 1llr, 1mgr, 1o9g, 1pm1, 1q7l, 1qjp,
-                    1s2p, 1si6, 1sxu, 1sxy, 1sy0, 1sy2, 1ug6, 1x9q, 2a83, 2acp,
-                    2at5, 2bwi, 2ceu, 2fri, 2frj, 2hmn, 2htx, 2j73, 2p6e, 2p6f,
-                    2p6g, 2qfn, 2qik, 2v0a, 2xgb, 2xl6, 2xle, 2xlw, 3bwo, 3dqy,
-                    3fde, 3g5t, 3jql, 3nju, 3nna, 3oxp
-                    """
-                    ne = ne + 1
-                    _log.debug("Beq not identical to B-factor inATOM record: "
-                               "{0:s} {1:3.2f} {2:3.2f}".format(
-                        atom.get_full_id(), b, beq))
-        else:
-            # TODO: Why break if an ATOM is None? This *could* happen at the
-            #       very first. If so, isn't this a special case?
-            # TODO: Check error case first, then you don't need the else and
-            #       the indentation is less.
-            break
+        if atom is None:
+            break # this happens sometimes
+        anisou = atom.get_anisou()
+        if anisou is not None:
+            has_anisou = True
+            # Beq = 8*pi**2*Ueq
+            # Ueq = 1/3<u.u> == 1/3<|u|**2> = 1/3(U11+U22+U33)
+            beq =  8*np.pi**2 * sum(anisou[0:3]) / 3
+            b = atom.get_bfactor()
+            if np.isclose(b, beq, atol=margin):
+                eq = eq + 1
+            elif check_combinations(anisou, b, margin, pdb_id):
+                """ e.g. 2a83, 2p6e, 2qik, 3bik, 3d95, 3d96, 3g5t
+                """
+                eq = eq + 1
+                correct_uij = False
+                _log.debug("B-factor reproduced by non-standard "
+                           "combination of Uij values in the ANISOU "
+                           "record of ATOM: {0:s}".format(
+                    atom.get_full_id()))
+            else:
+                """ e.g 1g8t, 1kr7, 1llr, 1mgr, 1o9g, 1pm1, 1q7l, 1qjp,
+                1s2p, 1si6, 1sxu, 1sxy, 1sy0, 1sy2, 1ug6, 1x9q, 2a83, 2acp,
+                2at5, 2bwi, 2ceu, 2fri, 2frj, 2hmn, 2htx, 2j73, 2p6e, 2p6f,
+                2p6g, 2qfn, 2qik, 2v0a, 2xgb, 2xl6, 2xle, 2xlw, 3bwo, 3dqy,
+                3fde, 3g5t, 3jql, 3nju, 3nna, 3oxp
+                """
+                ne = ne + 1
+                _log.debug("Beq not identical to B-factor in ATOM record: "
+                           "{0:s} {1:3.2f} {2:3.2f}".format(
+                    atom.get_full_id(), b, beq))
+
     reproduced = eq / (eq + ne) if has_anisou else None
     correct_uij = correct_uij if has_anisou else None
     return {"beq_identical": reproduced, "correct_uij": correct_uij}
