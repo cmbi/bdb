@@ -234,89 +234,6 @@ def determine_b_group_chain(chain):
     return group
 
 
-def determine_b_group_chain_greedy(chain):
-    """Return the most likely B-factor group type for this chain.
-
-    Return a string
-
-    Warning: the current approach is rather greedy as only the first four
-    residues of the chain are taken into account. A uniform parameterization
-    accross the chain is assumed.
-
-    Note: if only the first three residues would have been considered,
-    the approach would have been too greedy for 1hlz chain B
-
-    Warning: more atoms need to be compared. E.g. from 1kkl:
-    ATOM      1  N   GLU A 135      49.349  63.473  12.155  1.00 80.44
-    ATOM      2  CA  GLU A 135      50.791  63.168  12.411  1.00 80.45
-    ATOM      3  C   GLU A 135      50.998  61.654  12.472  1.00 79.50
-    ATOM      4  O   GLU A 135      50.236  60.900  11.876  1.00 79.31
-    ATOM      5  CB  GLU A 135      51.257  63.833  13.722  1.00 49.05
-    Individual B-factors, not 2 per residue
-    """
-    margin = 0.01
-    residues = chain.get_residues()
-    group = "individual"
-    b_res = []
-    i = 0
-    max_res = 4
-    # 4 useful residues should be sufficient to make a decision
-    while (i < max_res):
-        res = residues.next()
-        if res.get_id()[0] == " ":  # Exclude HETATM and waters
-            b_back = []
-            b_side = []
-            for atom in res:
-                # Exclude hydrogens and zero occupancy (many in e.g. 1etu)
-                if not re.match("H", atom.get_name())\
-                        and atom.get_occupancy() > 0:
-                    b = atom.get_bfactor()
-                    _log.debug(("{0:s} - B-factor: {1:3.2f}".format(
-                        atom.get_full_id(), b)))
-                    if is_heavy_backbone(atom):
-                        b_back.append(atom.get_bfactor())
-                        if len(b_back) > 1:  # Whithin backbone
-                            if not np.isclose(
-                                    b_back[0],
-                                    b_back[1],
-                                    atol=margin
-                                    ):
-                                # group = "individual"
-                                i = max_res  # stop comparing residues...
-                                break  # or atoms
-                    else:
-                        b_side.append(atom.get_bfactor())
-                        if len(b_side) > 1:  # Whithin side-chain
-                            if not np.isclose(
-                                    b_side[0],
-                                    b_side[1],
-                                    atol=margin
-                                    ):
-                                # group = "individual"
-                                i = max_res
-                                break
-                    if len(b_back) > 0 and len(b_side) > 0:
-                        # Between backbone and side-chain
-                        if not np.isclose(
-                                b_back[0],
-                                b_side[0],
-                                atol=margin
-                                ):
-                            group = "residue_2ADP"
-                            i = max_res
-                            break
-                        else:
-                            group = "residue_1ADP"
-                            break
-            # b_back.extend(b_side)
-            b_res.append(b_back)
-            i = i + 1  # useful atoms in this residue
-    if len(b_res) > max_res - 1 and np.isclose(
-            b_res[0][0], b_res[-1][0], atol=margin):
-        group = "overall"
-    return group
-
-
 def get_structure(pdb_file_path, pdb_id, verbose=False):
     structure = None
     try:
@@ -373,7 +290,6 @@ def is_calpha_trace(chain):
     return ca_ratio >= 0.75
 
 
-# TODO: This is super-easy to unit test.
 def is_nucleic_chain(chain):
     """Return True if the first 10 residues of the chain look like nucleotides.
 
@@ -414,7 +330,6 @@ def is_phos_trace(chain):
     return p_ratio >= 0.75
 
 
-# TODO: This is super-easy to unit test.
 def is_protein_chain(chain):
     """Return True if the first 10 residues of the chain look like amino acids.
 
@@ -433,7 +348,6 @@ def is_protein_chain(chain):
     return True
 
 
-# TODO: This is super-easy to unit test.
 def multiply_bfactors_8pipi(structure):
     """Multiply B-factors with 8*pi**2."""
     for atom in structure.get_atoms():

@@ -4,7 +4,8 @@ from bdb.check_beq import (check_beq, check_combinations, determine_b_group,
                            get_structure, is_calpha_trace, is_phos_trace,
                            has_amino_acid_backbone,
                            has_sugar_phosphate_backbone,
-                           is_heavy_backbone)
+                           is_heavy_backbone, is_nucleic_chain,
+                           is_protein_chain, multiply_bfactors_8pipi)
 
 import numpy as np
 
@@ -365,14 +366,17 @@ def test_is_phos_trace_none():
     result = is_phos_trace(None)
 
 
-def test_has_amino_acid_backbone():
-    """Tests has_amino_acid_backbone with protein, dna and rna."""
+def test_has_amino_acid_backbone_true():
+    """Tests has_amino_acid_backbone with protein."""
     pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
     pdb_id = "1crn"
     structure = get_structure(pdb_file_path, pdb_id)
     result = has_amino_acid_backbone(structure.get_residues().next())
     eq_(result, True)
 
+
+def test_has_amino_acid_backbone_false():
+    """Tests has_amino_acid_backbone with dna/rna."""
     pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
     pdb_id = "100d"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -386,14 +390,17 @@ def test_has_amino_acid_backbone():
     eq_(result, False)
 
 
-def test_has_sugar_phosphate_backbone():
-    """Tests has_amino_acid_backbone with protein, dna and rna."""
+def test_has_sugar_phosphate_backbone_false():
+    """Tests has_amino_acid_backbone with protein."""
     pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
     pdb_id = "1crn"
     structure = get_structure(pdb_file_path, pdb_id)
     result = has_sugar_phosphate_backbone(structure.get_residues().next())
     eq_(result, False)
 
+
+def test_has_sugar_phosphate_backbone_true():
+    """Tests has_amino_acid_backbone with dna/rna."""
     pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
     pdb_id = "100d"
     structure = get_structure(pdb_file_path, pdb_id)
@@ -433,5 +440,57 @@ def test_is_heavy_backbone():
     atom = residue.get_list()[0]
     result = is_heavy_backbone(atom)
     eq_(result, True)
+
+
+def test_is_nucleic_chain_false():
+    """Tests is_nucleic_chain with protein."""
+    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+    pdb_id = "1crn"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = is_nucleic_chain(structure.get_chains().next())
+    eq_(result, False)
+
+
+def test_is_nucleic_chain_true():
+    """Tests is_nucleic_chain with dna/rna."""
+    pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
+    pdb_id = "100d"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = is_nucleic_chain(structure.get_chains().next())
+    eq_(result, True)
+
+
+def test_is_protein_chain_true():
+    """Tests is_protein_chain with protein."""
+    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+    pdb_id = "1crn"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = is_protein_chain(structure.get_chains().next())
+    eq_(result, True)
+
+
+def test_is_protein_chain_true():
+    """Tests is_protein_chain with dna/rna."""
+    pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
+    pdb_id = "100d"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = is_protein_chain(structure.get_chains().next())
+    eq_(result, False)
+
+
+def test_multiply_bfactors_8pipi():
+    """Tests that bfactors are correctly multiplied by 8*pi^2."""
+    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+    pdb_id = "1crn"
+    structure = get_structure(pdb_file_path, pdb_id)
+    expected = []
+    for atom in structure.get_atoms():
+        expected.append(8*np.pi**2 * atom.get_bfactor())
+
+    s_mult = multiply_bfactors_8pipi(structure)
+    bvalues = []
+    for atom in s_mult.get_atoms():
+        bvalues.append(atom.get_bfactor())
+    eq_(bvalues, expected)
 
 
