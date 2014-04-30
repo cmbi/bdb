@@ -100,6 +100,7 @@ def decide_refprog_restrain(pdb_info, pdb_id):
     return useful, assume_iso, req_tlsanl
 
 
+#TODO split up functions, merge with other refprogs.
 def decide_refprog_refmac(pdb_info, pdb_id):
     """Determine whether a BDB file can be created for this PDB file.
 
@@ -291,6 +292,7 @@ def decide_refprog_refmac(pdb_info, pdb_id):
     return useful, assume_iso, req_tlsanl
 
 
+#TODO merge with refmac
 def decide_refprog(pdb_info, pdb_id):
     """Determine whether refinement program can be used in the bdb project.
 
