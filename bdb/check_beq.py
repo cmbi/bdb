@@ -180,9 +180,11 @@ def determine_b_group_chain(chain):
     i = 0
     max_res = 10
     # 10 useful residues should be sufficient to make a decision
-
-    # TODO: Summarise what this loop is doing. It's not trivial.
     while (i < max_res):
+        # Try to check (the first) 10 canonical residues with heavy and
+        # occupied atoms. Extract (some of) their B-factors and check if the
+        # most detailed B-factor model holds, otherwise check if a less
+        # detailed B-factor model is more applicable.
         try:
             res = residues.next()
         except StopIteration:
@@ -201,15 +203,12 @@ def determine_b_group_chain(chain):
                     _log.debug(("{0:s} - B-factor: {1:3.2f}".format(
                         atom.get_full_id(), b)))
                     b_atom.append(b)
-
-            # TODO: To me, a useful ATOM morphs into a power ranger...do you
-            #       mean that as well? There are other "useful" comments like
-            #       this in your code, as well as "useful" variable names. :)
-            # Useful atoms in this residue
+            # Any heavy occupied atoms in this canonical residue?
             if len(b_atom) > 0:
                 b_res.append(b_atom)
                 i = i + 1
             # Determine the B-factor type for this residue if it is not CA-only
+            # and if we already have enough atoms
             if len(b_atom) > 1:
                 b_atom = sorted(b_atom)
                 if np.isclose(b_atom[-1], b_atom[0], atol=margin):
