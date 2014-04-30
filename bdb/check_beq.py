@@ -73,19 +73,15 @@ def check_beq(structure, pdb_id):
     return {"beq_identical": reproduced, "correct_uij": correct_uij}
 
 
-# TODO: This is super-easy to unit test.
-def check_combinations(anisou, b, margin, pdb_id=None):
+def check_combinations(anisou, b, margin, pdb_id, check_first=False):
     """Check if the B-factor can be reproduced by non-standard U combinations.
 
     Standard: U11, U22, and U33 are the first three values in the ANISOU record
     """
-    pdb_id = pdb_id if pdb_id else ""
     assert(len(anisou) == 6)
     reproduced = False
     for c in itertools.combinations(list(xrange(0, 6)), 3):
-        # TODO: Comment why this combination can be skipped. Where was is
-        #       already calculated?
-        if c == (0, 1, 2):  # we have already calculated this
+        if c == (0, 1, 2) and not check_first:  # the standard combination
             pass
 
         beq = 8*np.pi**2 * (anisou[c[0]] + anisou[c[1]] + anisou[c[2]])/3

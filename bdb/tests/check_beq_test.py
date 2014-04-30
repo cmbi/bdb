@@ -1,7 +1,9 @@
 from nose.tools import eq_, ok_, raises
 
-from bdb.check_beq import (check_beq, determine_b_group, get_structure,
-                           is_calpha_trace, is_phos_trace)
+from bdb.check_beq import (check_beq, check_combinations, determine_b_group,
+                           get_structure, is_calpha_trace, is_phos_trace)
+
+import numpy as np
 
 
 def testo_check_beq_atom_none():
@@ -50,6 +52,34 @@ def test_check_beq_not_identical():
     result = check_beq(structure, pdb_id)
     eq_(result["beq_identical"], 0.999124343257443)
     eq_(result["correct_uij"], True)
+
+
+@raises(AssertionError)
+def test_check_combinations_error():
+    """Tests check_combinations of U values."""
+    anisou = [1, 2, 3, 4, 5]
+    check_combinations(anisou, 0, 0, "test")
+
+
+def test_check_combinations_first():
+    """Tests check_combinations with standard combination of U values."""
+    uij = [4, 5, 6, 1, 0, 0]
+    beq = 8*np.pi**2 * (uij[0] + uij[1] + uij[2])/3
+    tol = 1e-08
+    reproduced = check_combinations(uij, beq, tol, "test", check_first=True)
+    eq_(reproduced, True)
+
+
+def test_check_combinations():
+    """Tests check_combinations with non-standard combination of U values."""
+    uij = [1, 5, 6, 4, 0, 0]
+    beq = 8*np.pi**2 * (uij[3] + uij[1] + uij[2])/3
+    tol = 1e-08
+    reproduced = check_combinations(uij, beq, tol, "test", check_first=True)
+    eq_(reproduced, True)
+
+    reproduced = check_combinations(uij, beq, tol, "test")
+    eq_(reproduced, True)
 
 
 def test_determine_b_group_protein_overall():
