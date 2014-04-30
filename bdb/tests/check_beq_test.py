@@ -1,7 +1,10 @@
 from nose.tools import eq_, ok_, raises
 
 from bdb.check_beq import (check_beq, check_combinations, determine_b_group,
-                           get_structure, is_calpha_trace, is_phos_trace)
+                           get_structure, is_calpha_trace, is_phos_trace,
+                           has_amino_acid_backbone,
+                           has_sugar_phosphate_backbone,
+                           is_heavy_backbone)
 
 import numpy as np
 
@@ -360,5 +363,75 @@ def test_is_phos_trace_false_prot_chain():
 def test_is_phos_trace_none():
     """Tests is_phos_trace."""
     result = is_phos_trace(None)
+
+
+def test_has_amino_acid_backbone():
+    """Tests has_amino_acid_backbone with protein, dna and rna."""
+    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+    pdb_id = "1crn"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = has_amino_acid_backbone(structure.get_residues().next())
+    eq_(result, True)
+
+    pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
+    pdb_id = "100d"
+    structure = get_structure(pdb_file_path, pdb_id)
+    residues = structure.get_residues()
+    residue = residues.next()
+    result = has_amino_acid_backbone(residue)
+    eq_(result, False)
+
+    residue = residues.next()
+    result = has_amino_acid_backbone(residue)
+    eq_(result, False)
+
+
+def test_has_sugar_phosphate_backbone():
+    """Tests has_amino_acid_backbone with protein, dna and rna."""
+    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+    pdb_id = "1crn"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = has_sugar_phosphate_backbone(structure.get_residues().next())
+    eq_(result, False)
+
+    pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
+    pdb_id = "100d"
+    structure = get_structure(pdb_file_path, pdb_id)
+    residues = structure.get_residues()
+    residue = residues.next()
+    result = has_sugar_phosphate_backbone(residue)
+    eq_(result, False) # DNA, misses P
+
+    residue = residues.next()
+    result = has_sugar_phosphate_backbone(residue)
+    eq_(result, True)
+
+    residues = list(structure.get_chains().next().get_residues())
+    residue = residues[9] # Residue 10 has the phosphate..
+    result = has_sugar_phosphate_backbone(residue)
+    eq_(result, True)
+
+
+def test_is_heavy_backbone():
+    """Tests is_heavy_backbone with protein, dna and rna."""
+    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+    pdb_id = "1crn"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = is_heavy_backbone(structure.get_atoms().next())
+    eq_(result, True)
+
+    pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
+    pdb_id = "100d"
+    structure = get_structure(pdb_file_path, pdb_id)
+    residues = structure.get_residues()
+    residue = residues.next()
+    atom = residue.get_list()[0]
+    result = is_heavy_backbone(atom)
+    eq_(result, True)
+
+    residue = residues.next()
+    atom = residue.get_list()[0]
+    result = is_heavy_backbone(atom)
+    eq_(result, True)
 
 

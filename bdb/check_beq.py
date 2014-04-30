@@ -317,8 +317,6 @@ def determine_b_group_chain_greedy(chain):
     return group
 
 
-# TODO: sort structure first if exception is caught, then try again
-#       (temporary fix until Biopython parsers is fixed)
 def get_structure(pdb_file_path, pdb_id, verbose=False):
     structure = None
     try:
@@ -326,11 +324,11 @@ def get_structure(pdb_file_path, pdb_id, verbose=False):
         structure = p.get_structure(pdb_id, pdb_file_path)
     except (AttributeError, IndexError, ValueError, AssertionError,
             Bio.PDB.PDBExceptions.PDBConstructionException) as e:
+        # (temporary fix until Biopython parser is fixed)
         _log.error("Biopython Error. {0:s}".format(e))
     return structure
 
 
-# TODO: This is super-easy to unit test.
 def has_amino_acid_backbone(residue):
     """Return True if the residue's backbone looks like protein."""
     for atom in ("N", "CA", "C", "O"):
@@ -339,7 +337,6 @@ def has_amino_acid_backbone(residue):
     return True
 
 
-# TODO: This is super-easy to unit test.
 def has_sugar_phosphate_backbone(residue):
     """Return True if the residue's backbone looks like nucleic acid."""
     for atom in ("P", "OP1", "OP2", "O5'", "C5'", "C4'",
@@ -349,7 +346,6 @@ def has_sugar_phosphate_backbone(residue):
     return True
 
 
-# TODO: This is super-easy to unit test.
 def is_heavy_backbone(atom):
     """Return True if the atom looks like a backbone atom."""
     return atom.get_name() in [
