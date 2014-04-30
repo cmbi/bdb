@@ -90,6 +90,16 @@ def test_parse_btype_unverified():
     eq_(btype, "unverified")
 
 
+@raises(ValueError)
+def test_parse_btype_unexpected():
+    """
+    Tests that the btype value is correctly parsed from the pdb file remark
+    records.
+    """
+    records = {"REMARK": ["  3   B VALUE TYPE : SOMETHINGELSE", ]}
+    btype = parse_btype(records)
+
+
 def test_parse_btype_unverified_trailing_whitespace():
     """
     Tests that the btype value is correctly parsed from the pdb file remark
@@ -123,6 +133,22 @@ def test_parse_other_ref_remarks():
     eq_(other_ref_remarks, expected)
 
 
+def test_parse_other_ref_remarks_none():
+    """
+    Tests that other refinement remarks are None if not present in the
+    pdb file remark records.
+
+    This example is taken from 1crn.
+    """
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: NULL                                      ",
+        "  4                                                                      ",
+        ]}
+    other_ref_remarks = parse_other_ref_remarks(records)
+    eq_(other_ref_remarks, None)
+
+
 def test_is_bmsqav_true():
     ref_remarks = "THE QUANTITY GIVEN IN THE TEMPERATURE\n" \
         "FACTOR FIELD OF THE *ATOM* AND *HETATM* RECORDS BELOW IS U**2," \
@@ -135,6 +161,11 @@ def test_is_bmsqav_true():
 
 def test_is_bmsqav_false():
     ref_remarks = ""
+    eq_(is_bmsqav(ref_remarks), False)
+
+
+def test_is_bmsqav_na():
+    ref_remarks = None
     eq_(is_bmsqav(ref_remarks), False)
 
 
@@ -153,14 +184,22 @@ def test_parse_format_date_version_none():
     eq_(f_date, None)
 
 
+def test_parse_format_date_version_string():
+    records = {"REMARK":
+               ["  4 1ABC COMPLIES WITH FORMAT V. ABC, 13-JUL-11", ]}
+    (f_vers, f_date) = parse_format_date_version(records)
+    eq_(f_vers, None)
+    eq_(f_date, None)
+
+
 def test_parse_num_tls_groups():
-    records = {"REMARK": ["  3   NUMBER OF TLS GROUPS  : 6", ]}
+    records = {"REMARK": ["  3   NUMBER OF TLS GROUPS  : 6 ", ]}
     num_tls_groups = parse_num_tls_groups(records)
     eq_(num_tls_groups, 6)
 
 
 def test_parse_num_tls_groups_null():
-    records = {"REMARK": ["  3   NUMBER OF TLS GROUPS  : NULL", ]}
+    records = {"REMARK": ["  3   NUMBER OF TLS GROUPS  : NULL ", ]}
     num_tls_groups = parse_num_tls_groups(records)
     eq_(num_tls_groups, None)
 
@@ -169,6 +208,12 @@ def test_parse_num_tls_groups_non_existant():
     records = {"REMARK": ["", ]}
     num_tls_groups = parse_num_tls_groups(records)
     eq_(num_tls_groups, None)
+
+
+def test_parse_no_ref_prog():
+    records = {"REMARK": ["  3                  ", ]}
+    ref_prog = parse_ref_prog(records)
+    eq_(ref_prog, None)
 
 
 def test_parse_ref_prog():

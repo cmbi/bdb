@@ -114,7 +114,7 @@ def parse_btype(pdb_records):
             elif btype == "UNVERIFIED":
                 return "unverified"
             else:
-                _log.error("Unexpected B VALUE TYPE found: {0:s}", btype)
+                raise ValueError("Unexpected B VALUE TYPE found: {0:s}", btype)
     return None
 
 
@@ -146,7 +146,7 @@ def parse_format_date_version(pdb_records):
     Parses the format date and version from the pdb REMARK records and returns
     the tuple (version, date) where date is a string and version is a float.
 
-    If either the date or format are found, None is returned for both.
+    If either the date or format are not found, None is returned for both.
     """
     for record in pdb_records["REMARK"]:
         m = RE_FORMAT.search(record)
@@ -175,9 +175,6 @@ def parse_num_tls_groups(pdb_records):
         m = RE_TLS_GROUPS.search(record)
         if m is not None:
             n_tls = m.group(1)
-
-            if n_tls == "NULL":
-                return None
             return int(n_tls)
     return None
 
