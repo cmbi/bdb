@@ -3,9 +3,6 @@ from nose.tools import eq_, ok_, raises
 from bdb.check_beq import (determine_b_group, get_structure, is_calpha_trace,
                            is_phos_trace)
 
-from Bio.PDB.PDBExceptions import PDBConstructionException
-
-
 
 def test_determine_b_group_protein_overall():
     pdb_file_path = "bdb/tests/pdb/files/1etu.pdb"
