@@ -462,6 +462,14 @@ def test_is_tls_sum_false():
     tls_sum = is_tls_sum(records)
     eq_(tls_sum, False)
 
+    records = {"REMARK": [
+        "  3                                                                      ",
+        "  3  OTHER REFINEMENT REMARKS: NO HINTS ABOUT B FACTORS                  ",
+        "  4                                                                      ",
+        ]}
+    tls_sum = is_tls_sum(records)
+    eq_(tls_sum, False)
+
 
 def test_is_tls_sum_other1():
     """Tests that tls_sum is correctly parsed from REMARK 3 records.
