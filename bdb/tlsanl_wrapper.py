@@ -1,34 +1,19 @@
 #!/usr/bin/env python
 from __future__ import print_function
-from bdb_utils import init_bdb_logger, write_whynot, PDB_LOGFORMAT
+
 import argparse
 import logging
 import os
 import subprocess
 import sys
 
-# Configure logging
-_log = logging.getLogger("bdb")
+from bdb.bdb_utils import write_whynot
 
-def get_tlsanl_argparser():
-    """Create and return an argument parser."""
-    parser = argparse.ArgumentParser(description="Wrapper for TLSANL -\
-            Calculate isotropic B-factors for REFMAC files\
-            with residual B-factors")
-    parser.add_argument("-v", "--verbose", help="show TLSANL output",
-                        action="store_true")
-    parser.add_argument("--pdbid", help="PDB file name.")
-    parser.add_argument("xyzin", help="Input coordinates in PDB format.")
-    parser.add_argument("xyzout", help="Output coordinates and anisotropic\
-            tensors in PDB format.")
-    return parser
 
-def greet(pdb_id):
-    """Say hello."""
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-               "Preparing TLSANL run...").format(pdb_id))
+_log = logging.getLogger(__name__)
 
-def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
+
+def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
                verbose_output=False):
     """Run TLSANL.
 
@@ -43,11 +28,10 @@ def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
     Detailed documentation for TLSANL can be found at
     http://www.ccp4.ac.uk/html/tlsanl.html.
     """
-    pdb_id = xyzin if pdb_id is None else pdb_id
-    greet(pdb_id)
+    _log.info("Preparing TLSANL run...")
     success = False
     keyworded_input = "BINPUT t\nBRESID t\nISOOUT FULL\nNUMERIC\nEND\n"
-    p = subprocess.Popen(["tlsanl", "XYZIN", xyzin, "XYZOUT", xyzout],
+    p = subprocess.Popen(["tlsanl", "XYZIN", pdb_file_path, "XYZOUT", xyzout],
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate(input=keyworded_input)
@@ -65,42 +49,42 @@ def run_tlsanl(xyzin, xyzout, pdb_id=None, log_out_dir=".",
     # TODO categorize TLSANL problems (parse tlsanl.log)
     if p.returncode != 0:
         message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
-        swear(pdb_id, message, log_out_dir)
+        write_whynot(pdb_id, message)
+        _log.error("{0:s}".format(message))
     elif os.stat(xyzout).st_size <= 2000:
         # from script at http://deposit.rcsb.org/adit/REFMAC.html
         message = "TLSANL problem"
-        swear(pdb_id, message, log_out_dir)
+        write_whynot(pdb_id, message)
+        _log.error("{0:s}".format(message))
     elif os.stat(os.path.join(log_out_dir, "tlsanl.err")).st_size > 0:
         message = "TLSANL problem"
-        swear(pdb_id, message, log_out_dir)
+        write_whynot(pdb_id, message)
+        _log.error("{0:s}".format(message))
     else:
         success = True
-        say_goodbye(pdb_id)
+        _log.info("TLSANL ran without problems.")
     return success
-
-def say_goodbye(pdb_id):
-    """Report that TLSANL was run successfully."""
-    _log.info(("{0:" + PDB_LOGFORMAT + "} | "\
-               "TLSANL ran without problems.").format(pdb_id))
-
-def swear(pdb_id, message, out_dir):
-    """Report TLSANL problems."""
-    write_whynot(pdb_id, message, directory=out_dir)
-    _log.error(("{0:" + PDB_LOGFORMAT + "} | {1:s}").format(pdb_id, message))
 
 if __name__ == "__main__":
     """Run TLSANL.
 
     Exit with an exit code of 1 if TLSANL problems are encountered.
     """
-    parser = get_tlsanl_argparser()
+    parser = argparse.ArgumentParser(description="Wrapper for TLSANL -\
+            Calculate isotropic B-factors for REFMAC files\
+            with residual B-factors")
+    parser.add_argument("-v", "--verbose", help="show TLSANL output",
+                        action="store_true")
+    parser.add_argument("--pdbid", help="PDB accession code.")
+    parser.add_argument("pdb_file_path", help="PDB file location.")
+    parser.add_argument("xyzout", help="Output coordinates and anisotropic\
+            tensors in PDB format.")
     args = parser.parse_args()
-    pdb_id = args.pdbid if args.pdbid is not None else args.xyzin
-    _log = init_bdb_logger(args.pdbid, global_log=True)
+    pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
     import requirements
     if args.verbose:
         _log.setLevel(logging.DEBUG)
-    if run_tlsanl(args.xyzin, args.xyzout, pdb_id,
+    if run_tlsanl(args.pdb_file_path, args.xyzout, pdb_id,
                   verbose_output=args.verbose):
         sys.exit(0)
     else:
