@@ -354,7 +354,8 @@ def decide_refprog(pdb_info, pdb_id):
     elif pdb_info["prog_last"][0] == "REFMAC":
         useful, assume_iso, req_tlsanl = decide_refprog_restrain(pdb_info,
                                                                  pdb_id)
-    else:  # Now: not REFMAC
+    else:
+        useful, assume_iso, req_tlsanl = decide_refprog_other(pdb_info, pdb_id)
         if pdb_info["b_type"] == "residual":
             # Don't continue; inspect first
             req_tlsanl = True
@@ -362,7 +363,7 @@ def decide_refprog(pdb_info, pdb_id):
             write_whynot(pdb_id, message)
             _log.warn("{}.".format(message))
         elif pdb_info["b_type"] == "unverified":
-            message = pdb_info["prog_last"][0] + "REFMAC: B-value type could not be"\
+            message = pdb_info["prog_last"][0] + ": B-value type could not be"\
                 " determined in a wwPDB remediation"
             write_whynot(pdb_id, message)
             _log.warn("{}.".format(message))

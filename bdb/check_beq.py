@@ -328,6 +328,8 @@ def determine_b_group_chain_greedy(chain):
     return group
 
 
+# TODO: sort structure first if exception is caught, then try again
+#       (temporary fix until Biopython parsers is fixed)
 def get_structure(pdb_file_path, pdb_id, verbose=False):
     structure = None
     try:

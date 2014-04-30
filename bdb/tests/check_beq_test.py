@@ -157,13 +157,13 @@ def test_get_structure_invalid_path():
 def test_get_structure_pdbid_none():
     pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
     pdb_id = None
-    structure = get_structure(pdb_file_path, pdb_id, verbose=True)
+    ok_(get_structure(pdb_file_path, pdb_id, verbose=True))
 
 
 def test_get_structure_parse_error():
     pdb_file_path = "bdb/tests/pdb/files/4aph.pdb"
     pdb_id = "4aph"
-    ok_(get_structure(pdb_file_path, pdb_id, verbose=False))
+    eq_(get_structure(pdb_file_path, pdb_id, verbose=False), None)
 
 
 def test_is_calpha_trace_true():
