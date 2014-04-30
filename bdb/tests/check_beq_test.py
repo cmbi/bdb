@@ -242,6 +242,30 @@ def test_determine_b_group_calpha_true_phos_true():
     eq_(result["phos_only"], True)
 
 
+def test_determine_b_group_too_short():
+    """Tests that b_group is correctly determined."""
+    pdb_file_path = "bdb/tests/pdb/files/438d.pdb"
+    pdb_id = "438d"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = determine_b_group(structure, pdb_id)
+    eq_(result["protein_b"], None)
+    eq_(result["calpha_only"], False)
+    eq_(result["nucleic_b"], None)
+    eq_(result["phos_only"], False)
+
+
+def test_determine_b_group_nousefulres():
+    """Tests that b_group is correctly determined."""
+    pdb_file_path = "bdb/tests/pdb/files/1c0q.pdb"
+    pdb_id = "1c0q"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = determine_b_group(structure, pdb_id)
+    eq_(result["protein_b"], "individual")
+    eq_(result["calpha_only"], False)
+    eq_(result["nucleic_b"], None)
+    eq_(result["phos_only"], False)
+
+
 @raises(IOError)
 def test_get_structure_invalid_path():
     """Tests get_structure."""

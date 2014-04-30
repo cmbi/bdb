@@ -144,7 +144,7 @@ def determine_b_group(structure, pdb_id):
                     group["nucleic_b"] = determine_b_group_chain(c)
             else:
                 _log.error("Chain {0:s}: no protein or nucleic acid chain "
-                           "found.".format(c.get_id()))
+                           "found (of sufficient length).".format(c.get_id()))
         _log.info("Most likely B-factor group type protein: {0:s} | nucleic "
                   "acid: {1:s}.".format(
             group["protein_b"] if group["protein_b"] is not None else
