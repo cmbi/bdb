@@ -185,7 +185,7 @@ def determine_b_group_chain(chain):
     margin = 0.01
     residues = chain.get_residues()
     group = "individual"
-    b_res = list()
+    b_res = []
     i = 0
     max_res = 10
     # 10 useful residues should be sufficient to make a decision
@@ -201,8 +201,7 @@ def determine_b_group_chain(chain):
                 chain.get_id(), max_res))
             break
         if res.get_id()[0] == " ":  # Exclude HETATM and waters
-            # TODO: You can create an empty list just with `[]`
-            b_atom = list()
+            b_atom = []
             for atom in res:
                 # Exclude hydrogens and zero occupancy (many in e.g. 1etu)
                 if not re.match("H", atom.get_name()) \
@@ -268,15 +267,15 @@ def determine_b_group_chain_greedy(chain):
     margin = 0.01
     residues = chain.get_residues()
     group = "individual"
-    b_res = list()
+    b_res = []
     i = 0
     max_res = 4
     # 4 useful residues should be sufficient to make a decision
     while (i < max_res):
         res = residues.next()
         if res.get_id()[0] == " ":  # Exclude HETATM and waters
-            b_back = list()
-            b_side = list()
+            b_back = []
+            b_side = []
             for atom in res:
                 # Exclude hydrogens and zero occupancy (many in e.g. 1etu)
                 if not re.match("H", atom.get_name())\
@@ -483,7 +482,7 @@ def transfer_header_and_trailer(pdb_file_path, xyzout):
     """Transfer header and trailer from pdb_file_path to xyzout."""
     transferred = False
     h, t = get_pdb_header_and_trailer(pdb_file_path)
-    records = list()
+    records = []
     # Start with the header...
     records.extend(h)
     end = "END"

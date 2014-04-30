@@ -3,7 +3,8 @@ from nose.tools import eq_, raises
 from bdb.pdb.parser import (parse_pdb_file, parse_exp_methods, parse_btype,
                             parse_other_ref_remarks, is_bmsqav,
                             parse_format_date_version, parse_num_tls_groups,
-                            parse_ref_prog, is_tls_residual, is_tls_sum)
+                            parse_ref_prog, is_tls_residual, is_tls_sum,
+                            get_pdb_header_and_trailer)
 
 
 @raises(ValueError)
@@ -587,4 +588,73 @@ def test_is_tls_sum_other6():
         ]}
     tls_sum = is_tls_sum(records)
     eq_(tls_sum, True)
+
+
+def test_get_header_and_trailer():
+    """Tests that the header and trailer are correctly parsed from a PDB file.
+
+    Test entry ht.pdb:
+
+HEADER    TEST PROTEIN                            00-JAN-00   1ABC              
+TITLE     TEST                                                                  
+MODEL        1                                                                  
+ATOM      1                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+ATOM      2                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+HETATM                                                                          
+HETATM                                                                          
+ATOM      3                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+TER       4                                                                     
+ENDMDL                                                                          
+MODEL        2                                                                  
+ATOM      1                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+ATOM      2                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+HETATM                                                                          
+HETATM                                                                          
+ATOM      3                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+TER       4                                                                     
+ENDMDL                                                                          
+CONECT                                                                          
+CONECT                                                                          
+MASTER                                                                          
+END                                                                             
+
+    """
+    header, trailer = get_pdb_header_and_trailer("bdb/tests/pdb/files/ht.pdb")
+    head_exp = [
+            "HEADER    TEST PROTEIN                            "
+            "00-JAN-00   1ABC              ",
+            "TITLE     TEST                                    "
+            "                              "]
+    trai_exp = [
+            "CONECT                                            "
+            "                              ",
+            "CONECT                                            "
+            "                              ",
+            "MASTER                                            "
+            "                              "]
+    eq_(header, head_exp)
+    eq_(trailer, trai_exp)
+
+
+@raises(IOError)
+def test_get_header_and_trailer_ioerror():
+    """Tests that the header and trailer are correctly parsed from a PDB file.
+
+    Test file not found:
+    """
+    header, trailer = get_pdb_header_and_trailer("ht.pdb")
+    eq_(header, [])
+    eq_(trailer, [])
 

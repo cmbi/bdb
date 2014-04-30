@@ -1,0 +1,34 @@
+HEADER    TEST PROTEIN                            00-JAN-00   1ABC              
+TITLE     TEST                                                                  
+MODEL        1                                                                  
+ATOM      1                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+ATOM      2                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+HETATM                                                                          
+HETATM                                                                          
+ATOM      3                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+TER       4                                                                     
+ENDMDL                                                                          
+MODEL        2                                                                  
+ATOM      1                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+ATOM      2                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+HETATM                                                                          
+HETATM                                                                          
+ATOM      3                                                                     
+ANISOU                                                                          
+SIGUIJ                                                                          
+TER       4                                                                     
+ENDMDL                                                                          
+CONECT                                                                          
+CONECT                                                                          
+MASTER                                                                          
+END                                                                             
