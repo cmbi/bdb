@@ -1227,6 +1227,12 @@ def test_parse_refprog_buster():
     expected = (["AUTOBUSTER"], ["BUSTER"], ["-"])
     eq_(result, expected)
 
+    refprog = "BUSTER/TNT a b c 1 2 3"
+    result = parse_refprog(refprog, "test")
+    expected = (["BUSTER/TNT A B C 1 2 3"], ["BUSTER"], ["np"])
+    eq_(result, expected)
+
+
 
 def test_parse_refprog_tnt():
     refprog = "TNT"
@@ -1257,6 +1263,11 @@ def test_parse_refprog_tnt():
     refprog = "TNT 5-F PRERELEASE"
     result = parse_refprog(refprog, "test")
     expected = (["TNT 5-F PRERELEASE"], ["TNT"], ["5-F PRERELEASE"])
+    eq_(result, expected)
+
+    refprog = "TNT 5F 5G"
+    result = parse_refprog(refprog, "test")
+    expected = (["TNT 5F 5G"], ["TNT"], ["np"])
     eq_(result, expected)
 
 
@@ -1324,6 +1335,11 @@ def test_parse_refprog_shelx():
     refprog = "SHELX-L"
     result = parse_refprog(refprog, "test")
     expected = (["SHELX-L"], ["SHELX"], ["L"])
+    eq_(result, expected)
+
+    refprog = "SHELXL-L"
+    result = parse_refprog(refprog, "test")
+    expected = (["SHELXL-L"], ["SHELX"], ["np"])
     eq_(result, expected)
 
 
