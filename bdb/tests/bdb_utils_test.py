@@ -12,6 +12,14 @@ def test_is_valid_directory():
     eq_(is_valid_directory(parser, direct), direct)
 
 
+@raises(SystemExit)
+def test_is_valid_directory_error():
+    """Trivial test to check if directory exists."""
+    parser = argparse.ArgumentParser()
+    direct = "foo"
+    is_valid_directory(parser, direct)
+
+
 def test_is_valid_file():
     """Trivial test to check if file exists."""
     parser = argparse.ArgumentParser()
@@ -23,12 +31,12 @@ def test_is_valid_file():
 def test_is_valid_file_error():
     """Trivial test to check if file exists."""
     parser = argparse.ArgumentParser()
-    file_path = "1crn.pdb"
+    file_path = "foo"
     is_valid_file(parser, file_path)
 
 
 @raises(SystemExit)
-def test_is_valid_file_error():
+def test_is_valid_file_empty():
     """Trivial test to check if file is empty."""
     parser = argparse.ArgumentParser()
     file_path = "bdb/tests/pdb/files/empty"
