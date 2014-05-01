@@ -60,7 +60,7 @@ def test_is_valid_pdbid():
 
 
 @raises(TypeError)
-def test_is_valid_pdbid():
+def test_is_valid_pdbid_error():
     """Trivial test to check if the pdbid is valid."""
     parser = argparse.ArgumentParser()
 
