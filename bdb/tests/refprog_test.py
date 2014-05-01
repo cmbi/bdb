@@ -119,7 +119,7 @@ def test_decide_refprog_refmac_tls_sum_anisou():
     eq_(result, expected)
 
 
-def test_decide_refprog_refmac_tls_residual_noanisou():
+def test_decide_refprog_refmac_tls_sum_noanisou():
     pdb_info = {"format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": True, "has_anisou": False}
     result = decide_refprog_refmac(pdb_info, "test")

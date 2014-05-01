@@ -113,7 +113,7 @@ def test_parse_btype_unverified_trailing_whitespace():
     eq_(btype, "unverified")
 
 
-def test_parse_btype_unverified_trailing_whitespace():
+def test_parse_btype_unverified_trailing_whitespace_none():
     """Trivially test that the btype value is None if not present."""
     records = {"REMARK": ["  3               ", ]}
     btype = parse_btype(records)

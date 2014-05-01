@@ -493,7 +493,7 @@ def test_is_protein_chain_true():
     eq_(result, True)
 
 
-def test_is_protein_chain_true():
+def test_is_protein_chain_false():
     """Tests is_protein_chain with dna/rna."""
     pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
     pdb_id = "100d"
