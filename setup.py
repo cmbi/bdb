@@ -4,9 +4,9 @@ from distutils.core import setup
 setup(
     name='bdb',
     version='0.5.3.5',
-    description='TODO: Fill this in.',
+    description='A databank of PDB entries with full isotropic B-factors.',
     author='Wouter Touw',
-    author_email='TODO: Fill this in.',
+    author_email='wouter.touw@radboudumc.nl',
     url='https://github.com/cmbi/bdb',
     classifiers=[
         'Development Status :: 4 - Beta',

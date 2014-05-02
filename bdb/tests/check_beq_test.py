@@ -11,7 +11,7 @@ import numpy as np
 
 
 def test_check_beq_atom_none():
-    #TODO
+    #TODO implement a test
     pass
 
 
