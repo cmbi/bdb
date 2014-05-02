@@ -29,8 +29,7 @@ def init_logger(pdb_id, verbose):
     logging.basicConfig(
         filename=log_file_path,
         filemode="w",
-        level=logging.INFO if not verbose else logging.DEBUG,
-        format=fmt)
+        level=logging.INFO if not verbose else logging.DEBUG, format=fmt)
 
 
 def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
