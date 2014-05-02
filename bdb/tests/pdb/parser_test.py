@@ -243,6 +243,10 @@ def test_parse_num_tls_groups():
     num_tls_groups = parse_num_tls_groups(records)
     eq_(num_tls_groups, 6)
 
+    records = {"REMARK": ["  3   NUMBER OF TLS GROUPS  :   10", ]}
+    num_tls_groups = parse_num_tls_groups(records)
+    eq_(num_tls_groups, 10)
+
 
 def test_parse_num_tls_groups_null():
     records = {"REMARK": ["  3   NUMBER OF TLS GROUPS  : NULL ", ]}

@@ -11,7 +11,7 @@ RE_B_MSQAV = re.compile(r"(MEAN-SQUARE AMPLITUDE OF ATOMIC VIBRATION|"
 RE_FORMAT = re.compile(r"^  4 [0-9A-Z]{4} COMPLIES WITH FORMAT V. "
                         "(?P<version>[\d.]+), "
                         "(?P<date>\d{2}-[A-Z]{3}-\d{2})")
-RE_TLS_GROUPS = re.compile(r"^  3   NUMBER OF TLS GROUPS  : (\d+)\s*$")
+RE_TLS_GROUPS = re.compile(r"^  3   NUMBER OF TLS GROUPS  :\s*(\d+)\s*$")
 RE_TLS_RES = re.compile(r"^  3   ATOM RECORD CONTAINS RESIDUAL B FACTORS ONLY")
 RE_TLS_RES_1 = re.compile(r"RESIDUAL\s+([BU]-?\s*(FACTORS?|VALUES?)\s+)?ONLY")
 RE_TLS_RES_2 = re.compile(r"ATOMIC\s+[BU]-?\s*(FACTORS?|VALUES?)\s+(SHOWN\s+)?"

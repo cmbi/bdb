@@ -1169,6 +1169,57 @@ def test_get_refi_data_3zzw():
     eq_(pdb_info["tls_sum"], False)
 
 
+def test_get_refi_data_2wnl():
+    pdb_file_path = "bdb/tests/pdb/files/2wnl.pdb"
+    pdb_id = "2wnl"
+    structure = get_structure(pdb_file_path, pdb_id)
+    records = parse_pdb_file(pdb_file_path)
+    pdb_info = get_refi_data(records, structure, pdb_id)
+    eq_(pdb_info["assume_iso"], True)
+    eq_(pdb_info["b_msqav"], False)
+    eq_(pdb_info["b_type"], None)
+    eq_(pdb_info["beq_identical"], None)
+    eq_(pdb_info["correct_uij"], None)
+    eq_(pdb_info["decision"], "REFMAC: TLS group(s), full B-factors "\
+                              "(REMARK 3) without ANISOU records")
+    eq_(pdb_info["format_date"], "01-DEC-08")
+    eq_(pdb_info["format_vers"], 3.2)
+    eq_(pdb_info["has_anisou"], False)
+    eq_(pdb_info["is_bdb_includable"], True)
+    eq_(pdb_info["other_refinement_remarks"], "HYDROGENS HAVE BEEN ADDED IN "\
+            "THE  RIDING POSITIONS. GLOBAL B-FACTORS, CONTAINING RESIDUAL  "\
+            "AND TLS COMPONENT HAVE BEEN DEPOSITED.")
+    eq_(pdb_info["pdb_id"], "2wnl")
+    eq_(pdb_info["prog_inter"], ["REFMAC"])
+    eq_(pdb_info["prog_last"], ["REFMAC"])
+    eq_(pdb_info["prog_vers"], ["5.5.0102"])
+    eq_(pdb_info["ref_prog"], ["REFMAC 5.5.0102"])
+    eq_(pdb_info["refprog"], "REFMAC 5.5.0102")
+    eq_(pdb_info["req_tlsanl"], False)
+    eq_(pdb_info["tls_groups"], 10)
+    eq_(pdb_info["tls_residual"], False)
+    eq_(pdb_info["tls_sum"], True)
+
+
+#@patch("bdb.pdb.parser.parse_ref_prog", return_value=None)
+#def test_get_refprog_no_refprog(*args):
+#    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+#    pdb_id = "1crn"
+#    structure = get_structure(pdb_file_path, pdb_id)
+#    records = parse_pdb_file(pdb_file_path)
+#    pdb_info = get_refi_data(records, structure, pdb_id)
+#    msg = "Refinement program parse error"
+#    eq_(pdb_info["assume_iso"], False)
+#    eq_(pdb_info["decision"], msg)
+#    eq_(pdb_info["is_bdb_includable"], False)
+#    eq_(pdb_info["prog_inter"], None)
+#    eq_(pdb_info["prog_last"], None)
+#    eq_(pdb_info["prog_vers"], None)
+#    eq_(pdb_info["ref_prog"], ["PROLSQ"])
+#    eq_(pdb_info["refprog"], "PROLSQ")
+#    eq_(pdb_info["req_tlsanl"], False)
+
+
 def test_last_used_empty():
     pin = []
     pv = []
