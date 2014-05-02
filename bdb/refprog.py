@@ -57,8 +57,8 @@ def decide_refprog_restrain(pdb_info):
     PDB file. Furthermore, several remarks and details in the
     header are used.
 
-    WARNING: this code assumes the Beq values from ANISOU records are identical
-             to the reported corresponding B-factors
+    WARNING: this code assumes the Beq values from ANISOU records are not
+             identical to the reported corresponding B-factors
 
     Return a tuple of Booleans and the decision message:
     useful       : True if a BDB file can probably be created for this PDB file
@@ -73,6 +73,10 @@ def decide_refprog_restrain(pdb_info):
 
     (useful, assume_iso, req_tlsanl) = (False, False, False)
     msg = "{}: ".format(pdb_info["prog_last"][0])
+
+    # If ANISOU records are present, make sure Beq values are not OK
+    if pdb_info["has_anisou"]:
+        assert pdb_info["beq_identical"] <= 0.9999
 
     RE_U = re.compile(r"""
                         THE\s+QUANTITY\s+PRESENTED\s+
@@ -184,6 +188,10 @@ def decide_refprog_tls(pdb_info):
     msg = "{}: ".format(pdb_info["prog_last"][0])
     bneq_msg = "Not enough B-factors could be reproduced from ANISOU records"
 
+    # If ANISOU records are present, make sure Beq values are not OK
+    if pdb_info["has_anisou"]:
+        assert pdb_info["beq_identical"] <= 0.9999
+
     # Decide
 
     if pdb_info["tls_residual"]:  # Mentioned residual B-factors
@@ -260,6 +268,11 @@ def decide_refprog_notls(pdb_info):
     msg = "{}: ".format(pdb_info["prog_last"][0])
     bneq_msg = "Not enough B-factors could be reproduced from ANISOU records"
 
+    # If ANISOU records are present, make sure Beq values are not OK
+    if pdb_info["has_anisou"]:
+        assert pdb_info["beq_identical"] <= 0.9999
+
+
     # Decide
 
     if re.search(r"TLS", pdb_info["other_refinement_remarks"]):
@@ -329,8 +342,8 @@ def decide_refprog(pdb_info):
     PDB file. Furthermore, several remarks and details in the
     header are used.
 
-    WARNING: this code assumes the Beq values from ANISOU records are identical
-             to the reported corresponding B-factors
+    WARNING: this code assumes the Beq values from ANISOU records are not
+             identical to the reported corresponding B-factors
 
     Return a tuple of Booleans and the decision message:
     useful       : True if a BDB file can probably be created for this PDB file
@@ -344,9 +357,9 @@ def decide_refprog(pdb_info):
     assert isinstance(pdb_info["prog_last"], list)
     (useful, assume_iso, req_tlsanl) = (False, False, False)
 
-    # If ANISOU records are present, make sure Beq values are OK
+    # If ANISOU records are present, make sure Beq values are not OK
     if pdb_info["has_anisou"]:
-        assert pdb_info["beq_identical"] > 0.9999
+        assert pdb_info["beq_identical"] <= 0.9999
 
     # There must be only a single refinement program. If not, return False for
     # all values in the return tuple.
