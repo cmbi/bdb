@@ -48,8 +48,8 @@ def is_bdb_includable_refprog(refprog):
     return True
 
 
-def decide_refprog_restrain(pdb_info, pdb_id):
-    """Determine whether a BDB file can be created for this PDB file.
+def decide_refprog_restrain(pdb_info):
+    """Determine whether a BDB file can be created for this RESTRAIN PDB file.
 
     Only applicable for structures refined by RESTRAIN.
 
@@ -60,13 +60,19 @@ def decide_refprog_restrain(pdb_info, pdb_id):
     WARNING: this code assumes the Beq values from ANISOU records are identical
              to the reported corresponding B-factors
 
-    Return a tuple of Booleans:
+    Return a tuple of Booleans and the decision message:
     useful       : True if a BDB file can probably be created for this PDB file
     assume_iso   : whether the PDB file should be assumed to have
                    total isotropic B-factors
     req_tlsanl   : True if running TLSANL is required
     """
+
+    # Check and declare
+
+    assert pdb_info["prog_last"][0] == "RESTRAIN"
+
     (useful, assume_iso, req_tlsanl) = (False, False, False)
+    msg = "{}: ".format(pdb_info["prog_last"][0])
 
     RE_U = re.compile(r"""
                         THE\s+QUANTITY\s+PRESENTED\s+
@@ -74,226 +80,249 @@ def decide_refprog_restrain(pdb_info, pdb_id):
                         FIELD\s+IS\s+U\.
                         """, re.VERBOSE)
 
+    # Decide
+
     if pdb_info["b_msqav"]:
-        # We don't return another Boolean as b_msqav is already
-        # clear enough
         useful = True
-        message = "RESTRAIN: mentioned mean square "\
-                  "atomic displacement in B-factor field"
-        _log.info("{}".format(message))
+        msg = "{}B-factor field contains mean square atomic displacement "\
+              "(REMARK 3)".format(msg)
     elif re.search(RE_U, pdb_info["other_refinement_remarks"]):
         """ e.g. 3cms, 4cms """
-        message = "RESTRAIN: B-factor field contains \"U\" "\
-                  "according to REMARK 3"
-        write_whynot(pdb_id, message)
-        _log.warn("{}.".format(message))
+        msg = "{}B-factor field contains \"U\" (REMARK 3)".format(msg)
     elif pdb_info["b_type"] or pdb_info["has_anisou"] or \
             pdb_info["tls_groups"] or pdb_info["tls_residual"] or \
             pdb_info["tls_sum"]:
-        message = "RESTRAIN: unexpected content cannot (yet) be "\
-                  "handled"
-        write_whynot(pdb_id, message)
-        _log.warn("{}.".format(message))
+        msg = "{}unexpected content cannot (yet) be handled".format(msg)
     else:
+        msg = "{}probably full B-factors".format(msg)
         useful = True
         assume_iso = True
-    return useful, assume_iso, req_tlsanl
+
+    # Report
+
+    if not useful:
+        write_whynot(pdb_info["pdb_id"], msg)
+        _log.warn("{}.".format(msg))
+    else:
+        _log.info("{}".format(msg))
+
+    return useful, assume_iso, req_tlsanl, msg
 
 
-#TODO split up functions, merge with other refprogs.
-def decide_refprog_refmac(pdb_info, pdb_id):
-    """Determine whether a BDB file can be created for this PDB file.
+def decide_refprog_remediation(pdb_info):
+    """Determine whether a PDB has been flagged by a PDB remediation.
 
-    Only applicable for structures refined by REFMAC.
+    The wwPDB has reviewed the type of ADPs during the 2011
+    remediation:
+    http://www.wwpdb.org/documentation/2011remediation_overview-061711.pdf
 
-    The decision is based on the refinement program interpreted from the
-    PDB file. Furthermore, several remarks and details in the
-    header are used.
+    However we also find this type of remark for earlier versions...
+    earlier remediations?
 
-    WARNING: this code assumes the Beq values from ANISOU records are identical
-             to the reported corresponding B-factors
-
-    Return a tuple of Booleans:
+    Return a tuple of three Booleans and the decision message.
     useful       : True if a BDB file can probably be created for this PDB file
     assume_iso   : whether the PDB file should be assumed to have
                    total isotropic B-factors
-    req_tlsanl   : True if running TLSANL is required
+    req_tlsanl   : True if running TLSANL is required (also set for other
+                   programs than REFMAC)
     """
 
+    # Check and declare
+
     (useful, assume_iso, req_tlsanl) = (False, False, False)
-    bneq_mess = "Not all B-factors could be reproduced from ANISOU records"
+    msg = "{}: ".format(pdb_info["prog_last"][0])
 
-    if pdb_info["format_vers"] == 3.30:
-        # The wwPDB has reviewed the type of ADPs during the 2011
-        # remediation:
-        # http://www.wwpdb.org/documentation/2011remediation_overview-061711.pdf
-        if pdb_info["b_type"] == "residual":
-            useful = True
-            req_tlsanl = True
-            message = "REFMAC: residual B-values according to the"\
-                      " 2011 wwPDB remediation"
-            _log.info("{}.".format(message))
-        elif pdb_info["b_type"] == "unverified":
-            message = "REFMAC: B-value type could not be "\
-                      "determined in the 2011 wwPDB remediation"
-            write_whynot(pdb_id, message)
-            _log.warn("{}.".format(message))
-        else:
-            # The entry was found to contain full B-values
-            useful = True
-            assume_iso = True
-            message = "REFMAC: full B-values according to the"\
-                      " 2011 wwPDB remediation"
-            _log.info("{}".format(message))
-    # However we also find this type of remark for earlier
-    # versions... earlier remediations?
-    elif pdb_info["b_type"] == "residual":
-        useful = True
+    # Decide
+
+    if pdb_info["b_type"] == "residual":
         req_tlsanl = True
-        message = "REFMAC: residual B-values according to a "\
-                  "wwPDB remediation"
-        _log.info("{}.".format(message))
+        msg = "{}residual B-factors (wwPDB remediation{})".format(msg,
+                " 2011" if pdb_info["format_vers"] == 3.30 else "")
+        if pdb_info["prog_last"][0] == "REFMAC":
+            useful = True
     elif pdb_info["b_type"] == "unverified":
-        message = "REFMAC: B-value type could not be "\
-                  "determined in a wwPDB remediation"
-        write_whynot(pdb_id, message)
-        _log.warn("{}.".format(message))
-    else:  # No B VALUE TYPE comment in REMARK 3, we have to 'guess'
-        if pdb_info["tls_residual"] and pdb_info["tls_sum"]:
-            message = "REFMAC: "\
-                      "mentioned residual and full B-factors"
-            write_whynot(pdb_id, message)
-            _log.warn("{}.".format(message))
-        elif pdb_info["tls_groups"]:  # Probably TLS refinement
-            if pdb_info["tls_residual"]:  # Mentioned residual B-factors
-                if pdb_info["has_anisou"]:
-                    message = "REFMAC: "\
-                              "TLS group(s), mentioned residual "\
-                              "B-factors and ANISOU records"
-                    write_whynot(pdb_id, message)
-                    _log.warn("{}.".format(message))
-                else:
-                    useful = True
-                    req_tlsanl = True
-                    message = "REFMAC: "\
-                              "TLS group(s), mentioned residual "\
-                              "B-factors without ANISOU records"
-                    _log.info("{}.".format(message))
-            elif pdb_info["tls_sum"]:  # Mentioned full B-factors
-                if pdb_info["has_anisou"]:  # probably, TLSANL was run
-                    # useful = True
-                    # assume_iso = True
-                    message = "REFMAC: "\
-                              "TLS group(s), mentioned full "\
-                              "B-factors and ANISOU records. "\
-                              + bneq_mess
-                    write_whynot(pdb_id, message)
-                    _log.warn("{}.".format(message))
-                else:  # we want to be able look at these cases
-                    """ e.g 2aen, 2wo7, 2wwj, 2wyb, 2wyc, 2wye,
-                    2x00, 2x5s, 2xgq, 2xgx, 2xhk, 2xko, 2xkp, 2xr9
-                    """
-                    message = "REFMAC: "\
-                              "TLS group(s), mentioned full "\
-                              "B-factors without ANISOU records"
-                    _log.warn("{}.".format(message))
-                    useful = True
-                    assume_iso = True
-            elif re.search(RE_BEXCEPT, pdb_info["other_refinement_remarks"]):
-                # any exceptions? we want to look at these
-                message = "REFMAC: "\
-                          "TLS group(s) and "\
-                          "possibly, residual or full B-factor "\
-                          "remark in REMARK 3 with format "\
-                          "that cannot (yet) be handled"
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            else:  # TLS refinement without hints about B-value type
-                if pdb_info["has_anisou"]:
-                    """ e.g. 1oj7, 1pm7, 2gcl, 3c2s, 3l6r, 3o1a """
-                    message = "REFMAC: "\
-                              "TLS group(s), no B-value type "\
-                              "details. "\
-                              + bneq_mess
-                else:
-                    message = "REFMAC: "\
-                              "TLS group(s), no B-value type "\
-                              "details and no ANISOU records"
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-        else:  # No TLS groups reported
-            if re.search(r"TLS", pdb_info["other_refinement_remarks"]):  # any exceptions?
-                """ e.g. 1fse, 1gmm, 1gqq, 1h3g, 1jnx, 1krh, 1muu,
-                1oc0, 1oiq, 1oir, 1oit, 1ux9, 1uzl, 1zca, 2hwy,
-                2jbm, 2oeu, 2pe4, 2wnl, 2wvi, 2zze, 2zzf, 2zzg,
-                3dem, 3hbt
-                """
-                message = "REFMAC: TLS remark without TLS group(s)"
-                if pdb_info["has_anisou"]:
-                    message = message + ". " + bneq_mess
+        msg = "{}B-factor type could not be determined (wwPDB remediation{})".\
+        format(msg, " 2011" if pdb_info["format_vers"] == 3.30 else "")
+    elif pdb_info["prog_last"][0] == "REFMAC" and \
+            pdb_info["format_vers"] == 3.30:
+        # The REFMAC entry was found to contain full B-factors
+        useful = True
+        assume_iso = True
+        msg = "{}full B-factors (wwPDB remediation 2011)".format(msg)
+    else:
+        msg = "{}unexpected B-factor type annotation (wwPDB remediation)".\
+            format(msg)
 
-                if pdb_info["tls_sum"]:
-                    """ e.g. 2wnl """
-                    useful = True
-                    assume_iso = True
-                    _log.warn("{}. Mentioned full B-factors".format(
-                        message))
-                elif pdb_info["tls_residual"]:
-                    useful = True
-                    req_tlsanl = True
-                    _log.warn("{}. Mentioned residual "
-                              "B-factors.".format(message))
-                else:
-                    write_whynot(pdb_id, message)
-                    _log.warn("{}.".format(message))
-            elif pdb_info["tls_residual"]:
-                """ e.g. 3ch0, 2pq7, 3h3z """
-                message = "REFMAC: mentioned residual B-factors "\
-                          "without TLS group(s)"
-                if pdb_info["has_anisou"]:
-                    message = message + ". " + bneq_mess
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            elif pdb_info["tls_sum"]:
-                message = "REFMAC: mentioned full B-factors "\
-                          "without TLS group(s)"
-                if pdb_info["has_anisou"]:
-                    message = message + ". " + bneq_mess
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            elif re.search(RE_BEXCEPT, pdb_info["other_refinement_remarks"]) \
-                    and re.search("[BU]-?\s*(FACTORS?|VALUES?)",
-                              pdb_info["other_refinement_remarks"]):
-                # any exceptions? we want to look at these
-                message = "REFMAC: "\
-                          "possibly, residual or full B-factor "\
-                          "remark in REMARK 3 with format "\
-                          "that cannot (yet) be handled. "\
-                          "No TLS groups"
-                if pdb_info["has_anisou"]:
-                    message = message + ". " + bneq_mess
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            # In REFMAC, we ASSUME that TLS- and full anisotropic
-            # refinement are mutually exclusive for now [for logging]
-            elif pdb_info["has_anisou"]:
-                message = "REFMAC: probably full/mixed "\
-                          "anisotropic refinement. " + bneq_mess
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            else:
-                # Probably refinement without any type of
-                # anisotopic displacement parameters
+    # Report
+
+    if not useful:
+        write_whynot(pdb_info["pdb_id"], msg)
+        _log.warn("{}.".format(msg))
+    else:
+        _log.info("{}".format(msg))
+
+    return useful, assume_iso, req_tlsanl, msg
+
+
+def decide_refprog_tls(pdb_info):
+    """Determine whether a BDB entry can be created for this TLS-refined PDB
+    file.
+
+    Only applicable for PDB files with defined TLS groups.
+
+    Return a tuple of three Booleans and the decision message.
+    useful       : True if a BDB file can probably be created for this PDB file
+    assume_iso   : whether the PDB file should be assumed to have
+                   total isotropic B-factors
+    req_tlsanl   : True if running TLSANL is required (also set for other
+                   programs than REFMAC)
+    """
+
+    # Check and declare
+
+    (useful, assume_iso, req_tlsanl) = (False, False, False)
+    msg = "{}: ".format(pdb_info["prog_last"][0])
+    bneq_msg = "Not enough B-factors could be reproduced from ANISOU records"
+
+    # Decide
+
+    if pdb_info["tls_residual"]:  # Mentioned residual B-factors
+        if pdb_info["has_anisou"]:
+            msg = "{}TLS group(s), residual B-factors (REMARK 3) "\
+                  "and ANISOU records. {}".format(msg, bneq_msg)
+        else:
+            msg = "{}TLS group(s), residual B-factors (REMARK 3) "\
+                  "without ANISOU records".format(msg)
+            if pdb_info["prog_last"][0] == "REFMAC":
                 useful = True
-                assume_iso = True
-                message = "REFMAC: probably full B-factors"
-                _log.info("{}.".format(message))
+            # else: # inspect first
+                # useful = True
+            req_tlsanl = True
+    elif pdb_info["tls_sum"]:  # Mentioned full B-factors
+        if pdb_info["has_anisou"]:
+            # (probably, TLSANL was run)
+            msg = "{}TLS group(s), full B-factors (REMARK 3) "\
+                  "and ANISOU records. {}".format(msg, bneq_msg)
+        else:
+            """ REFMAC: e.g 2aen, 2wo7, 2wwj, 2wyb, 2wyc, 2wye, 2x00, 2x5s,
+            2xgq, 2xgx, 2xhk, 2xko, 2xkp, 2xr9
+            """
+            msg = "{}TLS group(s), full B-factors (REMARK 3) "\
+                  "without ANISOU records".format(msg)
+            assume_iso = True
+            if pdb_info["prog_last"][0] == "REFMAC":
+                useful = True
+            # else: # inspect first
+                # useful = True
+    elif re.search(RE_BEXCEPT, pdb_info["other_refinement_remarks"]) and \
+            re.search("[BU]-?\s*(FACTORS?|VALUES?)",
+                    pdb_info["other_refinement_remarks"]): # any exceptions?
+        msg = "{}TLS group(s) and, possibly, residual or full B-factors "\
+              "(REMARK 3, unrecognized format)".format(msg)
+    else:  # TLS refinement without hints about B-value type
+        if pdb_info["has_anisou"]:
+            """ REFMAC: e.g. 1oj7, 1pm7, 2gcl, 3c2s, 3l6r, 3o1a """
+            msg = "{}TLS group(s), no B-factor type details (REMARK 3). {}".\
+                format(msg, bneq_msg)
+        else:
+            # This will be a large group, inspect first
+            msg = "{}TLS group(s), no B-factor type details (REMARK 3) "\
+                  "and no ANISOU records".format(msg)
 
-    return useful, assume_iso, req_tlsanl
+    # Report
+
+    if not useful:
+        write_whynot(pdb_info["pdb_id"], msg)
+        _log.warn("{}.".format(msg))
+    else:
+        _log.info("{}".format(msg))
+
+    return useful, assume_iso, req_tlsanl, msg
 
 
-#TODO merge with refmac
-def decide_refprog(pdb_info, pdb_id):
+def decide_refprog_notls(pdb_info):
+    """Determine whether a BDB entry can be created for this PDB file without
+    TLS groups.
+
+    Only applicable for PDB files without defined TLS groups.
+
+    Return a tuple of three Booleans and the decision message.
+    useful       : True if a BDB file can probably be created for this PDB file
+    assume_iso   : whether the PDB file should be assumed to have
+                   total isotropic B-factors
+    req_tlsanl   : True if running TLSANL is required (also set for other
+                   programs than REFMAC)
+    """
+
+    # Check and declare
+
+    (useful, assume_iso, req_tlsanl) = (False, False, False)
+    msg = "{}: ".format(pdb_info["prog_last"][0])
+    bneq_msg = "Not enough B-factors could be reproduced from ANISOU records"
+
+    # Decide
+
+    if re.search(r"TLS", pdb_info["other_refinement_remarks"]):
+        """ Any exceptions?
+        REFMAC: e.g. 1fse, 1gmm, 1gqq, 1h3g, 1jnx, 1krh, 1muu, 1oc0, 1oiq,
+        1oir, 1oit, 1ux9, 1uzl, 1zca, 2hwy, 2jbm, 2oeu, 2pe4, 2wnl, 2wvi,
+        2zze, 2zzf, 2zzg, 3dem, 3hbt
+        """
+        msg = "{}TLS remark without TLS group(s)".format(msg)
+        if pdb_info["has_anisou"]:
+            msg = "{}. {}".format(msg, bneq_msg)
+
+        if pdb_info["tls_sum"]:
+            assume_iso = True
+            msg = "{}. Full B-factors (REMARK 3)".format(msg)
+            if pdb_info["prog_last"][0] == "REFMAC":
+                useful = True
+            # else: # inspect first
+                # useful = True
+        elif pdb_info["tls_residual"]:
+            req_tlsanl = True
+            msg = "{}. Residual B-factors (REMARK 3)".format(msg)
+            if pdb_info["prog_last"][0] == "REFMAC":
+                useful = True
+    elif pdb_info["tls_residual"]:
+        """ REFMAC: e.g. 3ch0, 2pq7, 3h3z """
+        msg = "{}residual B-factors without TLS group(s) (REMARK 3)".\
+            format(msg)
+        if pdb_info["has_anisou"]:
+            msg = "{}. {}".format(msg, bneq_msg)
+    elif pdb_info["tls_sum"]:
+        msg = "{}full B-factors without TLS group(s) (REMARK 3)".format(msg)
+        if pdb_info["has_anisou"]:
+            msg = "{}. {}".format(msg, bneq_msg)
+    elif re.search(RE_BEXCEPT, pdb_info["other_refinement_remarks"]) and \
+            re.search("[BU]-?\s*(FACTORS?|VALUES?)",
+                    pdb_info["other_refinement_remarks"]): # any exceptions?
+        msg = "{}possibly, residual or full B-factors (REMARK 3, unrecognized"\
+              " format). No TLS groups".format(msg)
+        if pdb_info["has_anisou"]:
+            msg = "{}. {}".format(msg, bneq_msg)
+    elif pdb_info["has_anisou"]:
+        msg = "{}probably full/mixed anisotropic refinement. {}".format(
+                msg, bneq_msg)
+    else:
+        # Probably refinement without any type of
+        # anisotopic displacement parameters
+        useful = True
+        assume_iso = True
+        msg = "{}probably full B-factors".format(msg)
+
+    # Report
+
+    if not useful:
+        write_whynot(pdb_info["pdb_id"], msg)
+        _log.warn("{}.".format(msg))
+    else:
+        _log.info("{}".format(msg))
+
+    return useful, assume_iso, req_tlsanl, msg
+
+
+def decide_refprog(pdb_info):
     """Determine whether refinement program can be used in the bdb project.
 
     The decision is based on the refinement program interpreted from the
@@ -303,193 +332,83 @@ def decide_refprog(pdb_info, pdb_id):
     WARNING: this code assumes the Beq values from ANISOU records are identical
              to the reported corresponding B-factors
 
-    Return a tuple of Booleans:
+    Return a tuple of Booleans and the decision message:
     useful       : True if a BDB file can probably be created for this PDB file
     assume_iso   : whether the PDB file should be assumed to have
                    total isotropic B-factors
-    req_tlsanl   : True if running TLSANL is required
+    req_tlsanl   : True if running TLSANL is required (also set for other
+                   programs than REFMAC)
     """
 
     # Check and declare
     assert isinstance(pdb_info["prog_last"], list)
     (useful, assume_iso, req_tlsanl) = (False, False, False)
 
+    # If ANISOU records are present, make sure Beq values are OK
+    if pdb_info["has_anisou"]:
+        assert pdb_info["beq_identical"] > 0.9999
+
     # There must be only a single refinement program. If not, return False for
     # all values in the return tuple.
     if len(pdb_info["prog_last"]) > 1:
         refprog = [str(p) for p in pdb_info["prog_last"]]
-        message = "Combination of refinement programs cannot (yet) be "\
-                  "included in the bdb: " + " and ".join(refprog)
-        write_whynot(pdb_id, message)
-        _log.warn("{}.".format(message))
-        return False, False, False
+        msg = "Combination of refinement programs cannot (yet) be "\
+                  "included in the bdb: {}".format(" and ".join(refprog))
+        write_whynot(pdb_info["pdb_id"], msg)
+        _log.warn("{}.".format(msg))
+        return False, False, False, msg
     elif len(pdb_info["prog_last"]) == 0:
-        # e.g. 3cw1
-        message = "Program(s) in REMARK 3 not interpreted as refinement "\
+        """ e.g. 3cw1 """
+        msg = "Program(s) in REMARK 3 not interpreted as refinement "\
                   "program(s)"
-        write_whynot(pdb_id, message)
-        _log.error("{}.".format(message))
-        return False, False, False
+        write_whynot(pdb_info["pdb_id"], msg)
+        _log.error("{}.".format(msg))
+        return False, False, False, msg
 
     assert isinstance(pdb_info["prog_last"][0], str)
     _log.info("Interpreted last-used refinement program: {}.".format(
         pdb_info["prog_last"][0]))
 
-    if pdb_info["other_refinement_remarks"] is None:
-        pdb_info["other_refinement_remarks"] = ""
-    bneq_mess = "Not all B-factors could be reproduced from ANISOU records"
+    msg = "{}: ".format(pdb_info["prog_last"][0])
 
     # Check if the refinement program is supported. If not, return False for
     # all values in return tuple.
     if not is_bdb_includable_refprog(pdb_info["prog_last"][0]):
-        message = "Refinement program: " + pdb_info["prog_last"][0]
-        write_whynot(pdb_id, message)
-        _log.warn("{} cannot (yet) be included in the bdb.".format(message))
-        return False, False, False
+        msg = "{}this program cannot (yet) be included".format(msg)
+        write_whynot(pdb_info["pdb_id"], msg)
+        _log.warn("{}.".format(msg))
+        return False, False, False, msg
+
+    # The orr may have to be searched
+    if pdb_info["other_refinement_remarks"] is None:
+        pdb_info["other_refinement_remarks"] = ""
 
     # Start deciding
+
+    # Special treatment for RESTRAIN files
     if pdb_info["prog_last"][0] == "RESTRAIN":
-        useful, assume_iso, req_tlsanl = decide_refprog_restrain(pdb_info,
-                                                                 pdb_id)
-    elif pdb_info["prog_last"][0] == "REFMAC":
-        useful, assume_iso, req_tlsanl = decide_refprog_restrain(pdb_info,
-                                                                 pdb_id)
-    else:
-        useful, assume_iso, req_tlsanl = decide_refprog_other(pdb_info, pdb_id)
-        if pdb_info["b_type"] == "residual":
-            # Don't continue; inspect first
-            req_tlsanl = True
-            message = pdb_info["prog_last"][0] + ": B-value type: residual"
-            write_whynot(pdb_id, message)
-            _log.warn("{}.".format(message))
-        elif pdb_info["b_type"] == "unverified":
-            message = pdb_info["prog_last"][0] + ": B-value type could not be"\
-                " determined in a wwPDB remediation"
-            write_whynot(pdb_id, message)
-            _log.warn("{}.".format(message))
-        elif pdb_info["tls_residual"] and pdb_info["tls_sum"]:
-            message = pdb_info["prog_last"][0] + ": mentioned residual and full "\
-                                   "B-factors"
-            write_whynot(pdb_id, message)
-            _log.warn("{}.".format(message))
-        elif pdb_info["tls_groups"]:
-            if pdb_info["tls_residual"]:  # Mentioned residual B-factors
-                if pdb_info["has_anisou"]:
-                    message = pdb_info["prog_last"][0] + ": "\
-                        "TLS group(s), mentioned residual "\
-                        "B-factors and ANISOU records"
-                else:
-                    message = pdb_info["prog_last"][0] + ": "\
-                        "TLS group(s), mentioned residual "\
-                        "B-factors and ANISOU records"
-                    # Don't continue; inspect first
-                    # useful = True
-                    req_tlsanl = True
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            elif pdb_info["tls_sum"]:  # Mentioned full B-factors
-                if pdb_info["has_anisou"]:
-                    message = pdb_info["prog_last"][0] + ": "\
-                        "TLS group(s), mentioned full "\
-                        "B-factors and ANISOU records. "\
-                        + bneq_mess
-                else:  # we want to be able look at these cases
-                    message = pdb_info["prog_last"][0] + ": "\
-                        "TLS group(s), mentioned full "\
-                        "B-factors without ANISOU records"
-                    _log.warn("{}.".format(message))
-                    # Don't continue; inspect first
-                    # useful = True
-                    assume_iso = True
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            elif re.search(RE_BEXCEPT, pdb_info["other_refinement_remarks"]) and \
-                    re.search("[BU]-?\s*(FACTORS?|VALUES?)",
-                              pdb_info["other_refinement_remarks"]):
-                # any exceptions? we want to look at these
-                message = pdb_info["prog_last"][0] + ": "\
-                    "possibly, residual or full B-factor "\
-                    "remark in REMARK 3 with format "\
-                    "that cannot (yet) be handled"
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            else:  # TLS refinement without hints about B-value type
-                if pdb_info["has_anisou"]:
-                    message = pdb_info["prog_last"][0] + ": "\
-                        "TLS group(s), no B-value type "\
-                        "details. "\
-                        + bneq_mess
-                else:
-                    # Don't continue; inspect first
-                    # This will be a large group
-                    message = pdb_info["prog_last"][0] + ": "\
-                        "TLS group(s), no B-value type "\
-                        "details and no ANISOU records"
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-        else:
-            if re.search(r"TLS", pdb_info["other_refinement_remarks"]):  # any exceptions?
-                message = pdb_info["prog_last"][0] + ": "\
-                    "TLS remark without TLS group(s)"
-                if pdb_info["has_anisou"]:
-                    message = message + ". " + bneq_mess
+        return decide_refprog_restrain(pdb_info)
 
-                if pdb_info["tls_sum"]:
-                    # Don't continue; inspect first
-                    # useful = True
-                    assume_iso = True
-                    _log.warn("{}. Mentioned full B-factors".format(
-                        message))
-                elif pdb_info["tls_residual"]:
-                    # Don't continue; inspect first
-                    # useful = True
-                    req_tlsanl = True
-                    _log.warn("{}. Mentioned residual B-factors.".format(
-                        message))
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            elif pdb_info["tls_residual"]:
-                message = pdb_info["prog_last"][0] + ": mentioned residual B-factors "\
-                    "without TLS group(s)"
-                if pdb_info["has_anisou"]:
-                    message = message + ". " + bneq_mess
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            elif pdb_info["tls_sum"]:
-                # Don't continue; inspect first
-                message = pdb_info["prog_last"][0] + ": "\
-                    "mentioned full B-factors "\
-                    "without TLS group(s)"
-                if pdb_info["has_anisou"]:
-                    message = message + ". " + bneq_mess
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            elif re.search(RE_BEXCEPT, pdb_info["other_refinement_remarks"]) and \
-                    re.search("[BU]-?\s*(FACTORS?|VALUES?)",
-                              pdb_info["other_refinement_remarks"]):
-                # any exceptions? we want to look at these
-                message = pdb_info["prog_last"][0] + ": possibly, residual or full " \
-                    "B-factor remark in REMARK 3 with format that " \
-                    "cannot (yet) be handled. No TLS groups"
-                if pdb_info["has_anisou"]:
-                    message = message + ". " + bneq_mess
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            elif pdb_info["has_anisou"]:
-                message = "{}: probably full/mixed anisotropic " \
-                          "refinement. ".format(pdb_info["prog_last"][0]) + bneq_mess
-                write_whynot(pdb_id, message)
-                _log.warn("{}.".format(message))
-            else:
-                # Probably refinement without any type of
-                # anisotopic displacement parameters
-                useful = True
-                assume_iso = True
-                message = "{}: probably full B-factors".format(pdb_info["prog_last"][0])
-                _log.info("{}.".format(message))
+    # REFMAC and other refprogs:
 
-    return useful, assume_iso, req_tlsanl
+    # We trust the wwPDB remediation decision
+    if (pdb_info["format_vers"] == 3.30 and \
+            pdb_info["prog_last"][0] == "REFMAC") \
+        or pdb_info["b_type"]:
+        return decide_refprog_remediation(pdb_info)
 
+    # B-factors cannot be residual and full at the same time
+    if pdb_info["tls_residual"] and pdb_info["tls_sum"]:
+        msg = "{}residual and full B-factors (REMARK 3)".format(msg)
+        write_whynot(pdb_info["pdb_id"], msg)
+        _log.warn("{}.".format(msg))
+        return False, False, False, msg
+
+    # TLS groups defined in the PDB file..
+    if pdb_info["tls_groups"]:
+        return decide_refprog_tls(pdb_info)
+    else: # ..or not (?)
+        return decide_refprog_notls(pdb_info)
 
 def except_refprog_warn(pdb_id):
     message = "Pre-defined exceptional refinement program case found"
@@ -576,7 +495,8 @@ def get_refi_data(pdb_records, structure, pdb_id):
     "refprog"      : the value of the refinement program record as a string.
     "is_bdb_includable"
                    : True if this PDB file is useful
-    "req_tlsanl"   : True if running TLSANL is required
+    "req_tlsanl    : True if running TLSANL is required (also set for other
+                     programs than REFMAC)
     "tls_groups"   : number of TLS groups as integer. If not present: None.
     "tls_residual" : True if it is mentioned in the TLS details or elsewhere
                      that the ATOM records contain residual B-factors only.
@@ -584,35 +504,40 @@ def get_refi_data(pdb_records, structure, pdb_id):
                      ATOM records contain the sum of TLS and residual B-factors
     """
     is_bdb_includable = False
+    assume_iso = False
+    message = None
     _log.debug("Parsing refinement program...")
 
-    # Parse the pdb records for refinement program data
+    # Parse the pdb records for refinement data
     format_vers, format_date = parse_format_date_version(pdb_records)
     other_refinement_remarks = parse_other_ref_remarks(pdb_records)
     pdb_info = {
-        "b_type": parse_btype(pdb_records),
-        "has_anisou": "ANISOU" in pdb_records,
-        "format_date": format_date,
-        "format_vers": format_vers,
-        "other_refinement_remarks": other_refinement_remarks,
-        "b_msqav": is_bmsqav(other_refinement_remarks),
-        "refprog": parse_ref_prog(pdb_records),
-        "tls_groups": parse_num_tls_groups(pdb_records),
-        "tls_residual": is_tls_residual(pdb_records),
-        "tls_sum": is_tls_sum(pdb_records)}
-
-    assume_iso = False
-    reproduced = {"beq_identical": None, "correct_uij": None}
+            "pdb_id": pdb_id,
+            "b_type": parse_btype(pdb_records),
+            "has_anisou": "ANISOU" in pdb_records,
+            "format_date": format_date,
+            "format_vers": format_vers,
+            "other_refinement_remarks": other_refinement_remarks,
+            "b_msqav": is_bmsqav(other_refinement_remarks),
+            "refprog": parse_ref_prog(pdb_records),
+            "tls_groups": parse_num_tls_groups(pdb_records),
+            "tls_residual": is_tls_residual(pdb_records),
+            "tls_sum": is_tls_sum(pdb_records)}
 
     _log.debug("Interpreting PDB file...")
 
-    # save some time
+    # For entries that have ANISOU records..
+    reproduced = {"beq_identical": None, "correct_uij": None}
     if pdb_info["has_anisou"]:
         reproduced = check_beq(structure, pdb_id)
         report_beq(pdb_id, reproduced)
+        # ..we assume we can save time
         if reproduced["beq_identical"] > 0.9999:
             is_bdb_includable = True
             assume_iso = True
+            message = "Assuming full isotropic B-factors because enough "\
+                      "B-factors can be reproduced from the ANISOU records"
+            _log.info(message)
     pdb_info.update(reproduced)
 
     prog = pdb_info["refprog"]
@@ -620,8 +545,11 @@ def get_refi_data(pdb_records, structure, pdb_id):
     version = None
     prog_last = None
     req_tlsanl = False
+    # Programs mentioned in REMARK 3
     if prog:
-        (prog, prog_inter, version) = parse_refprog(prog, pdb_id)
+        # Interpret refinement program(s)
+        prog, prog_inter, version = parse_refprog(prog, pdb_id)
+        # Decide the final structure's most likely refprog signature
         prog_last = last_used(prog_inter, version)
         pdb_info.update({"prog_inter": prog_inter,
                          "prog_last": prog_last,
@@ -631,10 +559,13 @@ def get_refi_data(pdb_records, structure, pdb_id):
             _log.debug("Refinement program: {} - interpreted as: {} - version:"
                        " {} - last used: {}.".format(p, i, v, prog_last))
 
+        # Interpreted refinement program
         if prog:
+            # (not enough) Beq values from ANISOU records are equal to B
             if not assume_iso:
-                (is_bdb_includable, assume_iso, req_tlsanl) = decide_refprog(
-                    pdb_info, pdb_id)
+                # interpret refinement data
+                is_bdb_includable, assume_iso, req_tlsanl, message = \
+                        decide_refprog(pdb_info)
             else:
                 _log.info("{}: probably full B-factors.".format(
                     " and ".join(prog_last)))
@@ -650,6 +581,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
             write_whynot(pdb_id, message)
 
     more_refprog = {"assume_iso": assume_iso,
+                    "decision": message,
                     "prog_inter": prog_inter,
                     "prog_last": prog_last,
                     "prog_vers": version,
