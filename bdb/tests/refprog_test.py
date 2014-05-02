@@ -1,9 +1,13 @@
+from mock import patch
 from nose.tools import eq_, ok_, raises
 
+from bdb.check_beq import get_structure
 from bdb.refprog import (decide_refprog, decide_refprog_restrain,
                          except_refprog_warn, filter_progs, last_used,
                          is_bdb_includable_refprog, one_of_the_two,
-                         parse_refprog)
+                         parse_refprog, get_refi_data)
+from bdb.pdb.parser import parse_pdb_file
+
 
 BNEQ_MSG = "Not enough B-factors could be reproduced from ANISOU records"
 
@@ -900,6 +904,11 @@ def test_decide_refprog_OTHER_notls_nohints_noanisou():
     expected = (True, True, False, msg)
     eq_(result, expected)
 
+    pdb_info["other_refinement_remarks"] = None
+    result = decide_refprog(pdb_info)
+    eq_(result, expected)
+
+
 # RESTRAIN
 
 def test_decide_refprog_restrain_u():
@@ -925,6 +934,16 @@ def test_decide_refprog_restrain_uu():
     msg = "RESTRAIN: B-factor field contains mean square atomic displacement "\
           "(REMARK 3)"
     result = decide_refprog_restrain(pdb_info)
+    expected = (True, False, False, msg)
+    eq_(result, expected)
+
+
+def test_decide_refprog_restrain_uu_2():
+    pdb_info = {"prog_last": ["RESTRAIN"], "pdb_id": "test", "b_msqav": True,
+                "other_refinement_remarks": "", "has_anisou": False}
+    msg = "RESTRAIN: B-factor field contains mean square atomic displacement "\
+          "(REMARK 3)"
+    result = decide_refprog(pdb_info)
     expected = (True, False, False, msg)
     eq_(result, expected)
 
@@ -996,14 +1015,12 @@ def test_decide_refprog_type_error_list():
 
 @raises(AssertionError)
 def test_decide_refprog_type_error_string():
-    pdb_info = {"prog_last": [1], "has_anisou": False, "pdb_id": "test",
-                "has_anisou": False}
+    pdb_info = {"prog_last": [1], "has_anisou": False, "pdb_id": "test"}
     decide_refprog(pdb_info)
 
 
 def test_decide_refprog_too_many():
-    pdb_info = {"prog_last": ["1", "2"], "has_anisou": False, "pdb_id": "test",
-                "has_anisou": False}
+    pdb_info = {"prog_last": ["1", "2"], "has_anisou": False, "pdb_id": "test"}
     result = decide_refprog(pdb_info)
     msg = "Combination of refinement programs cannot (yet) be included "\
           "in the bdb: 1 and 2"
@@ -1012,10 +1029,18 @@ def test_decide_refprog_too_many():
 
 
 def test_decide_refprog_too_few():
-    pdb_info = {"prog_last": [], "has_anisou": False, "pdb_id": "test",
-                "has_anisou": False}
+    pdb_info = {"prog_last": [], "has_anisou": False, "pdb_id": "test"}
     result = decide_refprog(pdb_info)
     msg = "Program(s) in REMARK 3 not interpreted as refinement program(s)"
+    expected = (False, False, False, msg)
+    eq_(result, expected)
+
+
+@patch("bdb.refprog.is_bdb_includable_refprog", return_value=False)
+def test_decide_refprog_nonincludable_refprog(*args):
+    pdb_info = {"prog_last": ["A"], "has_anisou": False, "pdb_id": "test"}
+    result = decide_refprog(pdb_info)
+    msg = "A: this program cannot (yet) be included"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -1083,6 +1108,65 @@ def test_filter_progs_filtered():
         result = filter_progs([p], pv)
         eq_(result, ([], []))
 
+
+def test_get_refi_data_1crn():
+    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+    pdb_id = "1crn"
+    structure = get_structure(pdb_file_path, pdb_id)
+    records = parse_pdb_file(pdb_file_path)
+    pdb_info = get_refi_data(records, structure, pdb_id)
+    eq_(pdb_info["assume_iso"], True)
+    eq_(pdb_info["b_msqav"], False)
+    eq_(pdb_info["b_type"], None)
+    eq_(pdb_info["beq_identical"], None)
+    eq_(pdb_info["correct_uij"], None)
+    eq_(pdb_info["decision"], "PROLSQ: probably full B-factors")
+    eq_(pdb_info["format_date"], "13-JUL-11")
+    eq_(pdb_info["format_vers"], 3.3)
+    eq_(pdb_info["has_anisou"], False)
+    eq_(pdb_info["is_bdb_includable"], True)
+    eq_(pdb_info["other_refinement_remarks"], "")
+    eq_(pdb_info["pdb_id"], "1crn")
+    eq_(pdb_info["prog_inter"], ["PROLSQ"])
+    eq_(pdb_info["prog_last"], ["PROLSQ"])
+    eq_(pdb_info["prog_vers"], ["PROLSQ"])
+    eq_(pdb_info["ref_prog"], ["PROLSQ"])
+    eq_(pdb_info["refprog"], "PROLSQ")
+    eq_(pdb_info["req_tlsanl"], False)
+    eq_(pdb_info["tls_groups"], None)
+    eq_(pdb_info["tls_residual"], False)
+    eq_(pdb_info["tls_sum"], False)
+
+
+def test_get_refi_data_3zzw():
+    pdb_file_path = "bdb/tests/pdb/files/3zzw.pdb"
+    pdb_id = "3zzw"
+    structure = get_structure(pdb_file_path, pdb_id)
+    records = parse_pdb_file(pdb_file_path)
+    pdb_info = get_refi_data(records, structure, pdb_id)
+    eq_(pdb_info["assume_iso"], True)
+    eq_(pdb_info["b_msqav"], False)
+    eq_(pdb_info["b_type"], None)
+    eq_(pdb_info["beq_identical"], 1.0)
+    eq_(pdb_info["correct_uij"], True)
+    eq_(pdb_info["decision"], "Assuming full isotropic B-factors because "\
+            "enough B-factors can be reproduced from the ANISOU records")
+    eq_(pdb_info["format_date"], "13-JUL-11")
+    eq_(pdb_info["format_vers"], 3.3)
+    eq_(pdb_info["has_anisou"], True)
+    eq_(pdb_info["is_bdb_includable"], True)
+    eq_(pdb_info["other_refinement_remarks"], "IDEAL-DIST CONTACT TERM "\
+            "CONTACT SETUP.  ALL ATOMS HAVE CCP4 ATOM TYPE FROM LIBRARY.")
+    eq_(pdb_info["pdb_id"], "3zzw")
+    eq_(pdb_info["prog_inter"], ["BUSTER"])
+    eq_(pdb_info["prog_last"], ["BUSTER"])
+    eq_(pdb_info["prog_vers"], ["2.11.1"])
+    eq_(pdb_info["ref_prog"], ["BUSTER 2.11.1"])
+    eq_(pdb_info["refprog"], "BUSTER 2.11.1")
+    eq_(pdb_info["req_tlsanl"], False)
+    eq_(pdb_info["tls_groups"], 8)
+    eq_(pdb_info["tls_residual"], False)
+    eq_(pdb_info["tls_sum"], False)
 
 
 def test_last_used_empty():
