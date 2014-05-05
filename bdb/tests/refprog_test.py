@@ -1046,8 +1046,7 @@ def test_decide_refprog_nonincludable_refprog(*args):
 
 
 def test_except_refprog_warn():
-    pdb_id = "test"
-    eq_(except_refprog_warn(pdb_id), None)
+    eq_(except_refprog_warn(), None)
 
 
 def test_filter_progs_empty():
@@ -1399,206 +1398,207 @@ def test_one_of_the_two_fail():
 
 def test_parse_refprog_null():
     refprog = "NULL"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = ([None], [None], [None])
     eq_(result, expected)
 
 
 def test_parse_refprog_predefined_exceptions():
     refprog = "X-PLOR 3.1 AND 3.85"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["X-PLOR 3.85"], ["X-PLOR"], ["3.85"])
     eq_(result, expected)
 
     refprog = "X-PLOR 3.1, 3.816"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["X-PLOR 3.816"], ["X-PLOR"], ["3.816"])
     eq_(result, expected)
 
     refprog = "CNS 1.1 & 1.3"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["CNS 1.3"], ["CNS"], ["1.3"])
     eq_(result, expected)
 
     refprog = "CNS 0.4, O, OOPS"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["CNS 0.4", "O", "OOPS"],
                  ["CNS", "O", "OOPS"],
                  ["0.4", "-", "-"])
     eq_(result, expected)
 
     refprog = "CNS 0.1-0.4"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["CNS 0.4"], ["CNS"], ["0.4"])
     eq_(result, expected)
 
     refprog = "CNS 0.9,1.0,1.1"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["CNS 1.1"], ["CNS"], ["1.1"])
     eq_(result, expected)
 
     refprog = "CNS 1.3 WITH DEN REFINEMENT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["CNS 1.3"], ["CNS"], ["1.3"])
     eq_(result, expected)
 
     refprog = "CNS 1.2 (USING XTAL_TWIN UTILITIES)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["CNS 1.2"], ["CNS"], ["1.2"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINE_REFMAC 5.5.0070"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["PHENIX.REFINE", "REFMAC 5.5.0070"],
                  ["PHENIX.REFINE", "REFMAC"],
                  ["-", "5.5.0070"])
     eq_(result, expected)
 
     refprog = "PHENIX (CCI APPS 2007_04_06_1210)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["PHENIX (PHENIX.REFINE: 2007_04_06_1210)"],
                  ["PHENIX.REFINE"],
                  ["2007_04_06_1210"])
     eq_(result, expected)
 
     refprog = "PHENIX VERSION 1.8_1069 (PHENIX.REFINE)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["PHENIX (PHENIX.REFINE: 1.8_1069)"], ["PHENIX.REFINE"],
                  ["1.8_1069"])
     eq_(result, expected)
 
     refprog = "PHENIX 1.6.2_432 - REFINE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["PHENIX (PHENIX.REFINE: 1.6.2_432)"], ["PHENIX.REFINE"],
                  ["1.6.2_432"])
     eq_(result, expected)
 
     refprog = "PHENIX REFINE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINE"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX, REFINE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINE"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX AUTOREFINE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINE"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.1.24/TLS"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["REFMAC 5.1.24"], ["REFMAC"], ["5.1.24"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.2.0005 24/04/2001"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["REFMAC 5.2.0005"], ["REFMAC"], ["5.2.0005"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.2.0019 24/04/2001"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
     eq_(result, expected)
 
     refprog = "REFMAC X-PLOR 3.843"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["REFMAC", "X-PLOR 3.843"],
                  ["REFMAC", "X-PLOR"],
                  ["-", "3.843"])
     eq_(result, expected)
 
     refprog = "REFMAC5 5.2.0019"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.5.0109 (AND PHENIX)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["REFMAC 5.5.0109", "PHENIX.REFINE"],
                  ["REFMAC", "PHENIX.REFINE"],
                  ["5.5.0109", "-"])
     eq_(result, expected)
 
     refprog = "BUSTER, BETA VERSION"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["BUSTER BETA"], ["BUSTER"], ["BETA"])
     eq_(result, expected)
 
     refprog = "TNT BUSTER/TNT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["TNT", "BUSTER/TNT"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "O, VERSION 9.0.7"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["O 9.0.7"], ["O"], ["9.0.7"])
     eq_(result, expected)
 
 
 def test_parse_refprog_nosplit():
+    # 4ow3
     refprog = "PHENIX (PHENIX.REFINE: DEV_1549+SVN)      "
-    result = parse_refprog(refprog, "4ow3")
+    result = parse_refprog(refprog)
     expected =  (["PHENIX (PHENIX.REFINE: DEV_1549+SVN)"], ["PHENIX.REFINE"],
                  ["np"])
     eq_(result, expected)
 
     refprog = "BUSTER/TNT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["BUSTER/TNT"], ["BUSTER"], ["-"])
     eq_(result, expected)
 
     refprog = "BUSTER/RESOLVE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["BUSTER/RESOLVE"], ["BUSTER"], ["np"])
     eq_(result, expected)
 
     refprog = "ARP/WARP"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["ARP/WARP"], ["ARP/WARP"], ["-"])
     eq_(result, expected)
 
     refprog = "WARP/ARP"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["WARP/ARP"], ["OTHER"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_split():
     refprog = "TNT/BUSTER"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT, BUSTER"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT&BUSTER"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT ; BUSTER"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT +, BUSTER"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT AND BUSTER,"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "/REFMAC5.7/////COOT//"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected =  (["REFMAC5.7", "COOT"], ["REFMAC", "COOT"], ["5.7", "-"])
     eq_(result, expected)
 
@@ -1613,221 +1613,221 @@ def test_parse_refprog_no_versions():
                 "SOLVE/RESOLVE", "TIBBITTS", "TOM", "TOM/FRODO", "XFIT",
                 "XPLEO", "XTALVIEW"]
     for refprog in refprogs:
-        result = parse_refprog(refprog, "test")
+        result = parse_refprog(refprog)
         expected = ([refprog], [refprog], ["-"])
         eq_(result, expected)
 
 
 def test_parse_refprog_no_versions_with_version():
     refprog = "CCP4 VERSION"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = ([refprog], ["CCP4"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_refmac():
     refprog = "refamc"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFAMC"], ["REFMAC"], ["-"])
     eq_(result, expected)
 
     refprog = "REFMEC"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMEC"], ["REFMAC"], ["-"])
     eq_(result, expected)
 
     # Theoretically possible...
     refprog = "CCCCCC"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CCCCCC"], ["REFMAC"], ["-"])
     eq_(result, expected)
 
     refprog = "REFMAC"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMAC"], ["REFMAC"], ["-"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.7"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMAC 5.7"], ["REFMAC"], ["5.7"])
     eq_(result, expected)
 
     refprog = "REFMAC5.7"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMAC5.7"], ["REFMAC"], ["5.7"])
     eq_(result, expected)
 
     refprog = "REFMAC V 5.7"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMAC V 5.7"], ["REFMAC"], ["5.7"])
     eq_(result, expected)
 
     refprog = "REFMAC V. 5.7"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMAC V. 5.7"], ["REFMAC"], ["np"])
     eq_(result, expected)
 
     refprog = "REFMAC NONE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMAC NONE"], ["REFMAC"], ["NONE"])
     eq_(result, expected)
 
     refprog = "REFMAC                   5.8                  "
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMAC                   5.8"], ["REFMAC"], ["np"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.8                  "
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["REFMAC 5.8"], ["REFMAC"], ["5.8"])
     eq_(result, expected)
 
 
 def test_parse_refprog_cns():
     refprog = "CNS"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS"], ["CNS"], ["-"])
     eq_(result, expected)
 
     refprog = "CNS          "
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS"], ["CNS"], ["-"])
     eq_(result, expected)
 
     refprog = "CNS (2)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS (2)"], ["CNS"], ["2"])
     eq_(result, expected)
 
     refprog = "CNS ( 2 )"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS ( 2 )"], ["CNS"], ["np"])
     eq_(result, expected)
 
     refprog = "CNS 2"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS 2"], ["CNS"], ["2"])
     eq_(result, expected)
 
     refprog = "CNS2.0"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS2.0"], ["CNS"], ["2.0"])
     eq_(result, expected)
 
     refprog = "CNS V. ABC123.456"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS V. ABC123.456"], ["CNS"], ["ABC123.456"])
     eq_(result, expected)
 
     refprog = "CNS-3"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS-3"], ["CNS"], ["3"])
     eq_(result, expected)
 
     # Theoretically possible...
     refprog = "CNS-V.3"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS-V.3"], ["CNS"], ["V.3"])
     eq_(result, expected)
 
     # Theoretically possible...
     refprog = "CNS (V.3)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS (V.3)"], ["CNS"], ["V.3"])
     eq_(result, expected)
 
     # Theoretically possible...
     refprog = "CNS-"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNS-"], ["CNS"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_twinlsq():
     refprog = "TWIN_LSQ"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TWIN_LSQ"], ["CNS"], ["TWIN_LSQ"])
     eq_(result, expected)
 
     refprog = "TWIN_LSQ 4"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TWIN_LSQ 4"], ["CNS"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_cnx():
     refprog = "CNX"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNX"], ["CNX"], ["-"])
     eq_(result, expected)
 
     refprog = "CNX          "
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNX"], ["CNX"], ["-"])
     eq_(result, expected)
 
     refprog = "CNX (ACCELRYS)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNX (ACCELRYS)"], ["CNX"], ["-"])
     eq_(result, expected)
 
     refprog = "CNX V0"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNX V0"], ["CNX"], ["np"])
     eq_(result, expected)
 
     refprog = "CNX 0"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNX 0"], ["CNX"], ["0"])
     eq_(result, expected)
 
     refprog = "CNX 0.9-9"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNX 0.9-9"], ["CNX"], ["0.9-9"])
     eq_(result, expected)
 
     refprog = "CNX0.9-9"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CNX0.9-9"], ["CNX"], ["0.9-9"])
     eq_(result, expected)
 
 
 def test_parse_refprog_xplor():
     refprog = "X-PLOR"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["X-PLOR"], ["X-PLOR"], ["-"])
     eq_(result, expected)
 
     refprog = "XPLOR"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["XPLOR"], ["X-PLOR"], ["-"])
     eq_(result, expected)
 
     refprog = "X-PLOR (ONLINE)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["X-PLOR (ONLINE)"], ["X-PLOR"], ["-"])
     eq_(result, expected)
 
     refprog = "X-PLOR V5.4321"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["X-PLOR V5.4321"], ["X-PLOR"], ["V5.4321"])
     eq_(result, expected)
 
     refprog = "X-PLOR V 5"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["X-PLOR V 5"], ["X-PLOR"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_phenix_ensemble_refinement():
     refprog = "PHENIX.ENSEMBLE_REFINEMENT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.ENSEMBLE_REFINEMENT"], ["PHENIX.ENSEMBLE_REFINEMENT"],
                 ["np"])
     eq_(result, expected)
 
     refprog = "PHENIX (PHENIX.ENSEMBLE_REFINEMENT: dev-9999)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX (PHENIX.ENSEMBLE_REFINEMENT: DEV-9999)"],
                 ["PHENIX.ENSEMBLE_REFINEMENT"], ["DEV-9999"])
     eq_(result, expected)
@@ -1835,130 +1835,130 @@ def test_parse_refprog_phenix_ensemble_refinement():
 
 def test_parse_refprog_phenix():
     refprog = "PHENIX"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINE"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINEMENT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINEMENT"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX (PHENIX.REFINE)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX (PHENIX.REFINE)"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX (PHENIX)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX (PHENIX)"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINE (PHENIX.REFINE)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINE (PHENIX.REFINE)"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINEMENT (PHENIX.REFINE)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINEMENT (PHENIX.REFINE)"], ["PHENIX.REFINE"],
                 ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINEMENT (PHENIX)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINEMENT (PHENIX)"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
     refprog = "PHENIX 1.8"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX 1.8"], ["PHENIX.REFINE"], ["1.8"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINE 1.8AB"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINE 1.8AB"], ["PHENIX.REFINE"], ["np"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINE: 1.8AB"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINE: 1.8AB"], ["PHENIX.REFINE"], ["1.8AB"])
     eq_(result, expected)
 
     refprog = "PHENIX (1.8_1060)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX (1.8_1060)"], ["PHENIX.REFINE"], ["1.8_1060"])
     eq_(result, expected)
 
     refprog = "PHENIX (PHENIX.REFINE: 1.8)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX (PHENIX.REFINE: 1.8)"], ["PHENIX.REFINE"], ["1.8"])
     eq_(result, expected)
 
     refprog = "AND PHENIX.REFINE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PHENIX.REFINE"], ["PHENIX.REFINE"], ["-"])
     eq_(result, expected)
 
 
 def test_parse_refprog_buster():
     refprog = "BUSTER"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER"], ["BUSTER"], ["-"])
     eq_(result, expected)
 
     refprog = "AUTOBUSTER 4"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["AUTOBUSTER 4"], ["BUSTER"], ["4"])
     eq_(result, expected)
 
     refprog = "BUSTER 2.10.0"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER 2.10.0"], ["BUSTER"], ["2.10.0"])
     eq_(result, expected)
 
     refprog = "BUSTER-TNT 2.11.2"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER-TNT 2.11.2"], ["BUSTER"], ["2.11.2"])
     eq_(result, expected)
 
     refprog = "BUSTER-TNT 2.X"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER-TNT 2.X"], ["BUSTER"], ["2.X"])
     eq_(result, expected)
 
     refprog = "BUSTER-TNT V. 1.1.1"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER-TNT V. 1.1.1"], ["BUSTER"], ["1.1.1"])
     eq_(result, expected)
 
     refprog = "BUSTER-TNT BUSTER 2.8.0"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER-TNT BUSTER 2.8.0"], ["BUSTER"], ["2.8.0"])
     eq_(result, expected)
 
     refprog = "BUSTER TNT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER TNT"], ["BUSTER"], ["-"])
     eq_(result, expected)
 
     refprog = "BUSTER/TNT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER/TNT"], ["BUSTER"], ["-"])
     eq_(result, expected)
 
     refprog = "AUTOBUSTER"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["AUTOBUSTER"], ["BUSTER"], ["-"])
     eq_(result, expected)
 
     refprog = "BUSTER/TNT a b c 1 2 3"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["BUSTER/TNT A B C 1 2 3"], ["BUSTER"], ["np"])
     eq_(result, expected)
 
@@ -1966,325 +1966,325 @@ def test_parse_refprog_buster():
 
 def test_parse_refprog_tnt():
     refprog = "TNT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TNT"], ["TNT"], ["-"])
     eq_(result, expected)
 
     refprog = "TNT V. 5-E"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TNT V. 5-E"], ["TNT"], ["5-E"])
     eq_(result, expected)
 
     refprog = "TNT 5.6.1"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TNT 5.6.1"], ["TNT"], ["5.6.1"])
     eq_(result, expected)
 
     refprog = "TNT 5F"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TNT 5F"], ["TNT"], ["5F"])
     eq_(result, expected)
 
     refprog = "TNT V. 5-F PRERELEASE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TNT V. 5-F PRERELEASE"], ["TNT"], ["5-F PRERELEASE"])
     eq_(result, expected)
 
     refprog = "TNT 5-F PRERELEASE"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TNT 5-F PRERELEASE"], ["TNT"], ["5-F PRERELEASE"])
     eq_(result, expected)
 
     refprog = "TNT 5F 5G"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["TNT 5F 5G"], ["TNT"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_shelx():
     refprog = "SHELX"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELX"], ["SHELX"], ["-"])
     eq_(result, expected)
 
     refprog = "SHELX97"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELX97"], ["SHELX"], ["97"])
     eq_(result, expected)
 
     refprog = "SHELXH"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELXH"], ["SHELX"], ["H"])
     eq_(result, expected)
 
     refprog = "SHELXS"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELXS"], ["SHELX"], ["S"])
     eq_(result, expected)
 
     refprog = "SHELXL"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELXL"], ["SHELX"], ["L"])
     eq_(result, expected)
 
     refprog = "SHELX-97"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELX-97"], ["SHELX"], ["97"])
     eq_(result, expected)
 
     refprog = "SHELXL-97"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELXL-97"], ["SHELX"], ["L-97"])
     eq_(result, expected)
 
     refprog = "SHELXH-97"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELXH-97"], ["SHELX"], ["H-97"])
     eq_(result, expected)
 
     refprog = "SHELX-97-1"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELX-97-1"], ["SHELX"], ["97-1"])
     eq_(result, expected)
 
     refprog = "SHELX 97-1"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELX 97-1"], ["SHELX"], ["97-1"])
     eq_(result, expected)
 
     refprog = "SHELXL 97"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELXL 97"], ["SHELX"], ["L 97"])
     eq_(result, expected)
 
     refprog = "SHELXL97"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELXL97"], ["SHELX"], ["L97"])
     eq_(result, expected)
 
     refprog = "SHELX-L"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELX-L"], ["SHELX"], ["L"])
     eq_(result, expected)
 
     refprog = "SHELXL-L"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["SHELXL-L"], ["SHELX"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_arpwarp():
     refprog = "ARP/WARP"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["ARP/WARP"], ["ARP/WARP"], ["-"])
     eq_(result, expected)
 
     refprog = "ARP/WARP V. 1.0"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["ARP/WARP V. 1.0"], ["ARP/WARP"], ["1.0"])
     eq_(result, expected)
 
     refprog = "ARP/WARP 1.0"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["ARP/WARP 1.0"], ["ARP/WARP"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_coot():
     refprog = "COOT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["COOT"], ["COOT"], ["-"])
     eq_(result, expected)
 
     refprog = "COOT 0.1-3-PRE-1"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["COOT 0.1-3-PRE-1"], ["COOT"], ["0.1-3-PRE-1"])
     eq_(result, expected)
 
     refprog = "COOT 0.0.33"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["COOT 0.0.33"], ["COOT"], ["0.0.33"])
     eq_(result, expected)
 
     refprog = "COOT V. 0.0.33"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["COOT V. 0.0.33"], ["COOT"], ["0.0.33"])
     eq_(result, expected)
 
     refprog = "COOT $"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["COOT $"], ["COOT"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_o():
     refprog = "O"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["O"], ["O"], ["-"])
     eq_(result, expected)
 
     refprog = "O 9.0.7"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["O 9.0.7"], ["O"], ["np"])
     eq_(result, expected)
 
     refprog = "O9.0.7"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["O9.0.7"], ["O"], ["9.0.7"])
     eq_(result, expected)
 
 
 def test_parse_refprog_profft():
     refprog = "PROFFT"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PROFFT"], ["PROLSQ"], ["PROFFT"])
     eq_(result, expected)
 
     refprog = "PROFFT (MODIFIED BY Z.OTWINOWSKI)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = ([refprog], ["PROLSQ"], ["PROFFT MODIFIED BY Z.OTWINOWSKI"])
     eq_(result, expected)
 
     refprog = "PROFFT anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PROFFT ANYTHING ELSE"], ["PROLSQ"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_prolsq():
     refprog = "PROLSQ"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PROLSQ"], ["PROLSQ"], ["PROLSQ"])
     eq_(result, expected)
 
     refprog = "PROLSQ (MODIFIED BY G.J.QUIGLEY)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = ([refprog], ["PROLSQ"], ["PROLSQ MODIFIED BY G.J.QUIGLEY"])
     eq_(result, expected)
 
     refprog = "PROLSQ anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PROLSQ ANYTHING ELSE"], ["PROLSQ"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_protin():
     refprog = "PROTIN"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PROTIN"], ["PROLSQ"], ["PROLSQ"])
     eq_(result, expected)
 
     refprog = "PROTIN anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PROTIN ANYTHING ELSE"], ["PROLSQ"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_nuclsq():
     refprog = "NUCLSQ"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["NUCLSQ"], ["PROLSQ"], ["NUCLSQ"])
     eq_(result, expected)
 
     refprog = "NUCLSQ (MODIFIED BY G.J.QUIGLEY)"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = ([refprog], ["PROLSQ"], ["NUCLSQ MODIFIED BY G.J.QUIGLEY"])
     eq_(result, expected)
 
     refprog = "NUCLSQ anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["NUCLSQ ANYTHING ELSE"], ["PROLSQ"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_nuclin():
     refprog = "NUCLIN"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["NUCLIN"], ["PROLSQ"], ["NUCLSQ"])
     eq_(result, expected)
 
     refprog = "PROTIN anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["PROTIN ANYTHING ELSE"], ["PROLSQ"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_gprlsa():
     refprog = "GPRLSA"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["GPRLSA"], ["PROLSQ"], ["GPRLSA"])
     eq_(result, expected)
 
     refprog = "GPRLSA anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["GPRLSA ANYTHING ELSE"], ["PROLSQ"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_deriv():
     refprog = "DERIV"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["DERIV"], ["PROLSQ"], ["DERIV"])
     eq_(result, expected)
 
     refprog = "DERIV anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["DERIV ANYTHING ELSE"], ["PROLSQ"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_cerius():
     refprog = "CERIUS"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CERIUS"], ["CERIUS"], ["-"])
     eq_(result, expected)
 
     refprog = "CERIUS 2"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CERIUS 2"], ["CERIUS"], ["2"])
     eq_(result, expected)
 
     refprog = "CERIUS2"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CERIUS2"], ["CERIUS"], ["2"])
     eq_(result, expected)
 
     refprog = "CERIUS anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["CERIUS ANYTHING ELSE"], ["CERIUS"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_hkl3000():
     refprog = "HKL-3000"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["HKL-3000"], ["HKL-3000"], ["-"])
     eq_(result, expected)
 
     refprog = "HKL3000"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["HKL3000"], ["HKL-3000"], ["-"])
     eq_(result, expected)
 
     refprog = "HKL-3000 anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["HKL-3000 ANYTHING ELSE"], ["HKL-3000"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_gromos():
     refprog = "GROMOS"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["GROMOS"], ["GROMOS"], ["-"])
     eq_(result, expected)
 
     refprog = "GROMOS87"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["GROMOS87"], ["GROMOS"], ["87"])
     eq_(result, expected)
 
     refprog = "GROMOS anything else"
-    result = parse_refprog(refprog, "test")
+    result = parse_refprog(refprog)
     expected = (["GROMOS ANYTHING ELSE"], ["GROMOS"], ["np"])
     eq_(result, expected)
 
@@ -2301,5 +2301,5 @@ def test_parse_refprog_other():
                 "REAL-SPACE REFINEMENT",
                 "SOME OTHER REFPROG",]
     for p in refprogs:
-        result = parse_refprog(p, "test")
+        result = parse_refprog(p)
         expected = ([p], ["OTHER"], ["np"])

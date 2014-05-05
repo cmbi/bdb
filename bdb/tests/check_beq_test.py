@@ -23,7 +23,7 @@ def test_check_beq_identical():
     pdb_file_path = "bdb/tests/pdb/files/3zzw.pdb"
     pdb_id = "3zzw"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = check_beq(structure, pdb_id)
+    result = check_beq(structure)
     eq_(result["beq_identical"], 1.0)
     eq_(result["correct_uij"], True)
 
@@ -36,7 +36,7 @@ def test_check_beq_incorrect_uij():
     pdb_file_path = "bdb/tests/pdb/files/2a83.pdb"
     pdb_id = "2a83"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = check_beq(structure, pdb_id)
+    result = check_beq(structure)
     eq_(result["beq_identical"], 0.9419321685508736)
     eq_(result["correct_uij"], False)
 
@@ -53,16 +53,22 @@ def test_check_beq_not_identical():
     pdb_file_path = "bdb/tests/pdb/files/1g8t.pdb"
     pdb_id = "1g8t"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = check_beq(structure, pdb_id)
+    result = check_beq(structure)
     eq_(result["beq_identical"], 0.999124343257443)
     eq_(result["correct_uij"], True)
+
+
+@raises(ValueError)
+def test_check_beq_structure_none():
+    """Tests that check_beq raises a value error if structure is None."""
+    check_beq(None)
 
 
 @raises(AssertionError)
 def test_check_combinations_error():
     """Tests check_combinations of U values."""
     anisou = [1, 2, 3, 4, 5]
-    check_combinations(anisou, 0, 0, "test")
+    check_combinations(anisou, 0, 0)
 
 
 def test_check_combinations_first():
@@ -70,7 +76,7 @@ def test_check_combinations_first():
     uij = [4, 5, 6, 1, 0, 0]
     beq = 8*np.pi**2 * (uij[0] + uij[1] + uij[2])/3
     tol = 1e-08
-    reproduced = check_combinations(uij, beq, tol, "test", check_first=True)
+    reproduced = check_combinations(uij, beq, tol, check_first=True)
     eq_(reproduced, True)
 
 
@@ -79,10 +85,10 @@ def test_check_combinations():
     uij = [1, 5, 6, 4, 0, 0]
     beq = 8*np.pi**2 * (uij[3] + uij[1] + uij[2])/3
     tol = 1e-08
-    reproduced = check_combinations(uij, beq, tol, "test", check_first=True)
+    reproduced = check_combinations(uij, beq, tol, check_first=True)
     eq_(reproduced, True)
 
-    reproduced = check_combinations(uij, beq, tol, "test")
+    reproduced = check_combinations(uij, beq, tol)
     eq_(reproduced, True)
 
 
@@ -91,7 +97,7 @@ def test_determine_b_group_protein_overall():
     pdb_file_path = "bdb/tests/pdb/files/1etu.pdb"
     pdb_id = "1etu"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "overall")
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], None)
@@ -107,7 +113,7 @@ def test_determine_b_group_protein_overall_2():
     pdb_file_path = "bdb/tests/pdb/files/1az2.pdb"
     pdb_id = "1az2"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "overall")
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], None)
@@ -123,7 +129,7 @@ def test_determine_b_group_protein_overall_3():
     pdb_file_path = "bdb/tests/pdb/files/1c2y.pdb"
     pdb_id = "1c2y"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "overall")
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], None)
@@ -134,7 +140,7 @@ def test_determine_b_group_protein_1ADP():
     pdb_file_path = "bdb/tests/pdb/files/1av1.pdb"
     pdb_id = "1av1"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "residue_1ADP")
 
 
@@ -143,7 +149,7 @@ def test_determine_b_group_nucleic_None():
     pdb_file_path = "bdb/tests/pdb/files/1av1.pdb"
     pdb_id = "1av1"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["nucleic_b"], None)
 
 
@@ -152,7 +158,7 @@ def test_determine_b_group_nucleic_2ADP():
     pdb_file_path = "bdb/tests/pdb/files/1hlz.pdb"
     pdb_id = "1hlz"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "residue_1ADP")
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], "residue_2ADP")
@@ -163,7 +169,7 @@ def test_determine_b_group_protein_individual():
     pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
     pdb_id = "1crn"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "individual")
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], None)
@@ -174,7 +180,7 @@ def test_determine_b_group_nucleic_individual():
     pdb_file_path = "bdb/tests/pdb/files/100d.pdb"
     pdb_id = "100d"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], None)
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], "individual")
@@ -185,7 +191,7 @@ def test_determine_b_group_protein_no_b_factors():
     pdb_file_path = "bdb/tests/pdb/files/1mcb.pdb"
     pdb_id = "1mcb"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "no_b-factors")
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], None)
@@ -196,7 +202,7 @@ def test_determine_b_group_calpha_false():
     pdb_file_path = "bdb/tests/pdb/files/1av1.pdb"
     pdb_id = "1av1"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["calpha_only"], False)
 
 
@@ -205,7 +211,7 @@ def test_determine_b_group_calpha_true():
     pdb_file_path = "bdb/tests/pdb/files/1a1q.pdb"
     pdb_id = "1a1q"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["calpha_only"], True)
 
 
@@ -214,7 +220,7 @@ def test_determine_b_group_calpha_true_2():
     pdb_file_path = "bdb/tests/pdb/files/1efg.pdb"
     pdb_id = "1efg"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "overall")
     eq_(result["calpha_only"], True)
     eq_(result["nucleic_b"], None)
@@ -225,7 +231,7 @@ def test_determine_b_group_calpha_true_3():
     pdb_file_path = "bdb/tests/pdb/files/1efg.pdb"
     pdb_id = "1efg"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "overall")
     eq_(result["calpha_only"], True)
 
@@ -235,7 +241,7 @@ def test_determine_b_group_calpha_true_phos_true():
     pdb_file_path = "bdb/tests/pdb/files/3cw1.pdb"
     pdb_id = "3cw1"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "overall")
     eq_(result["calpha_only"], True)
     eq_(result["nucleic_b"], "overall")
@@ -247,7 +253,7 @@ def test_determine_b_group_too_short():
     pdb_file_path = "bdb/tests/pdb/files/438d.pdb"
     pdb_id = "438d"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], None)
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], None)
@@ -259,7 +265,7 @@ def test_determine_b_group_nousefulres():
     pdb_file_path = "bdb/tests/pdb/files/1c0q.pdb"
     pdb_id = "1c0q"
     structure = get_structure(pdb_file_path, pdb_id)
-    result = determine_b_group(structure, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "individual")
     eq_(result["calpha_only"], False)
     eq_(result["nucleic_b"], None)

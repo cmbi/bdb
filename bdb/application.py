@@ -56,7 +56,7 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
         bdbd.update(refi_data)
 
         # Info about B-factor group type
-        b_group = determine_b_group(structure, pdb_id)
+        b_group = determine_b_group(structure)
         bdbd.update(b_group)
 
 
