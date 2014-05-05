@@ -7,12 +7,12 @@ import os
 import re
 import sys
 
-from bdb.pdb.parser import (parse_pdb_file, parse_other_ref_remarks, is_bmsqav,
+from pdbb.pdb.parser import (parse_pdb_file, parse_other_ref_remarks, is_bmsqav,
                             parse_btype, parse_format_date_version,
                             parse_num_tls_groups, parse_ref_prog,
                             is_tls_residual, is_tls_sum)
-from bdb.bdb_utils import write_whynot
-from bdb.check_beq import check_beq, report_beq
+from pdbb.bdb_utils import write_whynot
+from pdbb.check_beq import check_beq, report_beq
 
 
 _log = logging.getLogger(__name__)

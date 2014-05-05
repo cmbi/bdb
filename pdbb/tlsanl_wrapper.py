@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 
-from bdb.bdb_utils import write_whynot
+from pdbb.bdb_utils import write_whynot
 
 
 _log = logging.getLogger(__name__)

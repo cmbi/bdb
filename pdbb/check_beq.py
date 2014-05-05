@@ -10,7 +10,7 @@ import shutil
 import Bio.PDB
 import numpy as np
 
-from bdb.pdb.parser import get_pdb_header_and_trailer
+from pdbb.pdb.parser import get_pdb_header_and_trailer
 
 
 _log = logging.getLogger(__name__)
