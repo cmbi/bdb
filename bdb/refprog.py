@@ -549,7 +549,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
             is_bdb_includable = True
             assume_iso = True
             message = "Assuming full isotropic B-factors because enough "\
-                      "B-factors can be reproduced from the ANISOU records"
+                      "B-factors could be reproduced from the ANISOU records"
             _log.info(message)
     pdb_info.update(reproduced)
 

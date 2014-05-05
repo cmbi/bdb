@@ -1149,7 +1149,7 @@ def test_get_refi_data_3zzw():
     eq_(pdb_info["beq_identical"], 1.0)
     eq_(pdb_info["correct_uij"], True)
     eq_(pdb_info["decision"], "Assuming full isotropic B-factors because "\
-            "enough B-factors can be reproduced from the ANISOU records")
+            "enough B-factors could be reproduced from the ANISOU records")
     eq_(pdb_info["format_date"], "13-JUL-11")
     eq_(pdb_info["format_vers"], 3.3)
     eq_(pdb_info["has_anisou"], True)

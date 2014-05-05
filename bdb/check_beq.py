@@ -29,7 +29,7 @@ def check_beq(structure):
                    ANISOU records was necessary to reproduce the B-factors.
     """
     if not structure:
-        msg = "Could check Beq values in ANISOU records. No structure."
+        msg = "Could not check Beq values in ANISOU records. No structure."
         _log.error(msg)
         raise ValueError(msg)
 
