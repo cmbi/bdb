@@ -10,11 +10,6 @@ from bdb.check_beq import (check_beq, check_combinations, determine_b_group,
 import numpy as np
 
 
-def test_check_beq_atom_none():
-    #TODO implement a test
-    pass
-
-
 def test_check_beq_identical():
     """Tests check_beq.
 

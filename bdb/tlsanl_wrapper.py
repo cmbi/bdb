@@ -46,7 +46,6 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
                 print(stderr)
     except IOError as ex:
         _log.error(ex)
-    # TODO categorize TLSANL problems (parse tlsanl.log)
     if p.returncode != 0:
         message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
         write_whynot(pdb_id, message)

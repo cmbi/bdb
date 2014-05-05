@@ -128,8 +128,6 @@ def main():
     init_logger(args.pdb_id, args.verbose)
 
     # Check that the system has the required programs and libraries installed
-    # TODO: This should be moved to the `setup.py` file or at least be provided
-    #       via a function.
     import requirements
 
     if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id,

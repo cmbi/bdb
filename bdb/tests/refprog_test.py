@@ -1200,19 +1200,6 @@ def test_get_refi_data_2wnl():
     eq_(pdb_info["tls_sum"], True)
 
 
-# TODO fix patch
-#@patch("bdb.pdb.parser.parse_ref_prog", return_value=None)
-#def test_get_refprog_no_refprog(*args):
-#    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
-#    pdb_id = "1crn"
-#    structure = get_structure(pdb_file_path, pdb_id)
-#    records = parse_pdb_file(pdb_file_path)
-#    pdb_info = get_refi_data(records, structure, pdb_id)
-#    msg = "Refinement program parse error"
-#    eq_(pdb_info["refprog"], None)
-#    eq_(pdb_info["decision"], msg)
-
-
 def test_last_used_empty():
     pin = []
     pv = []
