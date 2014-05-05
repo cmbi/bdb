@@ -1,12 +1,12 @@
 from mock import patch
 from nose.tools import eq_, ok_, raises
 
-from bdb.check_beq import get_structure
-from bdb.refprog import (decide_refprog, decide_refprog_restrain,
+from pdbb.check_beq import get_structure
+from pdbb.refprog import (decide_refprog, decide_refprog_restrain,
                          except_refprog_warn, filter_progs, last_used,
                          is_bdb_includable_refprog, one_of_the_two,
                          parse_refprog, get_refi_data)
-from bdb.pdb.parser import parse_pdb_file
+from pdbb.pdb.parser import parse_pdb_file
 
 
 BNEQ_MSG = "Not enough B-factors could be reproduced from ANISOU records"
@@ -1036,7 +1036,7 @@ def test_decide_refprog_too_few():
     eq_(result, expected)
 
 
-@patch("bdb.refprog.is_bdb_includable_refprog", return_value=False)
+@patch("pdbb.refprog.is_bdb_includable_refprog", return_value=False)
 def test_decide_refprog_nonincludable_refprog(*args):
     pdb_info = {"prog_last": ["A"], "has_anisou": False, "pdb_id": "test"}
     result = decide_refprog(pdb_info)
@@ -1109,7 +1109,7 @@ def test_filter_progs_filtered():
 
 
 def test_get_refi_data_1crn():
-    pdb_file_path = "bdb/tests/pdb/files/1crn.pdb"
+    pdb_file_path = "pdbb/tests/pdb/files/1crn.pdb"
     pdb_id = "1crn"
     structure = get_structure(pdb_file_path, pdb_id)
     records = parse_pdb_file(pdb_file_path)
@@ -1138,7 +1138,7 @@ def test_get_refi_data_1crn():
 
 
 def test_get_refi_data_3zzw():
-    pdb_file_path = "bdb/tests/pdb/files/3zzw.pdb"
+    pdb_file_path = "pdbb/tests/pdb/files/3zzw.pdb"
     pdb_id = "3zzw"
     structure = get_structure(pdb_file_path, pdb_id)
     records = parse_pdb_file(pdb_file_path)
@@ -1169,7 +1169,7 @@ def test_get_refi_data_3zzw():
 
 
 def test_get_refi_data_2wnl():
-    pdb_file_path = "bdb/tests/pdb/files/2wnl.pdb"
+    pdb_file_path = "pdbb/tests/pdb/files/2wnl.pdb"
     pdb_id = "2wnl"
     structure = get_structure(pdb_file_path, pdb_id)
     records = parse_pdb_file(pdb_file_path)

@@ -1,6 +1,6 @@
 from nose.tools import eq_, raises
 
-from bdb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid)
+from pdbb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid)
 
 import argparse
 
@@ -8,7 +8,7 @@ import argparse
 def test_is_valid_directory():
     """Trivial test to check if directory exists."""
     parser = argparse.ArgumentParser()
-    direct = "bdb/tests/pdb/files"
+    direct = "pdbb/tests/pdb/files"
     eq_(is_valid_directory(parser, direct), direct)
 
 
@@ -23,7 +23,7 @@ def test_is_valid_directory_error():
 def test_is_valid_file():
     """Trivial test to check if file exists."""
     parser = argparse.ArgumentParser()
-    file_path = "bdb/tests/pdb/files/1crn.pdb"
+    file_path = "pdbb/tests/pdb/files/1crn.pdb"
     eq_(is_valid_file(parser, file_path), file_path)
 
 
@@ -39,7 +39,7 @@ def test_is_valid_file_error():
 def test_is_valid_file_empty():
     """Trivial test to check if file is empty."""
     parser = argparse.ArgumentParser()
-    file_path = "bdb/tests/pdb/files/empty"
+    file_path = "pdbb/tests/pdb/files/empty"
     is_valid_file(parser, file_path)
 
 

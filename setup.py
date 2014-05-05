@@ -17,10 +17,10 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics',
     ],
     packages=[
-        'bdb',
-        'bdb.pdb',
-        'bdb.tests',
-        'bdb.tests.pdb',
+        'pdbb',
+        'pdbb.pdb',
+        'pdbb.tests',
+        'pdbb.tests.pdb',
     ],
-    scripts=['scripts/bdb', ],
+    scripts=['scripts/mkbdb', ],
 )

@@ -8,14 +8,14 @@ import pyconfig
 import shutil
 import sys
 
-from bdb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
-                           get_bdb_entry_outdir, write_whynot)
-from bdb.check_beq import (determine_b_group, get_structure,
-                           write_multiplied_8pipi)
-from bdb.expdta import check_exp_methods
-from bdb.pdb.parser import parse_pdb_file
-from bdb.refprog import get_refi_data
-from bdb.tlsanl_wrapper import run_tlsanl
+from pdbb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
+                            get_bdb_entry_outdir, write_whynot)
+from pdbb.check_beq import (determine_b_group, get_structure,
+                            write_multiplied_8pipi)
+from pdbb.expdta import check_exp_methods
+from pdbb.pdb.parser import parse_pdb_file
+from pdbb.refprog import get_refi_data
+from pdbb.tlsanl_wrapper import run_tlsanl
 
 
 _log = logging.getLogger(__name__)
