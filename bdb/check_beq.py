@@ -27,6 +27,8 @@ def check_beq(structure):
                    calculating the Beq values from the ANISOU records.
     correct_uij  : False if a non-standard combination of the Uij values in the
                    ANISOU records was necessary to reproduce the B-factors.
+
+    Raise a ValueError if structure is None.
     """
     if not structure:
         msg = "Could not check Beq values in ANISOU records. No structure."
@@ -241,6 +243,10 @@ def determine_b_group_chain(chain):
 
 
 def get_structure(pdb_file_path, pdb_id, verbose=False):
+    """Return a Bio.PDB.Structure for this PDB file.
+
+    Return None if a Structure could not be created.
+    """
     structure = None
     try:
         p = Bio.PDB.PDBParser(QUIET=not verbose)
