@@ -16,7 +16,7 @@ from bdb.pdb.parser import get_pdb_header_and_trailer
 _log = logging.getLogger(__name__)
 
 
-def check_beq(structure, pdb_id):
+def check_beq(structure):
     """Determine if Beq values are the same as the reported B-factors.
 
     The margin is 0.015 Angstrom**2
@@ -27,7 +27,14 @@ def check_beq(structure, pdb_id):
                    calculating the Beq values from the ANISOU records.
     correct_uij  : False if a non-standard combination of the Uij values in the
                    ANISOU records was necessary to reproduce the B-factors.
+
+    Raise a ValueError if structure is None.
     """
+    if not structure:
+        msg = "Could not check Beq values in ANISOU records. No structure."
+        _log.error(msg)
+        raise ValueError(msg)
+
     _log.info("Checking Beq values in ANISOU records...")
     margin = 0.015
     has_anisou = False
@@ -36,8 +43,6 @@ def check_beq(structure, pdb_id):
     reproduced = 0.0
     correct_uij = True
     for atom in structure.get_atoms():
-        if atom is None:
-            break # this happens sometimes
         anisou = atom.get_anisou()
         if anisou is not None:
             has_anisou = True
@@ -47,7 +52,7 @@ def check_beq(structure, pdb_id):
             b = atom.get_bfactor()
             if np.isclose(b, beq, atol=margin):
                 eq = eq + 1
-            elif check_combinations(anisou, b, margin, pdb_id):
+            elif check_combinations(anisou, b, margin):
                 """ e.g. 2a83, 2p6e, 2qik, 3bik, 3d95, 3d96, 3g5t
                 """
                 eq = eq + 1
@@ -73,7 +78,7 @@ def check_beq(structure, pdb_id):
     return {"beq_identical": reproduced, "correct_uij": correct_uij}
 
 
-def check_combinations(anisou, b, margin, pdb_id, check_first=False):
+def check_combinations(anisou, b, margin, check_first=False):
     """Check if the B-factor can be reproduced by non-standard U combinations.
 
     Standard: U11, U22, and U33 are the first three values in the ANISOU record
@@ -94,7 +99,7 @@ def check_combinations(anisou, b, margin, pdb_id, check_first=False):
     return reproduced
 
 
-def determine_b_group(structure, pdb_id):
+def determine_b_group(structure):
     """Determine the most likely B-factor parameterization.
 
     Return a dictionary with separated output for protein and nucleic acid and
@@ -235,6 +240,10 @@ def determine_b_group_chain(chain):
 
 
 def get_structure(pdb_file_path, pdb_id, verbose=False):
+    """Return a Bio.PDB.Structure for this PDB file.
+
+    Return None if a Structure could not be created.
+    """
     structure = None
     try:
         p = Bio.PDB.PDBParser(QUIET=not verbose)
@@ -355,7 +364,7 @@ def multiply_bfactors_8pipi(structure):
     return structure
 
 
-def report_beq(pdb_id, reproduced):
+def report_beq(reproduced):
     """Report if Beqs are identical to B-factors."""
     if reproduced["beq_identical"] is None:
         _log.debug("No ANISOU records")
@@ -422,60 +431,3 @@ def write_multiplied_8pipi(pdb_file_path, xyzout, pdb_id, verbose=False):
     io.save(xyzout)
     return transfer_header_and_trailer(pdb_file_path, xyzout)
 
-
-if __name__ == "__main__":
-    """Run Beq check or multiply Uiso with 8*pi^2."""
-    parser = argparse.ArgumentParser(
-        description="Check Beq, find B-factor model or calculate B-factors")
-    parser.add_argument("-v", "--verbose", help="show versbose output",
-                        action="store_true")
-    parser.add_argument("--pdbid", help="PDB file name.")
-    sub = parser.add_subparsers(help="sub-command help")
-    calc = sub.add_parser(
-        "calc",
-        help="Multiply B-factor column with 8*pi**2")
-    calc.add_argument(
-        "pdb_file_path",
-        help="PDB file location.")
-    calc.add_argument(
-        "xyzout",
-        help="Output coordinates in PDB format.")
-    check = sub.add_parser(
-        "check",
-        help="Check Beq values or find B-factor model.")
-    check.add_argument(
-        "pdb_file_path",
-        help="PDB file location.")
-    check_mode = check.add_mutually_exclusive_group(required=True)
-    check_mode.add_argument(
-        "--beq",
-        help="Check if Beq values calculated from the ANISOU records in a "
-        "PDB file are equal to the B-factor values reported in the ATOM "
-        "records.",
-        action="store_true")
-    check_mode.add_argument(
-        "--group",
-        help="Determine most likely B-factor model parameterization "
-        "(overall, one per residue, two per residue (backbone and "
-        "side-chain, or individual). TLS groups are not "
-        "taken into account.",
-        action="store_true")
-
-    args = parser.parse_args()
-
-    pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
-
-    structure = get_structure(args.pdb_file_path, pdb_id, args.verbose)
-
-    if args.verbose:
-        _log.setLevel(logging.DEBUG)
-    if args.beq:
-        # Check Beq mode
-        report_beq(pdb_id, check_beq(structure, pdb_id))
-    elif args.group:
-        # Check group mode
-        determine_b_group(structure, pdb_id)
-    else:
-        # Calc mode
-        write_multiplied_8pipi(args.pdb_file_path, args.xyzout, pdb_id,
-                args.verbose)

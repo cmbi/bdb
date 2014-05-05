@@ -1,6 +1,12 @@
 # bdb
-
-**TODO: Write a short paragraph introducing bdb**
+If protein engineers, homology modellers, biologists, or bioinformaticians
+need B-factors from a PDB file, they normally want full isotropic B-factors.
+Normally it is indeed the full B-factor that is stored in the B-factor field
+in the ATOM records of a PDB file. However, sometimes the field contains
+"residual" B-factors or atomic mean-square displacements instead of B-factors.
+The BDB contains PDB files with full isotropic B-factors in the B-factor field
+if the original PDB file contains enough information to determine the content
+of the B-factor field and calculate the full B-factor if necessary.
 
 # License
 

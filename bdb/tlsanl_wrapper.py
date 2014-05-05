@@ -46,7 +46,6 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
                 print(stderr)
     except IOError as ex:
         _log.error(ex)
-    # TODO categorize TLSANL problems (parse tlsanl.log)
     if p.returncode != 0:
         message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
         write_whynot(pdb_id, message)
@@ -65,27 +64,3 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
         _log.info("TLSANL ran without problems.")
     return success
 
-if __name__ == "__main__":
-    """Run TLSANL.
-
-    Exit with an exit code of 1 if TLSANL problems are encountered.
-    """
-    parser = argparse.ArgumentParser(description="Wrapper for TLSANL -\
-            Calculate isotropic B-factors for REFMAC files\
-            with residual B-factors")
-    parser.add_argument("-v", "--verbose", help="show TLSANL output",
-                        action="store_true")
-    parser.add_argument("--pdbid", help="PDB accession code.")
-    parser.add_argument("pdb_file_path", help="PDB file location.")
-    parser.add_argument("xyzout", help="Output coordinates and anisotropic\
-            tensors in PDB format.")
-    args = parser.parse_args()
-    pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
-    import requirements
-    if args.verbose:
-        _log.setLevel(logging.DEBUG)
-    if run_tlsanl(args.pdb_file_path, args.xyzout, pdb_id,
-                  verbose_output=args.verbose):
-        sys.exit(0)
-    else:
-        sys.exit(1)

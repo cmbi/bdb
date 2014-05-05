@@ -423,7 +423,7 @@ def decide_refprog(pdb_info):
     else: # ..or not (?)
         return decide_refprog_notls(pdb_info)
 
-def except_refprog_warn(pdb_id):
+def except_refprog_warn():
     message = "Pre-defined exceptional refinement program case found"
     _log.warn("{}.".format(message))
 
@@ -542,14 +542,14 @@ def get_refi_data(pdb_records, structure, pdb_id):
     # For entries that have ANISOU records..
     reproduced = {"beq_identical": None, "correct_uij": None}
     if pdb_info["has_anisou"]:
-        reproduced = check_beq(structure, pdb_id)
-        report_beq(pdb_id, reproduced)
+        reproduced = check_beq(structure)
+        report_beq(reproduced)
         # ..we assume we can save time
         if reproduced["beq_identical"] > 0.9999:
             is_bdb_includable = True
             assume_iso = True
             message = "Assuming full isotropic B-factors because enough "\
-                      "B-factors can be reproduced from the ANISOU records"
+                      "B-factors could be reproduced from the ANISOU records"
             _log.info(message)
     pdb_info.update(reproduced)
 
@@ -561,7 +561,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
     # Programs mentioned in REMARK 3
     if prog:
         # Interpret refinement program(s)
-        prog, prog_inter, version = parse_refprog(prog, pdb_id)
+        prog, prog_inter, version = parse_refprog(prog)
         # Decide the final structure's most likely refprog signature
         prog_last = last_used(prog_inter, version)
         pdb_info.update({"prog_inter": prog_inter,
@@ -617,7 +617,7 @@ def last_used(pin, pv):
     Return a list of length 1 if the last program can be determined.
     Return a list with multiple programs if we cannot choose between them.
 
-    TODO versions are not yet interpreted.
+    Versions are not yet interpreted.
     """
     assert isinstance(pin, list)
     assert isinstance(pv, list)
@@ -699,7 +699,7 @@ def one_of_the_two(lst, loser, winner):
     return lst
 
 
-def parse_refprog(refprog, pdb_id):
+def parse_refprog(refprog):
     """Parse and sort the refinement program(s) found in the PDB file.
 
     Return a tuple of program(s), interpreted program(s) and version(s).
@@ -740,85 +740,85 @@ def parse_refprog(refprog, pdb_id):
     # Exceptions
     if refprog == "NULL" or refprog == "NONE" or \
             refprog == "NO REFINEMENT":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return ([None], [None], [None])
     elif refprog == "X-PLOR 3.1 AND 3.85":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["X-PLOR 3.85"], ["X-PLOR"], ["3.85"])
     elif refprog == "X-PLOR 3.1, 3.816":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["X-PLOR 3.816"], ["X-PLOR"], ["3.816"])
     elif refprog == "CNS 1.1 & 1.3":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["CNS 1.3"], ["CNS"], ["1.3"])
     elif refprog == "CNS 0.4, O, OOPS":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["CNS 0.4", "O", "OOPS"],
                 ["CNS", "O", "OOPS"],
                 ["0.4", "-", "-"])
     elif refprog == "CNS 0.1-0.4":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["CNS 0.4"], ["CNS"], ["0.4"])
     elif refprog == "CNS 0.9,1.0,1.1":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["CNS 1.1"], ["CNS"], ["1.1"])
     elif refprog == "CNS 1.3 WITH DEN REFINEMENT":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["CNS 1.3"], ["CNS"], ["1.3"])
     elif refprog == "CNS 1.2 (USING XTAL_TWIN UTILITIES)":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["CNS 1.2"], ["CNS"], ["1.2"])
     elif refprog == "PHENIX.REFINE_REFMAC 5.5.0070":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["PHENIX.REFINE", "REFMAC 5.5.0070"],
                 ["PHENIX.REFINE", "REFMAC"],
                 ["-", "5.5.0070"])
     elif refprog == "PHENIX (CCI APPS 2007_04_06_1210)":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["PHENIX (PHENIX.REFINE: 2007_04_06_1210)"], ["PHENIX.REFINE"],
                 ["2007_04_06_1210"])
     elif refprog == "PHENIX VERSION 1.8_1069 (PHENIX.REFINE)":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["PHENIX (PHENIX.REFINE: 1.8_1069)"], ["PHENIX.REFINE"],
                 ["1.8_1069"])
     elif refprog == "PHENIX 1.6.2_432 - REFINE":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["PHENIX (PHENIX.REFINE: 1.6.2_432)"], ["PHENIX.REFINE"],
                 ["1.6.2_432"])
     elif refprog == "PHENIX REFINE" or refprog == "PHENIX, REFINE" or \
             refprog == "PHENIX AUTOREFINE":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["PHENIX.REFINE"], ["PHENIX.REFINE"], ["-"])
     elif refprog == "REFMAC 5.1.24/TLS":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["REFMAC 5.1.24"], ["REFMAC"], ["5.1.24"])
     elif refprog == "REFMAC 5.2.0005 24/04/2001":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["REFMAC 5.2.0005"], ["REFMAC"], ["5.2.0005"])
     elif refprog == "REFMAC 5.2.0019 24/04/2001":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
     elif refprog == "REFMAC X-PLOR 3.843":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["REFMAC", "X-PLOR 3.843"],
                 ["REFMAC", "X-PLOR"],
                 ["-", "3.843"])
     elif refprog == "REFMAC5 5.2.0019":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
     elif refprog == "REFMAC 5.5.0109 (AND PHENIX)":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["REFMAC 5.5.0109", "PHENIX.REFINE"],
                 ["REFMAC", "PHENIX.REFINE"],
                 ["5.5.0109", "-"])
     elif refprog == "BUSTER, BETA VERSION":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["BUSTER BETA"], ["BUSTER"], ["BETA"])
     elif refprog == "TNT BUSTER/TNT":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["TNT", "BUSTER/TNT"], ["TNT", "BUSTER"], ["-", "-"])
     elif refprog == "O, VERSION 9.0.7":
-        except_refprog_warn(pdb_id)
+        except_refprog_warn()
         return (["O 9.0.7"], ["O"], ["9.0.7"])
     prog_pat = re.compile(r"""
         ,
@@ -1299,43 +1299,3 @@ def parse_refprog(refprog, pdb_id):
             _log.debug("{}: version not present.".format(prog_inter[i]))
     return prog, prog_inter, vers
 
-
-if __name__ == "__main__":
-    """Process the refinement program from a PDB file.
-
-    Exit with an exit code of 1 if the refinement program could not be found,
-    if it cannot be parsed, if it contains multiple programs (and it cannot be
-    decided which one was used last), or if the program cannot be used in the
-    bdb project.
-    """
-    parser = argparse.ArgumentParser(description="Parse refinement program")
-    parser.add_argument("-v", "--verbose", help="verbose output",
-                        action="store_true")
-    parser.add_argument("--pdbid", help="PDB accession code.")
-    subparsers = parser.add_subparsers(help="sub-command help")
-    test = subparsers.add_parser("test", help="Test refinement program parser")
-    test.add_argument("prog", help="Refinement program string")
-    run = subparsers.add_parser("run", help="Parse refinement program")
-    run.add_argument("pdb_file_path", help="PDB file location.")
-    args = parser.parse_args()
-    pdb_id = args.pdbid if args.pdbid is not None else args.pdb_file_path
-    if args.verbose:
-        _log.setLevel(logging.DEBUG)
-    if args.prog:
-        # Test mode
-        pdb_id = args.pdbid if args.pdbid is not None else "test"
-        (prog, prog_inter, version) = parse_refprog(args.prog, pdb_id)
-        for p, i, v in zip(prog, prog_inter, version):
-            print("p:", p, "i:", i, "v:", v)
-    else:
-        # Run mode
-
-        # Parse the given pdb file into a dict...
-        pdb_records = parse_pdb_file(args.pdb_file_path)
-
-        # and a Biopython structure
-        structure = get_structure(args.pdb_file_path, pdb_id, args.verbose)
-        if get_refi_data(pdb_records, structure, pdb_id):
-            sys.exit(0)
-        else:
-            sys.exit(1)

@@ -29,8 +29,7 @@ def init_logger(pdb_id, verbose):
     logging.basicConfig(
         filename=log_file_path,
         filemode="w",
-        level=logging.INFO if not verbose else logging.DEBUG,
-        format=fmt)
+        level=logging.INFO if not verbose else logging.DEBUG, format=fmt)
 
 
 def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
@@ -57,7 +56,7 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
         bdbd.update(refi_data)
 
         # Info about B-factor group type
-        b_group = determine_b_group(structure, pdb_id)
+        b_group = determine_b_group(structure)
         bdbd.update(b_group)
 
 
@@ -129,8 +128,6 @@ def main():
     init_logger(args.pdb_id, args.verbose)
 
     # Check that the system has the required programs and libraries installed
-    # TODO: This should be moved to the `setup.py` file or at least be provided
-    #       via a function.
     import requirements
 
     if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id,
