@@ -1,6 +1,6 @@
 from nose.tools import eq_
 
-from bdb.expdta import check_exp_methods
+from pdbb.expdta import check_exp_methods
 
 
 def test_check_exp_methods_too_many():

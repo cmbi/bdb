@@ -1,6 +1,6 @@
 from nose.tools import eq_, raises
 
-from bdb.pdb.parser import (parse_pdb_file, parse_exp_methods, parse_btype,
+from pdbb.pdb.parser import (parse_pdb_file, parse_exp_methods, parse_btype,
                             parse_other_ref_remarks, is_bmsqav,
                             parse_format_date_version, parse_num_tls_groups,
                             parse_ref_prog, is_tls_residual, is_tls_sum,
@@ -13,7 +13,7 @@ def test_parser_invalid_file():
 
 
 def test_parser():
-    pdb_records = parse_pdb_file("bdb/tests/pdb/files/1crn.pdb")
+    pdb_records = parse_pdb_file("pdbb/tests/pdb/files/1crn.pdb")
     eq_(len(pdb_records), 27)
     eq_(len(pdb_records["HEADER"]), 1)
     eq_(len(pdb_records["EXPDTA"]), 1)
@@ -643,7 +643,7 @@ MASTER
 END                                                                             
 
     """
-    header, trailer = get_pdb_header_and_trailer("bdb/tests/pdb/files/ht.pdb")
+    header, trailer = get_pdb_header_and_trailer("pdbb/tests/pdb/files/ht.pdb")
     head_exp = [
             "HEADER    TEST PROTEIN                            "
             "00-JAN-00   1ABC              ",

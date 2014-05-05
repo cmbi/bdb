@@ -3,8 +3,8 @@ from __future__ import print_function
 import logging
 import os
 
-from bdb.pdb.parser import parse_exp_methods
-from bdb.bdb_utils import write_whynot
+from pdbb.pdb.parser import parse_exp_methods
+from pdbb.bdb_utils import write_whynot
 
 
 _log = logging.getLogger(__name__)
