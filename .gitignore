@@ -52,6 +52,14 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Vim
+*.sw[a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
 # bdb
 bdb.log
-bdb/
+*.whynot
+run.bash

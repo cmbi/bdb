@@ -1,15 +1,13 @@
-#!/usr/bin/env python
 import logging
 import subprocess
 import sys
 
-# Configure logging
-_log = logging.getLogger("bdb")
+
+_log = logging.getLogger(__name__)
 
 # CCP4 dependencies
 ccp4_software = [
-    "tlsanl",
-    ]
+    "tlsanl", ]
 
 # Other dependencies
 # None
@@ -27,14 +25,13 @@ Strategy:
 for p in ccp4_software:
     try:
         p = subprocess.check_call(
-                [p, "and_an_invalid_argument"],
-                stdin=subprocess.PIPE, # suppress output
-                stdout=subprocess.PIPE,# suppress output
-                stderr=subprocess.PIPE # suppress output
-                )
+            [p, "and_an_invalid_argument"],
+            stdin=subprocess.PIPE,   # suppress output
+            stdout=subprocess.PIPE,  # suppress output
+            stderr=subprocess.PIPE)  # suppress output
     except subprocess.CalledProcessError:
         _log.debug("{0:s} set up properly".format(p))
     except OSError:
-        _log.error("{0:s} could not be executed. Install {0:s} and set up "\
+        _log.error("{0:s} could not be executed. Install {0:s} and set up "
                    "the CCP4 environment properly.".format(p))
         sys.exit(1)
