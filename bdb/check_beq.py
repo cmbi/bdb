@@ -43,9 +43,6 @@ def check_beq(structure):
     reproduced = 0.0
     correct_uij = True
     for atom in structure.get_atoms():
-        if atom is None:
-            _log.info("Atom does not exist")
-            break # this happens sometimes
         anisou = atom.get_anisou()
         if anisou is not None:
             has_anisou = True
