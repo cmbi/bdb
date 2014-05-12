@@ -1,12 +1,29 @@
+#    BDB: A databank of PDB entries with full isotropic B-factors.
+#    Copyright (C) 2014  Wouter G. Touw  (<wouter.touw@radboudumc.nl>)
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License in the
+#    LICENSE file that should have been included as part of this package.
+#    If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
+
+import logging
+_log = logging.getLogger(__name__)
 
 import argparse
 import json
-import logging
 import os
 import pyconfig
 import shutil
-import sys
 
 from pdbb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
                             get_bdb_entry_outdir, write_whynot)
@@ -18,7 +35,6 @@ from pdbb.refprog import get_refi_data
 from pdbb.tlsanl_wrapper import run_tlsanl
 
 
-_log = logging.getLogger(__name__)
 
 def init_logger(pdb_id, verbose):
     log_name = pdb_id + ".log"
@@ -101,7 +117,7 @@ def main():
     """Create a bdb entry."""
 
     parser = argparse.ArgumentParser(
-        description="Create a bdb entry. The bdb entry (.bdb) or WHY NOT\
+        description="Create a BDB entry. The BDB entry (.bdb) or WHY NOT\
         (.whynot) file, log and json files will be created in a separate\
         directory using the given pdb_id and the directory structure:\
         BDB_ROOT/ab/1abc/1abc.(bdb|whynot|log|json)")
@@ -133,6 +149,4 @@ def main():
     if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id,
             verbose=args.verbose):
         _log.debug("Finished bdb entry.")
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    # exit with status 0 when a BDB or a WHY NOT entry has been created
