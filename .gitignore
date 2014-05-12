@@ -63,3 +63,4 @@ Session.vim
 bdb.log
 *.whynot
 run.bash
+copyright_notice.sh

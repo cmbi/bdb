@@ -10,7 +10,7 @@ of the B-factor field and calculate the full B-factor if necessary.
 
 # License
 
-**TODO: Pick a license and write down here which one it is**
+GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
 
 # Installation
 
