@@ -15,11 +15,11 @@
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
 import logging
+_log = logging.getLogger(__name__)
+
 import os
 import pyconfig
 import re
-
-_log = logging.getLogger(__name__)
 
 
 ANISOU_PAT = re.compile(r"^ANISOU")
