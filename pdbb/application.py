@@ -6,7 +6,6 @@ import logging
 import os
 import pyconfig
 import shutil
-import sys
 
 from pdbb.bdb_utils import (is_valid_directory, is_valid_file, is_valid_pdbid,
                             get_bdb_entry_outdir, write_whynot)
@@ -101,7 +100,7 @@ def main():
     """Create a bdb entry."""
 
     parser = argparse.ArgumentParser(
-        description="Create a bdb entry. The bdb entry (.bdb) or WHY NOT\
+        description="Create a BDB entry. The BDB entry (.bdb) or WHY NOT\
         (.whynot) file, log and json files will be created in a separate\
         directory using the given pdb_id and the directory structure:\
         BDB_ROOT/ab/1abc/1abc.(bdb|whynot|log|json)")
@@ -133,6 +132,4 @@ def main():
     if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id,
             verbose=args.verbose):
         _log.debug("Finished bdb entry.")
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    # exit with status 0 when a BDB or a WHY NOT entry has been created
