@@ -15,5 +15,6 @@
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
 import pyconfig
+
 # Default path to the dir with BDB, log, json and WHY NOT files
 pyconfig.set("BDB_FILE_DIR_PATH",".")
