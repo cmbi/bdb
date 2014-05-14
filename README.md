@@ -8,6 +8,12 @@ The BDB contains PDB files with full isotropic B-factors in the B-factor field
 if the original PDB file contains enough information to determine the content
 of the B-factor field and calculate the full B-factor if necessary.
 
+BDB files can be viewed and downloaded [here][1].
+More information on BDB entries, their construction, their web page, how to
+download the entire BDB databank, and how to cite the BDB can be found
+[here][2].
+</br>
+
 # License
 
 GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
@@ -35,7 +41,7 @@ manually:
 
 * virtualenv
 * virtualenvwrapper
-* [ccp4 software suite][1]
+* [ccp4 software suite][3]
 
 ## Setup
 
@@ -61,4 +67,6 @@ To see the code coverage of the unit tests, run:
 
     nosetests --with-coverage --cover-package=bdb
 
-[1]: http://www.ccp4.ac.uk/
+[1]: http://www.cmbi.umcn.nl/bdb/
+[2]: http://www.cmbi.umcn.nl/bdb/about/
+[3]: http://www.ccp4.ac.uk/
