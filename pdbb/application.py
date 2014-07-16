@@ -35,7 +35,6 @@ from pdbb.refprog import get_refi_data
 from pdbb.tlsanl_wrapper import run_tlsanl
 
 
-
 def init_logger(pdb_id, verbose):
     log_name = pdb_id + ".log"
     log_file_path = os.path.join(pyconfig.get("BDB_FILE_DIR_PATH"), log_name)
@@ -62,7 +61,6 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
     # and a Biopython structure
     structure = get_structure(pdb_file_path, pdb_id, verbose)
 
-
     bdbd = {"pdb_id": pdb_id}
     expdta = check_exp_methods(pdb_records, pdb_id)
     bdbd.update(expdta)
@@ -75,12 +73,11 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
         b_group = determine_b_group(structure)
         bdbd.update(b_group)
 
-
         # Write the bdb metadata to a json file
         try:
             with open(os.path.join(pyconfig.get("BDB_FILE_DIR_PATH"),
-                pdb_id + ".json"),
-                   "w") as f:
+                      pdb_id + ".json"),
+                      "w") as f:
                 json.dump(bdbd, f, sort_keys=True, indent=4)
         except IOError as ex:
             _log.error(ex)
@@ -88,7 +85,7 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
 
         if refi_data["is_bdb_includable"]:
             bdb_file_path = os.path.join(pyconfig.get("BDB_FILE_DIR_PATH"),
-                    pdb_id + ".bdb")
+                                         pdb_id + ".bdb")
             if refi_data["req_tlsanl"]:
                 if run_tlsanl(
                         pdb_file_path=pdb_file_path,
@@ -139,14 +136,14 @@ def main():
         type=lambda x: is_valid_pdbid(parser, x))
     args = parser.parse_args()
 
-    pyconfig.set("BDB_FILE_DIR_PATH",get_bdb_entry_outdir(args.bdb_root_path,
-                                                          args.pdb_id))
+    pyconfig.set("BDB_FILE_DIR_PATH", get_bdb_entry_outdir(args.bdb_root_path,
+                                                           args.pdb_id))
     init_logger(args.pdb_id, args.verbose)
 
     # Check that the system has the required programs and libraries installed
     import requirements
 
     if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id,
-            verbose=args.verbose):
+                        verbose=args.verbose):
         _log.debug("Finished bdb entry.")
     # exit with status 0 when a BDB or a WHY NOT entry has been created

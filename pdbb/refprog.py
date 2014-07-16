@@ -14,25 +14,19 @@
 #    You should have received a copy of the GNU General Public License in the
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
 from __future__ import print_function
 
 import logging
 _log = logging.getLogger(__name__)
 
-import argparse
-import os
 import re
-import sys
 
-from pdbb.pdb.parser import (parse_pdb_file, parse_other_ref_remarks, is_bmsqav,
-                            parse_btype, parse_format_date_version,
-                            parse_num_tls_groups, parse_ref_prog,
-                            is_tls_residual, is_tls_sum)
+from pdbb.pdb.parser import (parse_other_ref_remarks, is_bmsqav,
+                             parse_btype, parse_format_date_version,
+                             parse_num_tls_groups, parse_ref_prog,
+                             is_tls_residual, is_tls_sum)
 from pdbb.bdb_utils import write_whynot
 from pdbb.check_beq import check_beq, report_beq
-
-
 
 
 RE_BEXCEPT = re.compile(r"""
@@ -68,7 +62,7 @@ def is_bdb_includable_refprog(refprog):
 def decide_refprog_restrain(pdb_info):
     """Determine whether a BDB file can be created for this RESTRAIN PDB file.
 
-    Only applicable for structures refined by RESTRAIN.
+    Only applicable for structures refined by RESTRAIN or PROSLQ.
 
     The decision is based on the refinement program interpreted from the
     PDB file. Furthermore, several remarks and details in the
@@ -86,7 +80,7 @@ def decide_refprog_restrain(pdb_info):
 
     # Check and declare
 
-    assert pdb_info["prog_last"][0] == "RESTRAIN"
+    assert pdb_info["prog_last"][0] in ["RESTRAIN", "PROLSQ"]
 
     (useful, assume_iso, req_tlsanl) = (False, False, False)
     msg = ": {}".format(pdb_info["prog_last"][0])
@@ -158,12 +152,12 @@ def decide_refprog_remediation(pdb_info):
     if pdb_info["b_type"] == "residual":
         req_tlsanl = True
         msg = "Residual B-factors (wwPDB remediation{}){}".format(
-                " 2011" if pdb_info["format_vers"] == 3.30 else "", msg)
+              " 2011" if pdb_info["format_vers"] == 3.30 else "", msg)
         if pdb_info["prog_last"][0] == "REFMAC":
             useful = True
     elif pdb_info["b_type"] == "unverified":
         msg = "B-factor type could not be determined (wwPDB remediation{}){}".\
-        format(" 2011" if pdb_info["format_vers"] == 3.30 else "", msg)
+              format(" 2011" if pdb_info["format_vers"] == 3.30 else "", msg)
     elif pdb_info["prog_last"][0] == "REFMAC" and \
             pdb_info["format_vers"] == 3.30:
         # The REFMAC entry was found to contain full B-factors
@@ -241,7 +235,7 @@ def decide_refprog_tls(pdb_info):
                 # useful = True
     elif re.search(RE_BEXCEPT, pdb_info["other_refinement_remarks"]) and \
             re.search("[BU]-?\s*(FACTORS?|VALUES?)",
-                    pdb_info["other_refinement_remarks"]): # any exceptions?
+                      pdb_info["other_refinement_remarks"]):  # any exceptions?
         msg = "TLS group(s) and, possibly, residual or full B-factors "\
               "(REMARK 3, unrecognized format){}".format(msg)
     else:  # TLS refinement without hints about B-value type
@@ -289,7 +283,6 @@ def decide_refprog_notls(pdb_info):
     if pdb_info["has_anisou"]:
         assert pdb_info["beq_identical"] <= 0.9999
 
-
     # Decide
 
     if re.search(r"TLS", pdb_info["other_refinement_remarks"]):
@@ -325,7 +318,7 @@ def decide_refprog_notls(pdb_info):
             msg = "{}. {}".format(msg, bneq_msg)
     elif re.search(RE_BEXCEPT, pdb_info["other_refinement_remarks"]) and \
             re.search("[BU]-?\s*(FACTORS?|VALUES?)",
-                    pdb_info["other_refinement_remarks"]): # any exceptions?
+                      pdb_info["other_refinement_remarks"]):  # any exceptions?
         msg = "Possibly, residual or full B-factors (REMARK 3, unrecognized"\
               " format). No TLS groups"
         if pdb_info["has_anisou"]:
@@ -372,7 +365,6 @@ def decide_refprog(pdb_info):
 
     # Check and declare
     assert isinstance(pdb_info["prog_last"], list)
-    (useful, assume_iso, req_tlsanl) = (False, False, False)
 
     # If ANISOU records are present, make sure Beq values are not OK
     if pdb_info["has_anisou"]:
@@ -416,15 +408,16 @@ def decide_refprog(pdb_info):
     # Start deciding
 
     # Special treatment for RESTRAIN files
-    if pdb_info["prog_last"][0] == "RESTRAIN":
+    if pdb_info["prog_last"][0] == "RESTRAIN" or \
+            (pdb_info["prog_last"][0] == "PROLSQ" and pdb_info["b_msqav"]):
         return decide_refprog_restrain(pdb_info)
 
     # REFMAC and other refprogs:
 
     # We trust the wwPDB remediation decision
-    if (pdb_info["format_vers"] == 3.30 and \
+    if (pdb_info["format_vers"] == 3.30 and
             pdb_info["prog_last"][0] == "REFMAC") \
-        or pdb_info["b_type"]:
+            or pdb_info["b_type"]:
         return decide_refprog_remediation(pdb_info)
 
     # B-factors cannot be residual and full at the same time
@@ -437,8 +430,9 @@ def decide_refprog(pdb_info):
     # TLS groups defined in the PDB file..
     if pdb_info["tls_groups"]:
         return decide_refprog_tls(pdb_info)
-    else: # ..or not (?)
+    else:  # ..or not (?)
         return decide_refprog_notls(pdb_info)
+
 
 def except_refprog_warn():
     message = "Pre-defined exceptional refinement program case found"
@@ -542,17 +536,17 @@ def get_refi_data(pdb_records, structure, pdb_id):
     format_vers, format_date = parse_format_date_version(pdb_records)
     other_refinement_remarks = parse_other_ref_remarks(pdb_records)
     pdb_info = {
-            "pdb_id": pdb_id,
-            "b_type": parse_btype(pdb_records),
-            "has_anisou": "ANISOU" in pdb_records,
-            "format_date": format_date,
-            "format_vers": format_vers,
-            "other_refinement_remarks": other_refinement_remarks,
-            "b_msqav": is_bmsqav(other_refinement_remarks),
-            "refprog": parse_ref_prog(pdb_records),
-            "tls_groups": parse_num_tls_groups(pdb_records),
-            "tls_residual": is_tls_residual(pdb_records),
-            "tls_sum": is_tls_sum(pdb_records)}
+        "pdb_id": pdb_id,
+        "b_type": parse_btype(pdb_records),
+        "has_anisou": "ANISOU" in pdb_records,
+        "format_date": format_date,
+        "format_vers": format_vers,
+        "other_refinement_remarks": other_refinement_remarks,
+        "b_msqav": is_bmsqav(other_refinement_remarks),
+        "refprog": parse_ref_prog(pdb_records),
+        "tls_groups": parse_num_tls_groups(pdb_records),
+        "tls_residual": is_tls_residual(pdb_records),
+        "tls_sum": is_tls_sum(pdb_records)}
 
     _log.debug("Interpreting PDB file...")
 
@@ -595,7 +589,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
             if not assume_iso:
                 # interpret refinement data
                 is_bdb_includable, assume_iso, req_tlsanl, message = \
-                        decide_refprog(pdb_info)
+                    decide_refprog(pdb_info)
             else:
                 _log.info("Probably full B-factors: {}".format(
                     " and ".join(prog_last)))
@@ -1315,4 +1309,3 @@ def parse_refprog(refprog):
         elif vers[i] == "-":
             _log.debug("{}: version not present.".format(prog_inter[i]))
     return prog, prog_inter, vers
-

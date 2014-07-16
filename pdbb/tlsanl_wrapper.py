@@ -14,20 +14,15 @@
 #    You should have received a copy of the GNU General Public License in the
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
 from __future__ import print_function
 
 import logging
 _log = logging.getLogger(__name__)
 
-import argparse
 import os
 import subprocess
-import sys
 
 from pdbb.bdb_utils import write_whynot
-
-
 
 
 def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
@@ -80,4 +75,3 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
         success = True
         _log.info("TLSANL ran without problems.")
     return success
-

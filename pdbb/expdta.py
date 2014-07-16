@@ -19,8 +19,6 @@ from __future__ import print_function
 import logging
 _log = logging.getLogger(__name__)
 
-import os
-
 from pdbb.pdb.parser import parse_exp_methods
 from pdbb.bdb_utils import write_whynot
 
