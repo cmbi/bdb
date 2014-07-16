@@ -20,6 +20,8 @@ import logging
 _log = logging.getLogger(__name__)
 
 import os
+import pyconfig
+import re
 import subprocess
 
 from pdbb.bdb_utils import write_whynot
@@ -48,11 +50,13 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
                          stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate(input=keyworded_input)
     try:
-        with open(os.path.join(log_out_dir, "tlsanl.log"), "w") as tlsanl_log:
+        with open(os.path.join(log_out_dir, pyconfig.get("TLSANL_LOG")),
+                  "w") as tlsanl_log:
             tlsanl_log.write(stdout)
             if verbose_output:
                 print(stdout)
-        with open(os.path.join(log_out_dir, "tlsanl.err"), "w") as tlsanl_err:
+        with open(os.path.join(log_out_dir, pyconfig.get("TLSANL_ERR")),
+                  "w") as tlsanl_err:
             tlsanl_err.write(stderr)
             if verbose_output:
                 print(stderr)
@@ -67,7 +71,8 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
         message = "TLSANL problem"
         write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
-    elif os.stat(os.path.join(log_out_dir, "tlsanl.err")).st_size > 0:
+    elif os.stat(os.path.join(log_out_dir,
+                              pyconfig.get("TLSANL_ERR"))).st_size > 0:
         message = "TLSANL problem"
         write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
@@ -75,3 +80,36 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
         success = True
         _log.info("TLSANL ran without problems.")
     return success
+
+
+def parse_skttls_summ(tlsanl_log):
+    """Parse Skttles summary from TLSANL log file
+
+    Return the total number of bonds between residues and the number of bonds
+    beyond the 95th and 99th percentile for any residual as a dict of integers.
+    """
+    skttls = {"skttls_tot": None,
+              "skttls_95th": None,
+              "skttls_99th": None}
+
+    RE_SKTTLS_TOT = re.compile(r"^#  Total number of bonds between residues:"
+                               "\s*(?P<num>\d+)")
+    RE_SKTTLS_95th = re.compile(r"^#  Number of bonds beyond 95th percentile "
+                                "for any residual:\s*(?P<num>\d+)")
+    RE_SKTTLS_99th = re.compile(r"^#  Number of bonds beyond 99th percentile "
+                                "for any residual:\s*(?P<num>\d+)")
+
+    with open(tlsanl_log, "r") as log:
+        lines = [l.strip() for l in log]
+        for l in lines:
+            m = RE_SKTTLS_TOT.search(l)
+            if m is not None:
+                skttls["skttls_tot"] = int(m.group("num"))
+            m = RE_SKTTLS_95th.search(l)
+            if m is not None:
+                skttls["skttls_95th"] = int(m.group("num"))
+            m = RE_SKTTLS_99th.search(l)
+            if m is not None:
+                skttls["skttls_99th"] = int(m.group("num"))
+
+    return skttls
