@@ -63,7 +63,7 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
     except IOError as ex:
         _log.error(ex)
     if p.returncode != 0:
-        message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
+        message = "Problem with TLS group definitions (TLSANL run unsuccessful)"
         write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
     elif os.stat(xyzout).st_size <= 2000:
@@ -73,7 +73,7 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
         _log.error("{0:s}".format(message))
     elif os.stat(os.path.join(log_out_dir,
                               pyconfig.get("TLSANL_ERR"))).st_size > 0:
-        message = "TLSANL problem"
+        message = "Problem with TLS group definitions (TLSANL run unsuccessful)"
         write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
     else:
