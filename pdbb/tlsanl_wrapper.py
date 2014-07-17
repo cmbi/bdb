@@ -14,20 +14,17 @@
 #    You should have received a copy of the GNU General Public License in the
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
 from __future__ import print_function
 
 import logging
 _log = logging.getLogger(__name__)
 
-import argparse
 import os
+import pyconfig
+import re
 import subprocess
-import sys
 
 from pdbb.bdb_utils import write_whynot
-
-
 
 
 def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
@@ -53,18 +50,20 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
                          stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate(input=keyworded_input)
     try:
-        with open(os.path.join(log_out_dir, "tlsanl.log"), "w") as tlsanl_log:
+        with open(os.path.join(log_out_dir, pyconfig.get("TLSANL_LOG")),
+                  "w") as tlsanl_log:
             tlsanl_log.write(stdout)
             if verbose_output:
                 print(stdout)
-        with open(os.path.join(log_out_dir, "tlsanl.err"), "w") as tlsanl_err:
+        with open(os.path.join(log_out_dir, pyconfig.get("TLSANL_ERR")),
+                  "w") as tlsanl_err:
             tlsanl_err.write(stderr)
             if verbose_output:
                 print(stderr)
     except IOError as ex:
         _log.error(ex)
     if p.returncode != 0:
-        message = "TLSANL problem (exit code: {0:3d})".format(p.returncode)
+        message = "Problem with TLS group definitions (TLSANL run unsuccessful)"
         write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
     elif os.stat(xyzout).st_size <= 2000:
@@ -72,8 +71,9 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
         message = "TLSANL problem"
         write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
-    elif os.stat(os.path.join(log_out_dir, "tlsanl.err")).st_size > 0:
-        message = "TLSANL problem"
+    elif os.stat(os.path.join(log_out_dir,
+                              pyconfig.get("TLSANL_ERR"))).st_size > 0:
+        message = "Problem with TLS group definitions (TLSANL run unsuccessful)"
         write_whynot(pdb_id, message)
         _log.error("{0:s}".format(message))
     else:
@@ -81,3 +81,35 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
         _log.info("TLSANL ran without problems.")
     return success
 
+
+def parse_skttls_summ(tlsanl_log):
+    """Parse Skttles summary from TLSANL log file
+
+    Return the total number of bonds between residues and the number of bonds
+    beyond the 95th and 99th percentile for any residual as a dict of integers.
+    """
+    skttls = {"skttls_tot": None,
+              "skttls_95th": None,
+              "skttls_99th": None}
+
+    RE_SKTTLS_TOT = re.compile(r"^#  Total number of bonds between residues:"
+                               "\s*(?P<num>\d+)")
+    RE_SKTTLS_95th = re.compile(r"^#  Number of bonds beyond 95th percentile "
+                                "for any residual:\s*(?P<num>\d+)")
+    RE_SKTTLS_99th = re.compile(r"^#  Number of bonds beyond 99th percentile "
+                                "for any residual:\s*(?P<num>\d+)")
+
+    with open(tlsanl_log, "r") as log:
+        lines = [l.strip() for l in log]
+        for l in lines:
+            m = RE_SKTTLS_TOT.search(l)
+            if m is not None:
+                skttls["skttls_tot"] = int(m.group("num"))
+            m = RE_SKTTLS_95th.search(l)
+            if m is not None:
+                skttls["skttls_95th"] = int(m.group("num"))
+            m = RE_SKTTLS_99th.search(l)
+            if m is not None:
+                skttls["skttls_99th"] = int(m.group("num"))
+
+    return skttls

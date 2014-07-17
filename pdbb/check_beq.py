@@ -14,13 +14,11 @@
 #    You should have received a copy of the GNU General Public License in the
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/env python
 from __future__ import division
 
 import logging
 _log = logging.getLogger(__name__)
 
-import argparse
 import itertools
 import re
 import shutil
@@ -28,9 +26,9 @@ import shutil
 import Bio.PDB
 import numpy as np
 
+from collections import Counter
+
 from pdbb.pdb.parser import get_pdb_header_and_trailer
-
-
 
 
 def check_beq(structure):
@@ -65,7 +63,7 @@ def check_beq(structure):
             has_anisou = True
             # Beq = 8*pi**2*Ueq
             # Ueq = 1/3<u.u> == 1/3<|u|**2> = 1/3(U11+U22+U33)
-            beq =  8*np.pi**2 * sum(anisou[0:3]) / 3
+            beq = 8*np.pi**2 * sum(anisou[0:3]) / 3
             b = atom.get_bfactor()
             if np.isclose(b, beq, atol=margin):
                 eq = eq + 1
@@ -77,7 +75,7 @@ def check_beq(structure):
                 _log.debug("B-factor reproduced by non-standard "
                            "combination of Uij values in the ANISOU "
                            "record of ATOM: {0:s}".format(
-                    atom.get_full_id()))
+                               atom.get_full_id()))
             else:
                 """ e.g 1g8t, 1kr7, 1llr, 1mgr, 1o9g, 1pm1, 1q7l, 1qjp,
                 1s2p, 1si6, 1sxu, 1sxy, 1sy0, 1sy2, 1ug6, 1x9q, 2a83, 2acp,
@@ -88,7 +86,7 @@ def check_beq(structure):
                 ne = ne + 1
                 _log.debug("Beq not identical to B-factor in ATOM record: "
                            "{0:s} {1:3.2f} {2:3.2f}".format(
-                    atom.get_full_id(), b, beq))
+                               atom.get_full_id(), b, beq))
 
     reproduced = eq / (eq + ne) if has_anisou else None
     correct_uij = correct_uij if has_anisou else None
@@ -111,7 +109,7 @@ def check_combinations(anisou, b, margin, check_first=False):
             reproduced = True
             _log.debug(("B-factor could only be reproduced by combining "
                         "non-standard Uij values {0:d} {1:d} {2:d}.".format(
-                c[0], c[1], c[2])))
+                            c[0], c[1], c[2])))
             break
     return reproduced
 
@@ -169,10 +167,10 @@ def determine_b_group(structure):
                            "found (of sufficient length).".format(c.get_id()))
         _log.info("Most likely B-factor group type protein: {0:s} | nucleic "
                   "acid: {1:s}.".format(
-            group["protein_b"] if group["protein_b"] is not None else
-                "not present",
-            group["nucleic_b"] if group["nucleic_b"] is not None else
-                "not present",))
+                      group["protein_b"] if group["protein_b"] is not None else
+                      "not present",
+                      group["nucleic_b"] if group["nucleic_b"] is not None else
+                      "not present",))
     return group
 
 
@@ -198,6 +196,7 @@ def determine_b_group_chain(chain):
     margin = 0.01
     residues = chain.get_residues()
     group = "individual"
+    group_votes = []
     b_res = []
     i = 0
     max_res = 10
@@ -213,7 +212,7 @@ def determine_b_group_chain(chain):
             # e.g. 1c0q
             _log.warn("Chain {0:s} has less than {1:d} useful "
                       "residues composed of ATOMs.".format(
-                chain.get_id(), max_res))
+                          chain.get_id(), max_res))
             break
         if res.get_id()[0] == " ":  # Exclude HETATM and waters
             b_atom = []
@@ -234,7 +233,7 @@ def determine_b_group_chain(chain):
             if len(b_atom) > 1:
                 b_atom = sorted(b_atom)
                 if np.isclose(b_atom[-1], b_atom[0], atol=margin):
-                    group = "residue_1ADP"
+                    group_votes.append("residue_1ADP")
                 elif len(b_atom) > 3 and \
                         np.allclose(
                             [b_atom[-1], b_atom[1]],
@@ -244,14 +243,32 @@ def determine_b_group_chain(chain):
                             b_atom[-2],
                             b_atom[1],
                             atol=margin,):
-                    group = "residue_2ADP"
+                    group_votes.append("residue_2ADP")
                 else:
-                    group = "individual"
-    if len(b_res) > max_res - 1 and np.isclose(
-            b_res[0][0], b_res[-1][0], atol=margin):
-        if np.isclose(b_res[-1][-1], 0):
-            group = "no_b-factors"
-        else:
+                    group_votes.append("individual")
+    counter = Counter(group_votes)
+    group_counts = counter.most_common()
+    _log.debug(group_counts)
+    group = group_counts[0][0] if len(group_counts) > 0 else group
+    if len(group_counts) > 1:
+        # If we have ties, assign most complex model
+        if group_counts[0][1] == group_counts[1][1]:
+            if "individual" in list(counter.elements()):
+                group = "individual"
+            elif "residue_1ADP" in list(counter.elements()):
+                group = "residue_1ADP"
+            else:
+                group = "residue_2ADP"
+    big_b = [a for r in b_res for a in r]
+    big_b = sorted(big_b)
+    if len(b_res) > max_res - 1:
+        if np.isclose(big_b[0], big_b[-1], atol=margin):
+            if np.isclose(big_b[0], 0) and np.isclose(big_b[-1], 0):
+                group = "no_b-factors"
+            else:
+                group = "overall"
+        elif len(set(big_b)) < 4:
+            # Exception for structures that have two overall B-factors
             group = "overall"
     return group
 
@@ -394,12 +411,12 @@ def report_beq(reproduced):
         _log.info("The B-factors in the ATOM records could all be "
                   "reproduced within 0.015 A**2 by calculating Beq from "
                   "the corresponding ANISOU records.".format(
-            100 * (1 - reproduced["beq_identical"])))
+                      100 * (1 - reproduced["beq_identical"])))
     elif reproduced["beq_identical"] < 1:
         _log.warn("{0:3.2f}% of the B-factors in the ATOM records "
                   "could not be reproduced within 0.015 A**2 by calculating "
                   "Beq from the corresponding ANISOU records.".format(
-            100 * (1 - reproduced["beq_identical"])))
+                      100 * (1 - reproduced["beq_identical"])))
     else:
         _log.info("No ANISOU records.")
 
@@ -447,4 +464,3 @@ def write_multiplied_8pipi(pdb_file_path, xyzout, pdb_id, verbose=False):
     # Header and trailer records not present in this output file
     io.save(xyzout)
     return transfer_header_and_trailer(pdb_file_path, xyzout)
-

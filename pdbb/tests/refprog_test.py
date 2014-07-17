@@ -15,17 +15,18 @@
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
 from mock import patch
-from nose.tools import eq_, ok_, raises
+from nose.tools import eq_, raises
 
 from pdbb.check_beq import get_structure
 from pdbb.refprog import (decide_refprog, decide_refprog_restrain,
-                         except_refprog_warn, filter_progs, last_used,
-                         is_bdb_includable_refprog, one_of_the_two,
-                         parse_refprog, get_refi_data)
+                          except_refprog_warn, filter_progs, last_used,
+                          is_bdb_includable_refprog, one_of_the_two,
+                          parse_refprog, get_refi_data)
 from pdbb.pdb.parser import parse_pdb_file
 
 
 BNEQ_MSG = "Not enough B-factors could be reproduced from ANISOU records"
+
 
 def test_is_bdb_includable_refprog_none():
     refprog = None
@@ -241,7 +242,7 @@ def test_decide_refprog_refmac_tls_nohints_anisou():
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
     msg = "TLS group(s), no B-factor type details (REMARK 3). {}: REFMAC".\
-            format(BNEQ_MSG)
+          format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -377,7 +378,7 @@ def test_decide_refprog_refmac_notls_residual_anisou():
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
     msg = "Residual B-factors without TLS group(s) (REMARK 3). {}: REFMAC".\
-            format(BNEQ_MSG)
+          format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -400,7 +401,7 @@ def test_decide_refprog_refmac_notls_sum_anisou():
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
     msg = "Full B-factors without TLS group(s) (REMARK 3). {}: REFMAC".format(
-            BNEQ_MSG)
+          BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -464,7 +465,7 @@ def test_decide_refprog_refmac_notls_nohints_anisou():
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
     msg = "Probably full/mixed anisotropic refinement. {}: REFMAC".\
-            format(BNEQ_MSG)
+          format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -670,7 +671,7 @@ def test_decide_refprog_OTHER_tls_nohints_anisou():
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
     msg = "TLS group(s), no B-factor type details (REMARK 3). {}: OTHER".\
-            format(BNEQ_MSG)
+          format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -806,7 +807,7 @@ def test_decide_refprog_OTHER_notls_residual_anisou():
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
     msg = "Residual B-factors without TLS group(s) (REMARK 3). {}: OTHER".\
-            format(BNEQ_MSG)
+          format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -829,7 +830,7 @@ def test_decide_refprog_OTHER_notls_sum_anisou():
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
     msg = "Full B-factors without TLS group(s) (REMARK 3). {}: OTHER".format(
-            BNEQ_MSG)
+          BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -893,7 +894,7 @@ def test_decide_refprog_OTHER_notls_nohints_anisou():
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
     msg = "Probably full/mixed anisotropic refinement. {}: OTHER".\
-            format(BNEQ_MSG)
+          format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -929,15 +930,15 @@ def test_decide_refprog_OTHER_notls_nohints_noanisou():
 
 def test_decide_refprog_restrain_u():
     pdb_info = {"prog_last": ["RESTRAIN"],
-            "pdb_id": "test",
-            "other_refinement_remarks": " THE QUANTITY PRESENTED IN THE "
-            "TEMPERATURE FACTOR FIELD IS U.",
-            "b_msqav": False,
-            "b_type": None,
-            "has_anisou": False,
-            "tls_groups": None,
-            "tls_residual": False,
-            "tls_sum": False}
+                "pdb_id": "test",
+                "other_refinement_remarks": " THE QUANTITY PRESENTED IN THE "
+                "TEMPERATURE FACTOR FIELD IS U.",
+                "b_msqav": False,
+                "b_type": None,
+                "has_anisou": False,
+                "tls_groups": None,
+                "tls_residual": False,
+                "tls_sum": False}
     msg = "B-factor field contains \"U\" (REMARK 3): RESTRAIN"
     result = decide_refprog_restrain(pdb_info)
     expected = (False, False, False, msg)
@@ -964,17 +965,37 @@ def test_decide_refprog_restrain_uu_2():
     eq_(result, expected)
 
 
+def test_decide_refprog_prolsq_uu():
+    pdb_info = {"prog_last": ["PROLSQ"], "pdb_id": "test", "b_msqav": True,
+                "other_refinement_remarks": "", "has_anisou": False}
+    msg = "B-factor field contains mean square atomic displacement "\
+          "(REMARK 3): PROLSQ"
+    result = decide_refprog_restrain(pdb_info)
+    expected = (True, False, False, msg)
+    eq_(result, expected)
+
+
+def test_decide_refprog_prolsq_uu2():
+    pdb_info = {"prog_last": ["PROLSQ"], "pdb_id": "test", "b_msqav": True,
+                "other_refinement_remarks": "", "has_anisou": False}
+    msg = "B-factor field contains mean square atomic displacement "\
+          "(REMARK 3): PROLSQ"
+    result = decide_refprog(pdb_info)
+    expected = (True, False, False, msg)
+    eq_(result, expected)
+
+
 def test_decide_refprog_restrain_nothandled():
     pdb_info_def = {"prog_last": ["RESTRAIN"],
-            "pdb_id": "test",
-            "beq_identical": 0.9,
-            "other_refinement_remarks": "",
-            "b_msqav": False,
-            "b_type": None,
-            "has_anisou": False,
-            "tls_groups": None,
-            "tls_residual": False,
-            "tls_sum": False}
+                    "pdb_id": "test",
+                    "beq_identical": 0.9,
+                    "other_refinement_remarks": "",
+                    "b_msqav": False,
+                    "b_type": None,
+                    "has_anisou": False,
+                    "tls_groups": None,
+                    "tls_residual": False,
+                    "tls_sum": False}
 
     pdb_info = pdb_info_def.copy()
     pdb_info["b_type"] = "residual"
@@ -1006,14 +1027,14 @@ def test_decide_refprog_restrain_nothandled():
 
 def test_decide_refprog_restrain_useful():
     pdb_info_def = {"prog_last": ["RESTRAIN"],
-            "pdb_id": "test",
-            "other_refinement_remarks": "",
-            "b_msqav": False,
-            "b_type": None,
-            "has_anisou": False,
-            "tls_groups": None,
-            "tls_residual": False,
-            "tls_sum": False}
+                    "pdb_id": "test",
+                    "other_refinement_remarks": "",
+                    "b_msqav": False,
+                    "b_type": None,
+                    "has_anisou": False,
+                    "tls_groups": None,
+                    "tls_residual": False,
+                    "tls_sum": False}
     result = decide_refprog_restrain(pdb_info_def)
     msg = "Probably full B-factors: RESTRAIN"
     expected = (True, True, False, msg)
@@ -1069,7 +1090,7 @@ def test_filter_progs_empty():
     pin = []
     pv = []
     result = filter_progs(pin, pv)
-    eq_(result, ([],[]))
+    eq_(result, ([], []))
 
 
 @raises(AssertionError)
@@ -1164,14 +1185,14 @@ def test_get_refi_data_3zzw():
     eq_(pdb_info["b_type"], None)
     eq_(pdb_info["beq_identical"], 1.0)
     eq_(pdb_info["correct_uij"], True)
-    eq_(pdb_info["decision"], "Assuming full isotropic B-factors because "\
-            "enough B-factors could be reproduced from the ANISOU records")
+    eq_(pdb_info["decision"], "Assuming full isotropic B-factors because "
+        "enough B-factors could be reproduced from the ANISOU records")
     eq_(pdb_info["format_date"], "13-JUL-11")
     eq_(pdb_info["format_vers"], 3.3)
     eq_(pdb_info["has_anisou"], True)
     eq_(pdb_info["is_bdb_includable"], True)
-    eq_(pdb_info["other_refinement_remarks"], "IDEAL-DIST CONTACT TERM "\
-            "CONTACT SETUP.  ALL ATOMS HAVE CCP4 ATOM TYPE FROM LIBRARY.")
+    eq_(pdb_info["other_refinement_remarks"], "IDEAL-DIST CONTACT TERM "
+        "CONTACT SETUP.  ALL ATOMS HAVE CCP4 ATOM TYPE FROM LIBRARY.")
     eq_(pdb_info["pdb_id"], "3zzw")
     eq_(pdb_info["prog_inter"], ["BUSTER"])
     eq_(pdb_info["prog_last"], ["BUSTER"])
@@ -1195,15 +1216,15 @@ def test_get_refi_data_2wnl():
     eq_(pdb_info["b_type"], None)
     eq_(pdb_info["beq_identical"], None)
     eq_(pdb_info["correct_uij"], None)
-    eq_(pdb_info["decision"], "TLS group(s), full B-factors "\
+    eq_(pdb_info["decision"], "TLS group(s), full B-factors "
                               "(REMARK 3) without ANISOU records: REFMAC")
     eq_(pdb_info["format_date"], "01-DEC-08")
     eq_(pdb_info["format_vers"], 3.2)
     eq_(pdb_info["has_anisou"], False)
     eq_(pdb_info["is_bdb_includable"], True)
-    eq_(pdb_info["other_refinement_remarks"], "HYDROGENS HAVE BEEN ADDED IN "\
-            "THE  RIDING POSITIONS. GLOBAL B-FACTORS, CONTAINING RESIDUAL  "\
-            "AND TLS COMPONENT HAVE BEEN DEPOSITED.")
+    eq_(pdb_info["other_refinement_remarks"], "HYDROGENS HAVE BEEN ADDED IN "
+        "THE  RIDING POSITIONS. GLOBAL B-FACTORS, CONTAINING RESIDUAL  "
+        "AND TLS COMPONENT HAVE BEEN DEPOSITED.")
     eq_(pdb_info["pdb_id"], "2wnl")
     eq_(pdb_info["prog_inter"], ["REFMAC"])
     eq_(pdb_info["prog_last"], ["REFMAC"])
@@ -1342,7 +1363,6 @@ def test_last_used_known_combis():
         eq_(result, expected)
 
 
-
 def test_last_used_unknown_combis():
     pin = ["X-PLOR", "CNS", "REFMAC", "PHENIX"]
     pv = ["3.85", "1.3", "5.8", "-"]
@@ -1409,70 +1429,70 @@ def test_parse_refprog_null():
 def test_parse_refprog_predefined_exceptions():
     refprog = "X-PLOR 3.1 AND 3.85"
     result = parse_refprog(refprog)
-    expected =  (["X-PLOR 3.85"], ["X-PLOR"], ["3.85"])
+    expected = (["X-PLOR 3.85"], ["X-PLOR"], ["3.85"])
     eq_(result, expected)
 
     refprog = "X-PLOR 3.1, 3.816"
     result = parse_refprog(refprog)
-    expected =  (["X-PLOR 3.816"], ["X-PLOR"], ["3.816"])
+    expected = (["X-PLOR 3.816"], ["X-PLOR"], ["3.816"])
     eq_(result, expected)
 
     refprog = "CNS 1.1 & 1.3"
     result = parse_refprog(refprog)
-    expected =  (["CNS 1.3"], ["CNS"], ["1.3"])
+    expected = (["CNS 1.3"], ["CNS"], ["1.3"])
     eq_(result, expected)
 
     refprog = "CNS 0.4, O, OOPS"
     result = parse_refprog(refprog)
-    expected =  (["CNS 0.4", "O", "OOPS"],
-                 ["CNS", "O", "OOPS"],
-                 ["0.4", "-", "-"])
+    expected = (["CNS 0.4", "O", "OOPS"],
+                ["CNS", "O", "OOPS"],
+                ["0.4", "-", "-"])
     eq_(result, expected)
 
     refprog = "CNS 0.1-0.4"
     result = parse_refprog(refprog)
-    expected =  (["CNS 0.4"], ["CNS"], ["0.4"])
+    expected = (["CNS 0.4"], ["CNS"], ["0.4"])
     eq_(result, expected)
 
     refprog = "CNS 0.9,1.0,1.1"
     result = parse_refprog(refprog)
-    expected =  (["CNS 1.1"], ["CNS"], ["1.1"])
+    expected = (["CNS 1.1"], ["CNS"], ["1.1"])
     eq_(result, expected)
 
     refprog = "CNS 1.3 WITH DEN REFINEMENT"
     result = parse_refprog(refprog)
-    expected =  (["CNS 1.3"], ["CNS"], ["1.3"])
+    expected = (["CNS 1.3"], ["CNS"], ["1.3"])
     eq_(result, expected)
 
     refprog = "CNS 1.2 (USING XTAL_TWIN UTILITIES)"
     result = parse_refprog(refprog)
-    expected =  (["CNS 1.2"], ["CNS"], ["1.2"])
+    expected = (["CNS 1.2"], ["CNS"], ["1.2"])
     eq_(result, expected)
 
     refprog = "PHENIX.REFINE_REFMAC 5.5.0070"
     result = parse_refprog(refprog)
-    expected =  (["PHENIX.REFINE", "REFMAC 5.5.0070"],
-                 ["PHENIX.REFINE", "REFMAC"],
-                 ["-", "5.5.0070"])
+    expected = (["PHENIX.REFINE", "REFMAC 5.5.0070"],
+                ["PHENIX.REFINE", "REFMAC"],
+                ["-", "5.5.0070"])
     eq_(result, expected)
 
     refprog = "PHENIX (CCI APPS 2007_04_06_1210)"
     result = parse_refprog(refprog)
-    expected =  (["PHENIX (PHENIX.REFINE: 2007_04_06_1210)"],
-                 ["PHENIX.REFINE"],
-                 ["2007_04_06_1210"])
+    expected = (["PHENIX (PHENIX.REFINE: 2007_04_06_1210)"],
+                ["PHENIX.REFINE"],
+                ["2007_04_06_1210"])
     eq_(result, expected)
 
     refprog = "PHENIX VERSION 1.8_1069 (PHENIX.REFINE)"
     result = parse_refprog(refprog)
-    expected =  (["PHENIX (PHENIX.REFINE: 1.8_1069)"], ["PHENIX.REFINE"],
-                 ["1.8_1069"])
+    expected = (["PHENIX (PHENIX.REFINE: 1.8_1069)"], ["PHENIX.REFINE"],
+                ["1.8_1069"])
     eq_(result, expected)
 
     refprog = "PHENIX 1.6.2_432 - REFINE"
     result = parse_refprog(refprog)
-    expected =  (["PHENIX (PHENIX.REFINE: 1.6.2_432)"], ["PHENIX.REFINE"],
-                 ["1.6.2_432"])
+    expected = (["PHENIX (PHENIX.REFINE: 1.6.2_432)"], ["PHENIX.REFINE"],
+                ["1.6.2_432"])
     eq_(result, expected)
 
     refprog = "PHENIX REFINE"
@@ -1492,51 +1512,51 @@ def test_parse_refprog_predefined_exceptions():
 
     refprog = "REFMAC 5.1.24/TLS"
     result = parse_refprog(refprog)
-    expected =  (["REFMAC 5.1.24"], ["REFMAC"], ["5.1.24"])
+    expected = (["REFMAC 5.1.24"], ["REFMAC"], ["5.1.24"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.2.0005 24/04/2001"
     result = parse_refprog(refprog)
-    expected =  (["REFMAC 5.2.0005"], ["REFMAC"], ["5.2.0005"])
+    expected = (["REFMAC 5.2.0005"], ["REFMAC"], ["5.2.0005"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.2.0019 24/04/2001"
     result = parse_refprog(refprog)
-    expected =  (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
+    expected = (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
     eq_(result, expected)
 
     refprog = "REFMAC X-PLOR 3.843"
     result = parse_refprog(refprog)
-    expected =  (["REFMAC", "X-PLOR 3.843"],
-                 ["REFMAC", "X-PLOR"],
-                 ["-", "3.843"])
+    expected = (["REFMAC", "X-PLOR 3.843"],
+                ["REFMAC", "X-PLOR"],
+                ["-", "3.843"])
     eq_(result, expected)
 
     refprog = "REFMAC5 5.2.0019"
     result = parse_refprog(refprog)
-    expected =  (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
+    expected = (["REFMAC 5.2.0019"], ["REFMAC"], ["5.2.0019"])
     eq_(result, expected)
 
     refprog = "REFMAC 5.5.0109 (AND PHENIX)"
     result = parse_refprog(refprog)
-    expected =  (["REFMAC 5.5.0109", "PHENIX.REFINE"],
-                 ["REFMAC", "PHENIX.REFINE"],
-                 ["5.5.0109", "-"])
+    expected = (["REFMAC 5.5.0109", "PHENIX.REFINE"],
+                ["REFMAC", "PHENIX.REFINE"],
+                ["5.5.0109", "-"])
     eq_(result, expected)
 
     refprog = "BUSTER, BETA VERSION"
     result = parse_refprog(refprog)
-    expected =  (["BUSTER BETA"], ["BUSTER"], ["BETA"])
+    expected = (["BUSTER BETA"], ["BUSTER"], ["BETA"])
     eq_(result, expected)
 
     refprog = "TNT BUSTER/TNT"
     result = parse_refprog(refprog)
-    expected =  (["TNT", "BUSTER/TNT"], ["TNT", "BUSTER"], ["-", "-"])
+    expected = (["TNT", "BUSTER/TNT"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "O, VERSION 9.0.7"
     result = parse_refprog(refprog)
-    expected =  (["O 9.0.7"], ["O"], ["9.0.7"])
+    expected = (["O 9.0.7"], ["O"], ["9.0.7"])
     eq_(result, expected)
 
 
@@ -1544,65 +1564,65 @@ def test_parse_refprog_nosplit():
     # 4ow3
     refprog = "PHENIX (PHENIX.REFINE: DEV_1549+SVN)      "
     result = parse_refprog(refprog)
-    expected =  (["PHENIX (PHENIX.REFINE: DEV_1549+SVN)"], ["PHENIX.REFINE"],
-                 ["np"])
+    expected = (["PHENIX (PHENIX.REFINE: DEV_1549+SVN)"], ["PHENIX.REFINE"],
+                ["np"])
     eq_(result, expected)
 
     refprog = "BUSTER/TNT"
     result = parse_refprog(refprog)
-    expected =  (["BUSTER/TNT"], ["BUSTER"], ["-"])
+    expected = (["BUSTER/TNT"], ["BUSTER"], ["-"])
     eq_(result, expected)
 
     refprog = "BUSTER/RESOLVE"
     result = parse_refprog(refprog)
-    expected =  (["BUSTER/RESOLVE"], ["BUSTER"], ["np"])
+    expected = (["BUSTER/RESOLVE"], ["BUSTER"], ["np"])
     eq_(result, expected)
 
     refprog = "ARP/WARP"
     result = parse_refprog(refprog)
-    expected =  (["ARP/WARP"], ["ARP/WARP"], ["-"])
+    expected = (["ARP/WARP"], ["ARP/WARP"], ["-"])
     eq_(result, expected)
 
     refprog = "WARP/ARP"
     result = parse_refprog(refprog)
-    expected =  (["WARP/ARP"], ["OTHER"], ["np"])
+    expected = (["WARP/ARP"], ["OTHER"], ["np"])
     eq_(result, expected)
 
 
 def test_parse_refprog_split():
     refprog = "TNT/BUSTER"
     result = parse_refprog(refprog)
-    expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
+    expected = (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT, BUSTER"
     result = parse_refprog(refprog)
-    expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
+    expected = (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT&BUSTER"
     result = parse_refprog(refprog)
-    expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
+    expected = (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT ; BUSTER"
     result = parse_refprog(refprog)
-    expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
+    expected = (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT +, BUSTER"
     result = parse_refprog(refprog)
-    expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
+    expected = (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "TNT AND BUSTER,"
     result = parse_refprog(refprog)
-    expected =  (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
+    expected = (["TNT", "BUSTER"], ["TNT", "BUSTER"], ["-", "-"])
     eq_(result, expected)
 
     refprog = "/REFMAC5.7/////COOT//"
     result = parse_refprog(refprog)
-    expected =  (["REFMAC5.7", "COOT"], ["REFMAC", "COOT"], ["5.7", "-"])
+    expected = (["REFMAC5.7", "COOT"], ["REFMAC", "COOT"], ["5.7", "-"])
     eq_(result, expected)
 
 
@@ -1966,7 +1986,6 @@ def test_parse_refprog_buster():
     eq_(result, expected)
 
 
-
 def test_parse_refprog_tnt():
     refprog = "TNT"
     result = parse_refprog(refprog)
@@ -2302,7 +2321,8 @@ def test_parse_refprog_other():
                 "FAST-FOURIER LEAST-SQUARES REFINEMENT",
                 "JACK-LEVITT",
                 "REAL-SPACE REFINEMENT",
-                "SOME OTHER REFPROG",]
+                "SOME OTHER REFPROG"]
     for p in refprogs:
         result = parse_refprog(p)
         expected = ([p], ["OTHER"], ["np"])
+        eq_(result, expected)
