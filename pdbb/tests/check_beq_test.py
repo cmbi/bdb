@@ -17,11 +17,11 @@
 from nose.tools import eq_, ok_, raises
 
 from pdbb.check_beq import (check_beq, check_combinations, determine_b_group,
-                           get_structure, is_calpha_trace, is_phos_trace,
-                           has_amino_acid_backbone,
-                           has_sugar_phosphate_backbone,
-                           is_heavy_backbone, is_nucleic_chain,
-                           is_protein_chain, multiply_bfactors_8pipi)
+                            get_structure, is_calpha_trace, is_phos_trace,
+                            has_amino_acid_backbone,
+                            has_sugar_phosphate_backbone,
+                            is_heavy_backbone, is_nucleic_chain,
+                            is_protein_chain, multiply_bfactors_8pipi)
 
 import numpy as np
 
@@ -146,13 +146,35 @@ def test_determine_b_group_protein_overall_3():
     eq_(result["nucleic_b"], None)
 
 
-def test_determine_b_group_protein_1ADP():
-    """Tests that b_group is correctly determined."""
+def test_determine_b_group_protein_overall_4():
+    """Tests that b_group is correctly determined.
+
+        1av1 has the same B-factor for large stretches
+        of residues; overall is probably the best term.
+    """
     pdb_file_path = "pdbb/tests/pdb/files/1av1.pdb"
     pdb_id = "1av1"
     structure = get_structure(pdb_file_path, pdb_id)
     result = determine_b_group(structure)
+    eq_(result["protein_b"], "overall")
+
+
+def test_determine_b_group_protein_1ADP():
+    """Tests that b_group is correctly determined."""
+    pdb_file_path = "pdbb/tests/pdb/files/3b8a.pdb"
+    pdb_id = "3b8a"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = determine_b_group(structure)
     eq_(result["protein_b"], "residue_1ADP")
+
+
+def test_determine_b_group_protein_2ADP():
+    """Tests that b_group is correctly determined."""
+    pdb_file_path = "pdbb/tests/pdb/files/3zzt.pdb"
+    pdb_id = "3zzt"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = determine_b_group(structure)
+    eq_(result["protein_b"], "residue_2ADP")
 
 
 def test_determine_b_group_nucleic_None():
@@ -179,6 +201,17 @@ def test_determine_b_group_protein_individual():
     """Tests that b_group is correctly determined."""
     pdb_file_path = "pdbb/tests/pdb/files/1crn.pdb"
     pdb_id = "1crn"
+    structure = get_structure(pdb_file_path, pdb_id)
+    result = determine_b_group(structure)
+    eq_(result["protein_b"], "individual")
+    eq_(result["calpha_only"], False)
+    eq_(result["nucleic_b"], None)
+
+
+def test_determine_b_group_protein_individual2():
+    """Tests that b_group is correctly determined."""
+    pdb_file_path = "pdbb/tests/pdb/files/2er0.pdb"
+    pdb_id = "2er0"
     structure = get_structure(pdb_file_path, pdb_id)
     result = determine_b_group(structure)
     eq_(result["protein_b"], "individual")
@@ -237,6 +270,7 @@ def test_determine_b_group_calpha_true_2():
     eq_(result["nucleic_b"], None)
     eq_(result["phos_only"], False)
 
+
 def test_determine_b_group_calpha_true_3():
     """Tests that b_group is correctly determined."""
     pdb_file_path = "pdbb/tests/pdb/files/1efg.pdb"
@@ -288,7 +322,7 @@ def test_get_structure_invalid_path():
     """Tests get_structure."""
     pdb_file_path = "1crn.pdb"
     pdb_id = "1crn"
-    structure = get_structure(pdb_file_path, pdb_id, verbose=True)
+    get_structure(pdb_file_path, pdb_id, verbose=True)
 
 
 def test_get_structure_pdbid_none():
@@ -336,8 +370,8 @@ def test_is_calpha_trace_true_2():
     for c in chains:
         cid = c.get_id()
         if cid in ("D", "S", "T", "U", "A", "H", "I", "J", "B", "M", "N", "O",
-                "C", "P", "Q", "R", "1", "2", "F", "Z", "E", "W", "X", "Y",
-                "3", "5", "G", "6", "7", "8", "K", "0", "9", "L", "I"):
+                   "C", "P", "Q", "R", "1", "2", "F", "Z", "E", "W", "X", "Y",
+                   "3", "5", "G", "6", "7", "8", "K", "0", "9", "L", "I"):
             result = is_calpha_trace(c)
             eq_(result, True)
 
@@ -365,7 +399,7 @@ def test_is_calpha_trace_false_nuc():
 @raises(AttributeError)
 def test_is_calpha_trace_none():
     """Tests is_calpha_trace."""
-    result = is_calpha_trace(None)
+    is_calpha_trace(None)
 
 
 def test_is_phos_trace_true():
@@ -404,7 +438,7 @@ def test_is_phos_trace_false_prot_chain():
 @raises(AttributeError)
 def test_is_phos_trace_none():
     """Tests is_phos_trace."""
-    result = is_phos_trace(None)
+    is_phos_trace(None)
 
 
 def test_has_amino_acid_backbone_true():
@@ -448,14 +482,14 @@ def test_has_sugar_phosphate_backbone_true():
     residues = structure.get_residues()
     residue = residues.next()
     result = has_sugar_phosphate_backbone(residue)
-    eq_(result, False) # DNA, misses P
+    eq_(result, False)  # DNA, misses P
 
     residue = residues.next()
     result = has_sugar_phosphate_backbone(residue)
     eq_(result, True)
 
     residues = list(structure.get_chains().next().get_residues())
-    residue = residues[9] # Residue 10 has the phosphate..
+    residue = residues[9]  # Residue 10 has the phosphate..
     result = has_sugar_phosphate_backbone(residue)
     eq_(result, True)
 
@@ -533,5 +567,3 @@ def test_multiply_bfactors_8pipi():
     for atom in s_mult.get_atoms():
         bvalues.append(atom.get_bfactor())
     eq_(bvalues, expected)
-
-

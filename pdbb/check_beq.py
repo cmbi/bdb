@@ -26,6 +26,8 @@ import shutil
 import Bio.PDB
 import numpy as np
 
+from collections import Counter
+
 from pdbb.pdb.parser import get_pdb_header_and_trailer
 
 
@@ -194,6 +196,7 @@ def determine_b_group_chain(chain):
     margin = 0.01
     residues = chain.get_residues()
     group = "individual"
+    group_votes = []
     b_res = []
     i = 0
     max_res = 10
@@ -230,7 +233,7 @@ def determine_b_group_chain(chain):
             if len(b_atom) > 1:
                 b_atom = sorted(b_atom)
                 if np.isclose(b_atom[-1], b_atom[0], atol=margin):
-                    group = "residue_1ADP"
+                    group_votes.append("residue_1ADP")
                 elif len(b_atom) > 3 and \
                         np.allclose(
                             [b_atom[-1], b_atom[1]],
@@ -240,14 +243,32 @@ def determine_b_group_chain(chain):
                             b_atom[-2],
                             b_atom[1],
                             atol=margin,):
-                    group = "residue_2ADP"
+                    group_votes.append("residue_2ADP")
                 else:
-                    group = "individual"
-    if len(b_res) > max_res - 1 and np.isclose(
-            b_res[0][0], b_res[-1][0], atol=margin):
-        if np.isclose(b_res[-1][-1], 0):
-            group = "no_b-factors"
-        else:
+                    group_votes.append("individual")
+    counter = Counter(group_votes)
+    group_counts = counter.most_common()
+    _log.debug(group_counts)
+    group = group_counts[0][0] if len(group_counts) > 0 else group
+    if len(group_counts) > 1:
+        # If we have ties, assign most complex model
+        if group_counts[0][1] == group_counts[1][1]:
+            if "individual" in list(counter.elements()):
+                group = "individual"
+            elif "residue_1ADP" in list(counter.elements()):
+                group = "residue_1ADP"
+            else:
+                group = "residue_2ADP"
+    big_b = [a for r in b_res for a in r]
+    big_b = sorted(big_b)
+    if len(b_res) > max_res - 1:
+        if np.isclose(big_b[0], big_b[-1], atol=margin):
+            if np.isclose(big_b[0], 0) and np.isclose(big_b[-1], 0):
+                group = "no_b-factors"
+            else:
+                group = "overall"
+        elif len(set(big_b)) < 4:
+            # Exception for structures that have two overall B-factors
             group = "overall"
     return group
 
