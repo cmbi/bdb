@@ -14,13 +14,14 @@
 #    You should have received a copy of the GNU General Public License in the
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
+from datetime import datetime
 from nose.tools import eq_, raises
 
-from pdbb.pdb.parser import (parse_pdb_file, parse_exp_methods, parse_btype,
-                            parse_other_ref_remarks, is_bmsqav,
-                            parse_format_date_version, parse_num_tls_groups,
-                            parse_ref_prog, is_tls_residual, is_tls_sum,
-                            get_pdb_header_and_trailer)
+from pdbb.pdb.parser import (parse_pdb_file, parse_dep_date, parse_exp_methods,
+                             parse_btype, parse_other_ref_remarks, is_bmsqav,
+                             parse_format_date_version, parse_num_tls_groups,
+                             parse_ref_prog, is_tls_residual, is_tls_sum,
+                             get_pdb_header_and_trailer)
 
 
 @raises(ValueError)
@@ -35,6 +36,57 @@ def test_parser():
     eq_(len(pdb_records["EXPDTA"]), 1)
     eq_(len(pdb_records["ATOM  "]), 327)
     eq_(len(pdb_records["REMARK"]), 224)
+
+
+def test_parse_dep_date():
+    records = parse_pdb_file("pdbb/tests/pdb/files/1crn.pdb")
+    dep_date = parse_dep_date(records)
+    eq_(dep_date, datetime(1981, 4, 30))
+
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          "  30-APR-81   1CRN"]}
+    parse_dep_date(records)
+    eq_(dep_date, datetime(1981, 4, 30))
+
+
+@raises(ValueError)
+def test_parse_dep_date_none():
+    records = {}
+    parse_dep_date(records)
+
+
+@raises(ValueError)
+def test_parse_dep_date_multiple():
+    records = {"HEADER": [" HEADER1", "HEADER2"]}
+    parse_dep_date(records)
+
+
+@raises(ValueError)
+def test_parse_dep_date_format():
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          "  30-AAA-81   1CRN"]}
+    parse_dep_date(records)
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          "  30-04-81    1CRN"]}
+    parse_dep_date(records)
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          " 30-APR-81    1CRN"]}
+    parse_dep_date(records)
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          "   30-AAA-81  1CRN"]}
+    parse_dep_date(records)
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          "  30-04-1981  1CRN"]}
+    parse_dep_date(records)
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          "  30- 04-81  1CRN"]}
+    parse_dep_date(records)
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          "  81-APR-30  1CRN"]}
+    parse_dep_date(records)
+    records = {"HEADER": ["   PLANT PROTEIN                         "
+                          "  1981-04-30 1CRN"]}
+    parse_dep_date(records)
 
 
 def test_parse_exp_method_single_line_multiple():
@@ -114,7 +166,7 @@ def test_parse_btype_unexpected():
     records.
     """
     records = {"REMARK": ["  3   B VALUE TYPE : SOMETHINGELSE", ]}
-    btype = parse_btype(records)
+    parse_btype(records)
 
 
 def test_parse_btype_unverified_trailing_whitespace():
@@ -196,13 +248,13 @@ def test_is_bmsqav_true_2():
     e.g. 1eed and 5pep
     """
     ref_remarks = "THE ATOMIC TEMPERATURE FACTORS IN THIS ENTRY ARE GIVEN AS" \
-            "U VALUES NOT B VALUES.  B VALUES MAY BE CALCULATED BY THE" \
-            "THE FOLLOWING: BISO (BISO = 8 PI==2== UISO)."
+        "U VALUES NOT B VALUES.  B VALUES MAY BE CALCULATED BY THE" \
+        "THE FOLLOWING: BISO (BISO = 8 PI==2== UISO)."
     eq_(is_bmsqav(ref_remarks), True)
 
     ref_remarks = "ISOTROPIC UISO VALUES ARE PROVIDED IN THE FIELD THAT" \
-            "U VALUES NOT B VALUES.  B VALUES MAY BE CALCULATED BY THE" \
-            "USUALLY CONTAINS B VALUES."
+        "U VALUES NOT B VALUES.  B VALUES MAY BE CALCULATED BY THE" \
+        "USUALLY CONTAINS B VALUES."
     eq_(is_bmsqav(ref_remarks), True)
 
     ref_remarks = "U**2"
@@ -327,7 +379,7 @@ def test_parse_ref_prog_none_trailing_whitespace():
 def test_is_tls_residual_remark3():
     """Tests that tls_residual is correctly parsed from REMARK 3 records."""
     records = {"REMARK": ["  3   ATOM RECORD CONTAINS RESIDUAL B FACTORS ONLY",
-        ]}
+                          ]}
     tls_residual = is_tls_residual(records)
     eq_(tls_residual, True)
 
@@ -462,8 +514,7 @@ def test_is_tls_residual_other3():
 def test_is_tls_sum_remark3():
     """Tests that tls_sum is correctly parsed from REMARK 3 records."""
     records = {"REMARK": ["  3   ATOM RECORD CONTAINS SUM OF TLS AND "
-                          "RESIDUAL B FACTORS",
-        ]}
+                          "RESIDUAL B FACTORS", ]}
     tls_sum = is_tls_sum(records)
     eq_(tls_sum, True)
 
@@ -623,55 +674,55 @@ def test_get_header_and_trailer():
 
     Test entry ht.pdb:
 
-HEADER    TEST PROTEIN                            00-JAN-00   1ABC              
-TITLE     TEST                                                                  
-MODEL        1                                                                  
-ATOM      1                                                                     
-ANISOU                                                                          
-SIGUIJ                                                                          
-ATOM      2                                                                     
-ANISOU                                                                          
-SIGUIJ                                                                          
-HETATM                                                                          
-HETATM                                                                          
-ATOM      3                                                                     
-ANISOU                                                                          
-SIGUIJ                                                                          
-TER       4                                                                     
-ENDMDL                                                                          
-MODEL        2                                                                  
-ATOM      1                                                                     
-ANISOU                                                                          
-SIGUIJ                                                                          
-ATOM      2                                                                     
-ANISOU                                                                          
-SIGUIJ                                                                          
-HETATM                                                                          
-HETATM                                                                          
-ATOM      3                                                                     
-ANISOU                                                                          
-SIGUIJ                                                                          
-TER       4                                                                     
-ENDMDL                                                                          
-CONECT                                                                          
-CONECT                                                                          
-MASTER                                                                          
-END                                                                             
+HEADER    TEST PROTEIN                            00-JAN-00   1ABC
+TITLE     TEST
+MODEL        1
+ATOM      1
+ANISOU
+SIGUIJ
+ATOM      2
+ANISOU
+SIGUIJ
+HETATM
+HETATM
+ATOM      3
+ANISOU
+SIGUIJ
+TER       4
+ENDMDL
+MODEL        2
+ATOM      1
+ANISOU
+SIGUIJ
+ATOM      2
+ANISOU
+SIGUIJ
+HETATM
+HETATM
+ATOM      3
+ANISOU
+SIGUIJ
+TER       4
+ENDMDL
+CONECT
+CONECT
+MASTER
+END
 
     """
     header, trailer = get_pdb_header_and_trailer("pdbb/tests/pdb/files/ht.pdb")
     head_exp = [
-            "HEADER    TEST PROTEIN                            "
-            "00-JAN-00   1ABC              ",
-            "TITLE     TEST                                    "
-            "                              "]
+        "HEADER    TEST PROTEIN                            "
+        "00-JAN-00   1ABC              ",
+        "TITLE     TEST                                    "
+        "                              "]
     trai_exp = [
-            "CONECT                                            "
-            "                              ",
-            "CONECT                                            "
-            "                              ",
-            "MASTER                                            "
-            "                              "]
+        "CONECT                                            "
+        "                              ",
+        "CONECT                                            "
+        "                              ",
+        "MASTER                                            "
+        "                              "]
     eq_(header, head_exp)
     eq_(trailer, trai_exp)
 
@@ -685,4 +736,3 @@ def test_get_header_and_trailer_ioerror():
     header, trailer = get_pdb_header_and_trailer("ht.pdb")
     eq_(header, [])
     eq_(trailer, [])
-
