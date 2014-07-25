@@ -148,8 +148,15 @@ def test_decide_refprog_refmac_remediation_notfull():
                 "dep_date": datetime(2011, 7, 12)}
     decide_refprog(pdb_info)
 
-    pdb_info["format_vers"] = 3.15
-    pdb_info["dep_date"] = datetime(2011, 7, 13)
+
+@raises(KeyError)
+def test_decide_refprog_refmac_remediation_notfull2():
+    pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
+                "beq_identical": 0.9,
+                "format_vers": 3.15, "b_type": None,
+                "has_anisou": True, "tls_residual": False, "tls_sum": True,
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 13)}
     decide_refprog(pdb_info)
 
 
