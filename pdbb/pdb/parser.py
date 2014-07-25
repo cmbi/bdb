@@ -17,6 +17,7 @@
 import logging
 _log = logging.getLogger(__name__)
 
+import datetime
 import os
 import re
 
@@ -25,38 +26,38 @@ RE_BTYPE = re.compile(r"^  3   B VALUE TYPE : (?P<btype>.*)")
 RE_REF_PROG = re.compile(r"^  3   PROGRAM     : (?P<refprogs>.*)")
 RE_REF_REMARKS = re.compile(r"^  3  OTHER REFINEMENT REMARKS: (?!NULL|NONE)")
 RE_B_MSQAV = re.compile(r"(MEAN-SQUARE AMPLITUDE OF ATOMIC VIBRATION|"
-                         "U\*\*2|UISO)")
+                        "U\*\*2|UISO)")
 RE_FORMAT = re.compile(r"^  4 [0-9A-Z]{4} COMPLIES WITH FORMAT V. "
-                        "(?P<version>[\d.]+), "
-                        "(?P<date>\d{2}-[A-Z]{3}-\d{2})")
+                       "(?P<version>[\d.]+), "
+                       "(?P<date>\d{2}-[A-Z]{3}-\d{2})")
 RE_TLS_GROUPS = re.compile(r"^  3   NUMBER OF TLS GROUPS  :\s*(\d+)\s*$")
 RE_TLS_RES = re.compile(r"^  3   ATOM RECORD CONTAINS RESIDUAL B FACTORS ONLY")
 RE_TLS_RES_1 = re.compile(r"RESIDUAL\s+([BU]-?\s*(FACTORS?|VALUES?)\s+)?ONLY")
 RE_TLS_RES_2 = re.compile(r"ATOMIC\s+[BU]-?\s*(FACTORS?|VALUES?)\s+(SHOWN\s+)?"
-                           "ARE\s+RESIDUALS(\s+FROM\s+TLS(\s+REFINEMENT)?)?")
+                          "ARE\s+RESIDUALS(\s+FROM\s+TLS(\s+REFINEMENT)?)?")
 RE_TLS_RES_3 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s+ARE\s+RESIDUAL"
-                           "\s+[BU]-?\s*(FACTORS?|VALUES?),?"
-                           "(\s+\(?WHICH\s+DO\s+NOT\s+"
-                           "INCLUDE\s+THE\s+CONTRIBUTION\s+FROM\s+THE\s+TLS"
-                           "\s+PARAMETERS\)?)?.?(\s+USE\s+TLSANL(\s+\(?\s*"
-                           "DISTRIBUTED\s+WITH\s+CCP4\)?)?\s+TO\s+OBTAIN\s+"
-                           "THE\s+(FULL\s+)?[BU]-?\s*(FACTORS?|VALUES?))?")
+                          "\s+[BU]-?\s*(FACTORS?|VALUES?),?"
+                          "(\s+\(?WHICH\s+DO\s+NOT\s+"
+                          "INCLUDE\s+THE\s+CONTRIBUTION\s+FROM\s+THE\s+TLS"
+                          "\s+PARAMETERS\)?)?.?(\s+USE\s+TLSANL(\s+\(?\s*"
+                          "DISTRIBUTED\s+WITH\s+CCP4\)?)?\s+TO\s+OBTAIN\s+"
+                          "THE\s+(FULL\s+)?[BU]-?\s*(FACTORS?|VALUES?))?")
 RE_TLS_SUM = re.compile(r"^  3   ATOM RECORD CONTAINS SUM OF TLS "
-                         "AND RESIDUAL B FACTORS")
+                        "AND RESIDUAL B FACTORS")
 RE_TLS_SUM_1 = re.compile(r"SUM\s+OF\s+TLS\s+AND\s+RESIDUAL\s+"
-                               "[BU]-?\s*(FACTORS?|VALUES?)")
+                          "[BU]-?\s*(FACTORS?|VALUES?)")
 RE_TLS_SUM_2 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s*:?\s+WITH\s+"
-                               "TLS\s+ADDED")
+                          "TLS\s+ADDED")
 RE_TLS_SUM_3 = re.compile(r"(GLOBAL\s+)?[BU]-?\s*(FACTORS?|VALUES?),?\s*"
-                               "(CONTAINING\s+)?RESIDUALS?\s+(AND|\+)\s+TLS\s+"
-                               "COMPONENTS?(HAVE\s+BEEN\s+DEPOSITED)?")
+                          "(CONTAINING\s+)?RESIDUALS?\s+(AND|\+)\s+TLS\s+"
+                          "COMPONENTS?(HAVE\s+BEEN\s+DEPOSITED)?")
 RE_TLS_SUM_4 = re.compile(r"([BU]-?\s*(FACTORS?|VALUES?)\s+CORRESPOND\s+"
                           "TO\s+(THE\s+)?OVERALL?"
                           "[BU]-?\s*(FACTORS?|VALUES?)\s+EQUAL\s+TO\s+"
                           "THE\s+)?RESIDUAL[S]?\s+PLUS\s+(THE\s+)?TLS"
                           "(\s+COMPONENT)?")
 RE_TLS_SUM_5 = re.compile(r"[BU]-?\s*(FACTORS?|VALUES?)\s*CONTAINS?\s+"
-                           "(BOTH\s+)?TLS\s+AND\s+RESIDUALS?\s+COMPONENTS?.?")
+                          "(BOTH\s+)?TLS\s+AND\s+RESIDUALS?\s+COMPONENTS?.?")
 RE_TLS_SUM_6 = re.compile(r"""
         (
             (ANISOTROPIC\s+)?
@@ -102,6 +103,36 @@ def parse_pdb_file(pdb_file_path):
             records[record_name].append(record[7:])
         _log.debug("Parsed {0} records".format(len(records)))
         return records
+
+
+def parse_dep_date(pdb_records):
+    """
+    Parses the deposition date from the pdb HEADER record, returning a
+    date.
+
+    The HEADER record is mandatory and spans a single line.
+
+    If no HEADER records are found, a ValueError is raised.
+    If multiple HEADER records are found, a ValueError is raised.
+    If the date can not be parsed, a ValueError is raised.
+    """
+    _log.debug("Parsing deposition date from HEADER record")
+    if "HEADER" not in pdb_records:
+        _log.error("No HEADER record found")
+        raise ValueError("No HEADER record found")
+
+    if len(pdb_records["HEADER"]) > 1:
+        _log.error("Multiple HEADER records found")
+        raise ValueError("Multiple HEADER records found")
+
+    dep_date = None
+    record = pdb_records["HEADER"][0]
+    try:
+        dep_date = datetime.datetime.strptime(record[43:52], "%d-%b-%y")
+    except ValueError as e:
+        _log.error("{}".format(e))
+        raise ValueError("Error parsing deposition date")
+    return dep_date
 
 
 def parse_exp_methods(pdb_records):
@@ -168,7 +199,7 @@ def parse_other_ref_remarks(pdb_records):
             while (i+j < len(pdb_records["REMARK"]) and
                    pdb_records["REMARK"][i+j][0:3] == "  3"):
                 ref_rem = ref_rem + " " + \
-                pdb_records["REMARK"][i+j][5:].rstrip()
+                    pdb_records["REMARK"][i+j][5:].rstrip()
                 j = j + 1
             return ref_rem
     return None
