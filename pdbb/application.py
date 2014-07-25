@@ -32,6 +32,7 @@ from pdbb.check_beq import (determine_b_group, get_structure,
 from pdbb.expdta import check_exp_methods
 from pdbb.pdb.parser import parse_pdb_file
 from pdbb.refprog import get_refi_data
+from pdbb.requirements import check_deps
 from pdbb.tlsanl_wrapper import parse_skttls_summ, run_tlsanl
 
 
@@ -45,6 +46,10 @@ def init_logger(pdb_id, verbose):
         filename=log_file_path,
         filemode="w",
         level=logging.INFO if not verbose else logging.DEBUG, format=fmt)
+
+
+def date_handler(obj):
+    return obj.date().isoformat() if hasattr(obj, 'isoformat') else obj
 
 
 def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
@@ -116,7 +121,8 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
             with open(os.path.join(pyconfig.get("BDB_FILE_DIR_PATH"),
                       pdb_id + ".json"),
                       "w") as f:
-                json.dump(bdbd, f, sort_keys=True, indent=4)
+                json.dump(bdbd, f, sort_keys=True, indent=4,
+                          default=date_handler)
         except IOError as ex:
             _log.error(ex)
             return False
@@ -155,7 +161,7 @@ def main():
     init_logger(args.pdb_id, args.verbose)
 
     # Check that the system has the required programs and libraries installed
-    import requirements
+    check_deps()
 
     if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id,
                         verbose=args.verbose):

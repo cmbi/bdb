@@ -65,7 +65,7 @@ The following command will run all the unit tests for bdb:
 
 To see the code coverage of the unit tests, run:
 
-    nosetests --with-coverage --cover-package=bdb
+    nosetests --with-coverage --cover-package=pdbb
 
 [1]: http://www.cmbi.umcn.nl/bdb/
 [2]: http://www.cmbi.umcn.nl/bdb/about/
