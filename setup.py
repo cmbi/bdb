@@ -23,7 +23,7 @@ setup(
     description='A databank of PDB entries with full isotropic B-factors.',
     author='Wouter Touw',
     author_email='wouter.touw@radboudumc.nl',
-    license = "GNU GPLv3",
+    license="GNU GPLv3",
     url='https://github.com/cmbi/bdb',
     classifiers=[
         'Development Status :: 4 - Beta',

@@ -32,6 +32,7 @@ from pdbb.check_beq import (determine_b_group, get_structure,
 from pdbb.expdta import check_exp_methods
 from pdbb.pdb.parser import parse_pdb_file
 from pdbb.refprog import get_refi_data
+from pdbb.requirements import check_deps
 from pdbb.tlsanl_wrapper import parse_skttls_summ, run_tlsanl
 
 
@@ -155,7 +156,7 @@ def main():
     init_logger(args.pdb_id, args.verbose)
 
     # Check that the system has the required programs and libraries installed
-    import requirements
+    check_deps()
 
     if create_bdb_entry(pdb_file_path=args.pdb_file_path, pdb_id=args.pdb_id,
                         verbose=args.verbose):

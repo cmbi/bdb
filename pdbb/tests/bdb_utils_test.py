@@ -99,5 +99,3 @@ def test_is_valid_pdbid_false():
 
     pdb_id = "(crn"
     is_valid_pdbid(parser, pdb_id)
-
-
