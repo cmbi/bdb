@@ -21,7 +21,9 @@ _log = logging.getLogger(__name__)
 
 import re
 
-from pdbb.pdb.parser import (parse_other_ref_remarks, is_bmsqav,
+from datetime import datetime
+
+from pdbb.pdb.parser import (parse_other_ref_remarks, is_bmsqav, parse_dep_date,
                              parse_btype, parse_format_date_version,
                              parse_num_tls_groups, parse_ref_prog,
                              is_tls_residual, is_tls_sum)
@@ -131,9 +133,6 @@ def decide_refprog_remediation(pdb_info):
     remediation:
     http://www.wwpdb.org/documentation/2011remediation_overview-061711.pdf
 
-    However we also find this type of remark for earlier versions...
-    earlier remediations?
-
     Return a tuple of three Booleans and the decision message.
     useful       : True if a BDB file can probably be created for this PDB file
     assume_iso   : whether the PDB file should be assumed to have
@@ -146,24 +145,27 @@ def decide_refprog_remediation(pdb_info):
 
     (useful, assume_iso, req_tlsanl) = (False, False, False)
     msg = ": {}".format(pdb_info["prog_last"][0])
+    remediation = datetime(2011, 7, 13)
 
     # Decide
 
     if pdb_info["b_type"] == "residual":
         req_tlsanl = True
-        msg = "Residual B-factors (wwPDB remediation{}){}".format(
-              " 2011" if pdb_info["format_vers"] == 3.30 else "", msg)
+        msg = "Residual B-factors (wwPDB remediation){}".format(msg)
+        # Only REFMAC entries were part of the remediation,
+        # otherwise inspect first
         if pdb_info["prog_last"][0] == "REFMAC":
             useful = True
     elif pdb_info["b_type"] == "unverified":
-        msg = "B-factor type could not be determined (wwPDB remediation{}){}".\
-              format(" 2011" if pdb_info["format_vers"] == 3.30 else "", msg)
+        msg = "B-factor type could not be determined (wwPDB remediation){}".\
+              format(msg)
     elif pdb_info["prog_last"][0] == "REFMAC" and \
-            pdb_info["format_vers"] == 3.30:
+            pdb_info["format_vers"] in [3.15, 3.20, 3.30] and \
+            pdb_info["dep_date"] < remediation:
         # The REFMAC entry was found to contain full B-factors
         useful = True
         assume_iso = True
-        msg = "Full B-factors (wwPDB remediation 2011){}".format(msg)
+        msg = "Full B-factors (wwPDB remediation){}".format(msg)
     else:
         msg = "Unexpected B-factor type annotation (wwPDB remediation){}".\
             format(msg)
@@ -415,8 +417,12 @@ def decide_refprog(pdb_info):
     # REFMAC and other refprogs:
 
     # We trust the wwPDB remediation decision
-    if (pdb_info["format_vers"] == 3.30 and
-            pdb_info["prog_last"][0] == "REFMAC") \
+    # Remediations can have format_version 3.15, 3.20, 3.30
+    # and were performed for REFMAC at or before 13 July 2011
+    remediation = datetime(2011, 7, 13)
+    if (pdb_info["format_vers"] in [3.15, 3.20, 3.30] and
+        pdb_info["prog_last"][0] == "REFMAC" and
+        pdb_info["dep_date"] < remediation) \
             or pdb_info["b_type"]:
         return decide_refprog_remediation(pdb_info)
 
@@ -502,6 +508,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
     "correct_uij"  : False if a non-standard combination of the Uij values in
                      the ANISOU records was necessary to reproduce the
                      B-factors.
+    "dep_date"     : PDB deposition date
     "format_date"  : PDB format date
     "format_vers"  : PDB format version
     "has_anisou"   : True if ANISOU records are present in the PDB file.
@@ -537,6 +544,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
     other_refinement_remarks = parse_other_ref_remarks(pdb_records)
     pdb_info = {
         "pdb_id": pdb_id,
+        "dep_date": parse_dep_date(pdb_records),
         "b_type": parse_btype(pdb_records),
         "has_anisou": "ANISOU" in pdb_records,
         "format_date": format_date,

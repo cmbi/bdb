@@ -14,6 +14,7 @@
 #    You should have received a copy of the GNU General Public License in the
 #    LICENSE file that should have been included as part of this package.
 #    If not, see <http://www.gnu.org/licenses/>.
+from datetime import datetime
 from mock import patch
 from nose.tools import eq_, raises
 
@@ -69,9 +70,19 @@ def test_is_bdb_includable_refprog_phenix():
 def test_decide_refprog_refmac_remediation_residual():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": "residual",
-                "other_refinement_remarks": ""}
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 12)}
     result = decide_refprog(pdb_info)
-    msg = "Residual B-factors (wwPDB remediation 2011): REFMAC"
+    msg = "Residual B-factors (wwPDB remediation): REFMAC"
+    expected = (True, False, True, msg)
+    eq_(result, expected)
+
+    pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
+                "format_vers": "not3.30", "b_type": "residual",
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 13)}
+    result = decide_refprog(pdb_info)
+    msg = "Residual B-factors (wwPDB remediation): REFMAC"
     expected = (True, False, True, msg)
     eq_(result, expected)
 
@@ -79,10 +90,21 @@ def test_decide_refprog_refmac_remediation_residual():
 def test_decide_refprog_refmac_remediation_unverified():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": "unverified",
-                "other_refinement_remarks": ""}
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 12)}
     result = decide_refprog(pdb_info)
     msg = "B-factor type could not be determined "\
-          "(wwPDB remediation 2011): REFMAC"
+          "(wwPDB remediation): REFMAC"
+    expected = (False, False, False, msg)
+    eq_(result, expected)
+
+    pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
+                "format_vers": "not3.30", "b_type": "unverified",
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 13)}
+    result = decide_refprog(pdb_info)
+    msg = "B-factor type could not be determined "\
+          "(wwPDB remediation): REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -91,47 +113,44 @@ def test_decide_refprog_refmac_remediation_full():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": None,
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": ""}
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 12)}
     result = decide_refprog(pdb_info)
-    msg = "Full B-factors (wwPDB remediation 2011): REFMAC"
+    msg = "Full B-factors (wwPDB remediation): REFMAC"
     expected = (True, True, False, msg)
     eq_(result, expected)
 
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
-                "format_vers": 3.30, "b_type": "something",
+                "format_vers": 3.20, "b_type": "something",
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": ""}
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 12)}
     result = decide_refprog(pdb_info)
     eq_(result, expected)
 
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "beq_identical": 0.9,
-                "format_vers": 3.30, "b_type": None, "has_anisou": True,
+                "format_vers": 3.15, "b_type": None, "has_anisou": True,
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": ""}
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 12)}
     result = decide_refprog(pdb_info)
     eq_(result, expected)
 
 
-def test_decide_refprog_refmac_residual():
-    pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
-                "format_vers": "not3.30", "b_type": "residual",
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
-    msg = "Residual B-factors (wwPDB remediation): REFMAC"
-    expected = (True, False, True, msg)
-    eq_(result, expected)
+@raises(KeyError)
+def test_decide_refprog_refmac_remediation_notfull():
+    pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
+                "beq_identical": 0.9,
+                "format_vers": "not3.30,3.20,3.15", "b_type": None,
+                "has_anisou": True, "tls_residual": False, "tls_sum": True,
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 12)}
+    decide_refprog(pdb_info)
 
-
-def test_decide_refprog_refmac_unverified():
-    pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
-                "format_vers": "not3.30", "b_type": "unverified",
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
-    msg = "B-factor type could not be determined "\
-          "(wwPDB remediation): REFMAC"
-    expected = (False, False, False, msg)
-    eq_(result, expected)
+    pdb_info["format_vers"] = 3.15
+    pdb_info["dep_date"] = datetime(2011, 7, 13)
+    decide_refprog(pdb_info)
 
 
 def test_decide_refprog_refmac_residual_and_full():
@@ -498,25 +517,52 @@ def test_decide_refprog_refmac_notls_nohints_noanisou():
 def test_decide_refprog_OTHER_remediation_residual():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": "residual",
-                "other_refinement_remarks": ""}
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 12)}
     result = decide_refprog(pdb_info)
-    msg = "Residual B-factors (wwPDB remediation 2011): OTHER"
+    msg = "Residual B-factors (wwPDB remediation): OTHER"
+    expected = (False, False, True, msg)
+    eq_(result, expected)
+
+    pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
+                "format_vers": 3.40, "b_type": "residual",
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2012, 7, 12)}
+    result = decide_refprog(pdb_info)
+    msg = "Residual B-factors (wwPDB remediation): OTHER"
     expected = (False, False, True, msg)
     eq_(result, expected)
 
 
 def test_decide_refprog_OTHER_remediation_unverified():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
-                "format_vers": 3.30, "b_type": "unverified",
-                "other_refinement_remarks": ""}
+                "format_vers": 3.20, "b_type": "unverified",
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2011, 7, 12)}
     result = decide_refprog(pdb_info)
     msg = "B-factor type could not be determined "\
-          "(wwPDB remediation 2011): OTHER"
+          "(wwPDB remediation): OTHER"
+    expected = (False, False, False, msg)
+    eq_(result, expected)
+
+    pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
+                "format_vers": 3.10, "b_type": "unverified",
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2010, 7, 12)}
+    result = decide_refprog(pdb_info)
+    expected = (False, False, False, msg)
+    eq_(result, expected)
+
+    pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
+                "format_vers": 3.10, "b_type": "unverified",
+                "other_refinement_remarks": "",
+                "dep_date": datetime(2010, 7, 13)}
+    result = decide_refprog(pdb_info)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
 
-def test_decide_refprog_OTHER_remediation_full():
+def test_decide_refprog_OTHER_remediation_unexpected():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": "somethingunexpected",
                 "tls_residual": False, "tls_sum": True,
@@ -539,27 +585,6 @@ def test_decide_refprog_OTHER_remediation_full():
                 "tls_residual": False, "tls_sum": True,
                 "other_refinement_remarks": ""}
     result = decide_refprog(pdb_info)
-    eq_(result, expected)
-
-
-def test_decide_refprog_OTHER_residual():
-    pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
-                "format_vers": "not3.30", "b_type": "residual",
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
-    msg = "Residual B-factors (wwPDB remediation): OTHER"
-    expected = (False, False, True, msg)
-    eq_(result, expected)
-
-
-def test_decide_refprog_OTHER_unverified():
-    pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
-                "format_vers": "not3.30", "b_type": "unverified",
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
-    msg = "B-factor type could not be determined "\
-          "(wwPDB remediation): OTHER"
-    expected = (False, False, False, msg)
     eq_(result, expected)
 
 
@@ -1163,6 +1188,7 @@ def test_get_refi_data_1crn():
     eq_(pdb_info["is_bdb_includable"], True)
     eq_(pdb_info["other_refinement_remarks"], "")
     eq_(pdb_info["pdb_id"], "1crn")
+    eq_(pdb_info["dep_date"], datetime(1981, 4, 30))
     eq_(pdb_info["prog_inter"], ["PROLSQ"])
     eq_(pdb_info["prog_last"], ["PROLSQ"])
     eq_(pdb_info["prog_vers"], ["PROLSQ"])
@@ -1194,6 +1220,7 @@ def test_get_refi_data_3zzw():
     eq_(pdb_info["other_refinement_remarks"], "IDEAL-DIST CONTACT TERM "
         "CONTACT SETUP.  ALL ATOMS HAVE CCP4 ATOM TYPE FROM LIBRARY.")
     eq_(pdb_info["pdb_id"], "3zzw")
+    eq_(pdb_info["dep_date"], datetime(2011, 9, 5))
     eq_(pdb_info["prog_inter"], ["BUSTER"])
     eq_(pdb_info["prog_last"], ["BUSTER"])
     eq_(pdb_info["prog_vers"], ["2.11.1"])
@@ -1216,8 +1243,7 @@ def test_get_refi_data_2wnl():
     eq_(pdb_info["b_type"], None)
     eq_(pdb_info["beq_identical"], None)
     eq_(pdb_info["correct_uij"], None)
-    eq_(pdb_info["decision"], "TLS group(s), full B-factors "
-                              "(REMARK 3) without ANISOU records: REFMAC")
+    eq_(pdb_info["decision"], "Full B-factors (wwPDB remediation): REFMAC")
     eq_(pdb_info["format_date"], "01-DEC-08")
     eq_(pdb_info["format_vers"], 3.2)
     eq_(pdb_info["has_anisou"], False)
@@ -1226,6 +1252,7 @@ def test_get_refi_data_2wnl():
         "THE  RIDING POSITIONS. GLOBAL B-FACTORS, CONTAINING RESIDUAL  "
         "AND TLS COMPONENT HAVE BEEN DEPOSITED.")
     eq_(pdb_info["pdb_id"], "2wnl")
+    eq_(pdb_info["dep_date"], datetime(2009, 7, 9))
     eq_(pdb_info["prog_inter"], ["REFMAC"])
     eq_(pdb_info["prog_last"], ["REFMAC"])
     eq_(pdb_info["prog_vers"], ["5.5.0102"])

@@ -48,6 +48,10 @@ def init_logger(pdb_id, verbose):
         level=logging.INFO if not verbose else logging.DEBUG, format=fmt)
 
 
+def date_handler(obj):
+    return obj.isoformat() if hasattr(obj, 'isoformat') else obj
+
+
 def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
     """Create a bdb entry.
 
@@ -117,7 +121,8 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
             with open(os.path.join(pyconfig.get("BDB_FILE_DIR_PATH"),
                       pdb_id + ".json"),
                       "w") as f:
-                json.dump(bdbd, f, sort_keys=True, indent=4)
+                json.dump(bdbd, f, sort_keys=True, indent=4,
+                          default=date_handler)
         except IOError as ex:
             _log.error(ex)
             return False
