@@ -49,7 +49,7 @@ def init_logger(pdb_id, verbose):
 
 
 def date_handler(obj):
-    return obj.isoformat() if hasattr(obj, 'isoformat') else obj
+    return obj.date().isoformat() if hasattr(obj, 'isoformat') else obj
 
 
 def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
