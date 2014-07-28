@@ -83,7 +83,7 @@ def run_tlsanl(pdb_file_path, xyzout, pdb_id, log_out_dir=".",
 
 
 def parse_skttls_summ(tlsanl_log):
-    """Parse Skttles summary from TLSANL log file
+    """Parse Skttls summary from TLSANL log file
 
     Return the total number of bonds between residues and the number of bonds
     beyond the 95th and 99th percentile for any residual as a dict of integers.

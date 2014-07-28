@@ -496,7 +496,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
     Warning: it is assumed that B-factors are full and isotropic if they can be
     reproduced from Beq values.
 
-    Return a dict containing refinement info.
+    Return a dict containing refinement and decision info.
     "assume_iso"   : whether the PDB file should be assumed to have
                      total isotropic B-factors
     "b_msqav"      : True if the B-factor file contains U**2 (mean-square
@@ -508,6 +508,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
     "correct_uij"  : False if a non-standard combination of the Uij values in
                      the ANISOU records was necessary to reproduce the
                      B-factors.
+    "decision"     : Decision summary.
     "dep_date"     : PDB deposition date
     "format_date"  : PDB format date
     "format_vers"  : PDB format version
