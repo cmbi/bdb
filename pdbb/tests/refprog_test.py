@@ -1189,13 +1189,13 @@ def test_get_refi_data_1crn():
     eq_(pdb_info["beq_identical"], None)
     eq_(pdb_info["correct_uij"], None)
     eq_(pdb_info["decision"], "Probably full B-factors: PROLSQ")
+    eq_(pdb_info["dep_date"], datetime(1981, 4, 30))
     eq_(pdb_info["format_date"], "13-JUL-11")
     eq_(pdb_info["format_vers"], 3.3)
     eq_(pdb_info["has_anisou"], False)
     eq_(pdb_info["is_bdb_includable"], True)
     eq_(pdb_info["other_refinement_remarks"], "")
     eq_(pdb_info["pdb_id"], "1crn")
-    eq_(pdb_info["dep_date"], datetime(1981, 4, 30))
     eq_(pdb_info["prog_inter"], ["PROLSQ"])
     eq_(pdb_info["prog_last"], ["PROLSQ"])
     eq_(pdb_info["prog_vers"], ["PROLSQ"])
@@ -1220,6 +1220,7 @@ def test_get_refi_data_3zzw():
     eq_(pdb_info["correct_uij"], True)
     eq_(pdb_info["decision"], "Assuming full isotropic B-factors because "
         "enough B-factors could be reproduced from the ANISOU records")
+    eq_(pdb_info["dep_date"], datetime(2011, 9, 5))
     eq_(pdb_info["format_date"], "13-JUL-11")
     eq_(pdb_info["format_vers"], 3.3)
     eq_(pdb_info["has_anisou"], True)
@@ -1227,7 +1228,6 @@ def test_get_refi_data_3zzw():
     eq_(pdb_info["other_refinement_remarks"], "IDEAL-DIST CONTACT TERM "
         "CONTACT SETUP.  ALL ATOMS HAVE CCP4 ATOM TYPE FROM LIBRARY.")
     eq_(pdb_info["pdb_id"], "3zzw")
-    eq_(pdb_info["dep_date"], datetime(2011, 9, 5))
     eq_(pdb_info["prog_inter"], ["BUSTER"])
     eq_(pdb_info["prog_last"], ["BUSTER"])
     eq_(pdb_info["prog_vers"], ["2.11.1"])
@@ -1251,6 +1251,7 @@ def test_get_refi_data_2wnl():
     eq_(pdb_info["beq_identical"], None)
     eq_(pdb_info["correct_uij"], None)
     eq_(pdb_info["decision"], "Full B-factors (wwPDB remediation): REFMAC")
+    eq_(pdb_info["dep_date"], datetime(2009, 7, 9))
     eq_(pdb_info["format_date"], "01-DEC-08")
     eq_(pdb_info["format_vers"], 3.2)
     eq_(pdb_info["has_anisou"], False)
@@ -1259,7 +1260,6 @@ def test_get_refi_data_2wnl():
         "THE  RIDING POSITIONS. GLOBAL B-FACTORS, CONTAINING RESIDUAL  "
         "AND TLS COMPONENT HAVE BEEN DEPOSITED.")
     eq_(pdb_info["pdb_id"], "2wnl")
-    eq_(pdb_info["dep_date"], datetime(2009, 7, 9))
     eq_(pdb_info["prog_inter"], ["REFMAC"])
     eq_(pdb_info["prog_last"], ["REFMAC"])
     eq_(pdb_info["prog_vers"], ["5.5.0102"])
@@ -1269,6 +1269,37 @@ def test_get_refi_data_2wnl():
     eq_(pdb_info["tls_groups"], 10)
     eq_(pdb_info["tls_residual"], False)
     eq_(pdb_info["tls_sum"], True)
+
+
+def test_get_refi_data_1p9i():
+    pdb_file_path = "pdbb/tests/pdb/files/1p9i.pdb"
+    pdb_id = "1p9i"
+    structure = get_structure(pdb_file_path, pdb_id)
+    records = parse_pdb_file(pdb_file_path)
+    pdb_info = get_refi_data(records, structure, pdb_id)
+    eq_(pdb_info["assume_iso"], True)
+    eq_(pdb_info["b_msqav"], False)
+    eq_(pdb_info["b_type"], None)
+    eq_(pdb_info["beq_identical"], 1.0)
+    eq_(pdb_info["correct_uij"], True)
+    eq_(pdb_info["decision"], "Assuming full isotropic B-factors because enough"
+        " B-factors could be reproduced from the ANISOU records")
+    eq_(pdb_info["dep_date"], datetime(2003, 5, 12))
+    eq_(pdb_info["format_date"], "01-DEC-08")
+    eq_(pdb_info["format_vers"], 3.15)
+    eq_(pdb_info["has_anisou"], True)
+    eq_(pdb_info["is_bdb_includable"], True)
+    eq_(pdb_info["other_refinement_remarks"], None)
+    eq_(pdb_info["pdb_id"], "1p9i")
+    eq_(pdb_info["prog_inter"], None)
+    eq_(pdb_info["prog_last"], None)
+    eq_(pdb_info["prog_vers"], None)
+    eq_(pdb_info["ref_prog"], None)
+    eq_(pdb_info["refprog"], None)
+    eq_(pdb_info["req_tlsanl"], False)
+    eq_(pdb_info["tls_groups"], None)
+    eq_(pdb_info["tls_residual"], False)
+    eq_(pdb_info["tls_sum"], False)
 
 
 def test_last_used_empty():

@@ -608,9 +608,10 @@ def get_refi_data(pdb_records, structure, pdb_id):
             write_whynot(pdb_id, message)
             _log.error("{}.".format(message))
     else:
-        message = "No refinement program found"
-        _log.warn("{}.".format(message))
+        msg = "No refinement program found"
+        _log.warn("{}.".format(msg))
         if not assume_iso:
+            message = msg
             write_whynot(pdb_id, message)
 
     more_refprog = {"assume_iso": assume_iso,
