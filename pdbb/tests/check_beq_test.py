@@ -332,13 +332,6 @@ def test_get_structure_pdbid_none():
     ok_(get_structure(pdb_file_path, pdb_id, verbose=True))
 
 
-def test_get_structure_parse_error():
-    """Tests get_structure."""
-    pdb_file_path = "pdbb/tests/pdb/files/4aph.pdb"
-    pdb_id = "4aph"
-    eq_(get_structure(pdb_file_path, pdb_id, verbose=False), None)
-
-
 def test_is_calpha_trace_true():
     """Tests is_calpha_trace."""
     pdb_file_path = "pdbb/tests/pdb/files/1efg.pdb"
