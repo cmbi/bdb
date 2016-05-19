@@ -25,10 +25,10 @@ from datetime import datetime
 
 from pdbb.pdb.parser import (parse_other_ref_remarks, is_bmsqav, parse_dep_date,
                              parse_btype, parse_format_date_version,
-                             parse_num_tls_groups, parse_ref_prog,
-                             is_tls_residual, is_tls_sum)
+                             parse_num_tls_groups, parse_tls_selection,
+                             parse_ref_prog, is_tls_residual, is_tls_sum)
 from pdbb.bdb_utils import write_whynot
-from pdbb.check_beq import check_beq, report_beq
+from pdbb.check_beq import check_beq, check_tls_range, report_beq
 
 
 RE_BEXCEPT = re.compile(r"""
@@ -151,11 +151,18 @@ def decide_refprog_remediation(pdb_info):
 
     if pdb_info["b_type"] == "residual":
         req_tlsanl = True
-        msg = "Residual B-factors (wwPDB remediation){}".format(msg)
+        res_msg = "Residual B-factors (wwPDB remediation)"
         # Only REFMAC entries were part of the remediation,
         # otherwise inspect first
         if pdb_info["prog_last"][0] == "REFMAC":
-            useful = True
+            if pdb_info["tls_valid"]:
+                useful = True
+                msg = "{}{}".format(res_msg, msg)
+            else:
+                # TLS residues invalid or absent
+                msg = "{}. Invalid TLS residue range{}".format(res_msg, msg)
+        else:
+            msg = "{}{}".format(res_msg, msg)
     elif pdb_info["b_type"] == "unverified":
         msg = "B-factor type could not be determined (wwPDB remediation){}".\
               format(msg)
@@ -530,6 +537,8 @@ def get_refi_data(pdb_records, structure, pdb_id):
     "req_tlsanl    : True if running TLSANL is required (also set for other
                      programs than REFMAC)
     "tls_groups"   : number of TLS groups as integer. If not present: None.
+    "tls_valid"    : True if the TLS residue ranges are valid (REFMAC-style
+                     TLS specifications only.
     "tls_residual" : True if it is mentioned in the TLS details or elsewhere
                      that the ATOM records contain residual B-factors only.
     "tls_sum"      : True if it is mentioned somewhere in REMARK 3 that the
@@ -543,6 +552,13 @@ def get_refi_data(pdb_records, structure, pdb_id):
     # Parse the pdb records for refinement data
     format_vers, format_date = parse_format_date_version(pdb_records)
     other_refinement_remarks = parse_other_ref_remarks(pdb_records)
+
+    # Check TLS range first
+    tls_selections = parse_tls_selection(pdb_records)
+    tls_valid = None
+    if len(tls_selections) > 0:
+        tls_valid = check_tls_range(structure, tls_selections)
+
     pdb_info = {
         "pdb_id": pdb_id,
         "dep_date": parse_dep_date(pdb_records),
@@ -554,6 +570,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
         "b_msqav": is_bmsqav(other_refinement_remarks),
         "refprog": parse_ref_prog(pdb_records),
         "tls_groups": parse_num_tls_groups(pdb_records),
+        "tls_valid": tls_valid,
         "tls_residual": is_tls_residual(pdb_records),
         "tls_sum": is_tls_sum(pdb_records)}
 
