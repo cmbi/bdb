@@ -70,18 +70,18 @@ def test_is_bdb_includable_refprog_phenix():
 def test_decide_refprog_refmac_remediation_residual():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": "residual",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "Residual B-factors (wwPDB remediation): REFMAC"
     expected = (True, False, True, msg)
     eq_(result, expected)
 
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": "residual",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 13)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "Residual B-factors (wwPDB remediation): REFMAC"
     expected = (True, False, True, msg)
     eq_(result, expected)
@@ -90,9 +90,9 @@ def test_decide_refprog_refmac_remediation_residual():
 def test_decide_refprog_refmac_remediation_unverified():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": "unverified",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "B-factor type could not be determined "\
           "(wwPDB remediation): REFMAC"
     expected = (False, False, False, msg)
@@ -100,9 +100,9 @@ def test_decide_refprog_refmac_remediation_unverified():
 
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": "unverified",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 13)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "B-factor type could not be determined "\
           "(wwPDB remediation): REFMAC"
     expected = (False, False, False, msg)
@@ -113,9 +113,9 @@ def test_decide_refprog_refmac_remediation_full():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": None,
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "Full B-factors (wwPDB remediation): REFMAC"
     expected = (True, True, False, msg)
     eq_(result, expected)
@@ -123,18 +123,18 @@ def test_decide_refprog_refmac_remediation_full():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.20, "b_type": "something",
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "beq_identical": 0.9,
                 "format_vers": 3.15, "b_type": None, "has_anisou": True,
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -144,9 +144,9 @@ def test_decide_refprog_refmac_remediation_notfull():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30,3.20,3.15", "b_type": None,
                 "has_anisou": True, "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 12)}
-    decide_refprog(pdb_info)
+    decide_refprog(pdb_info, None)
 
 
 @raises(KeyError)
@@ -155,17 +155,17 @@ def test_decide_refprog_refmac_remediation_notfull2():
                 "beq_identical": 0.9,
                 "format_vers": 3.15, "b_type": None,
                 "has_anisou": True, "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 13)}
-    decide_refprog(pdb_info)
+    decide_refprog(pdb_info, None)
 
 
 def test_decide_refprog_refmac_residual_and_full():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": None,
                 "tls_residual": True, "tls_sum": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Residual and full B-factors (REMARK 3): REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -176,8 +176,8 @@ def test_decide_refprog_refmac_tls_residual_anisou():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": True, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), residual B-factors (REMARK 3) "\
           "and ANISOU records. {}: REFMAC".format(BNEQ_MSG)
     expected = (False, False, False, msg)
@@ -188,8 +188,8 @@ def test_decide_refprog_refmac_tls_residual_noanisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": True, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), residual B-factors (REMARK 3) "\
           "without ANISOU records: REFMAC"
     expected = (True, False, True, msg)
@@ -201,8 +201,8 @@ def test_decide_refprog_refmac_tls_sum_anisou():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": True, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), full B-factors (REMARK 3) "\
           "and ANISOU records. {}: REFMAC".format(BNEQ_MSG)
     expected = (False, False, False, msg)
@@ -213,8 +213,8 @@ def test_decide_refprog_refmac_tls_sum_noanisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": True, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), full B-factors (REMARK 3) "\
           "without ANISOU records: REFMAC"
     expected = (True, True, False, msg)
@@ -225,19 +225,20 @@ def test_decide_refprog_refmac_tls_bexcept_noanisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": False,
-                "other_refinement_remarks": "RESIDUAL U VALUES"}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "RESIDUAL U VALUES",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s) and, possibly, residual or full B-factors "\
           "(REMARK 3, unrecognized format): REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "B-FACTORS ARE RESIDUALS "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "B-FACTORS SUM  "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -245,19 +246,20 @@ def test_decide_refprog_refmac_tls_bexcept_anisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": True,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": False, "beq_identical": 0.9,
-                "other_refinement_remarks": "RESIDUAL U VALUES"}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "RESIDUAL U VALUES",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s) and, possibly, residual or full B-factors "\
           "(REMARK 3, unrecognized format): REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "B-FACTORS ARE RESIDUALS "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "B-FACTORS SUM  "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -265,31 +267,31 @@ def test_decide_refprog_refmac_tls_nohints_anisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": True,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": False, "beq_identical": 0.9,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), no B-factor type details (REMARK 3). {}: REFMAC".\
           format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "MAXIMUM LIKELIHOOD RESIDUALS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL FEATURES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRONS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRON DENSITY"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL DENSITY "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -297,31 +299,31 @@ def test_decide_refprog_refmac_tls_nohints_noanisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), no B-factor type details (REMARK 3) and no "\
           "ANISOU records: REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "MAXIMUM LIKELIHOOD RESIDUALS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL FEATURES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRONS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRON DENSITY"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL DENSITY "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -329,8 +331,9 @@ def test_decide_refprog_refmac_notls_tlsremark_noanisou_nohints():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s): REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -341,8 +344,9 @@ def test_decide_refprog_refmac_notls_tlsremark_anisou():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). {}: REFMAC".format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -352,8 +356,9 @@ def test_decide_refprog_refmac_notls_tlsremark_noanisou_sum():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": True, "has_anisou": False,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). Full B-factors (REMARK 3): REFMAC"
     expected = (True, True, False, msg)
     eq_(result, expected)
@@ -364,8 +369,9 @@ def test_decide_refprog_refmac_notls_tlsremark_anisou_sum():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": True, "has_anisou": True,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). {}. Full B-factors "\
           "(REMARK 3): REFMAC".format(BNEQ_MSG)
     expected = (True, True, False, msg)
@@ -376,8 +382,9 @@ def test_decide_refprog_refmac_notls_tlsremark_noanisou_residual():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": True, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). Residual B-factors "\
           "(REMARK 3): REFMAC"
     expected = (True, False, True, msg)
@@ -389,8 +396,9 @@ def test_decide_refprog_refmac_notls_tlsremark_anisou_residual():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": True, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). {}. Residual B-factors "\
           "(REMARK 3): REFMAC".format(BNEQ_MSG)
     expected = (True, False, True, msg)
@@ -401,8 +409,8 @@ def test_decide_refprog_refmac_notls_residual_anisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": True, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Residual B-factors without TLS group(s) (REMARK 3). {}: REFMAC".\
           format(BNEQ_MSG)
     expected = (False, False, False, msg)
@@ -413,8 +421,8 @@ def test_decide_refprog_refmac_notls_residual_noanisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": True, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Residual B-factors without TLS group(s) (REMARK 3): REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -424,8 +432,8 @@ def test_decide_refprog_refmac_notls_sum_anisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": True, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Full B-factors without TLS group(s) (REMARK 3). {}: REFMAC".format(
           BNEQ_MSG)
     expected = (False, False, False, msg)
@@ -436,8 +444,8 @@ def test_decide_refprog_refmac_notls_sum_noanisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": True, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Full B-factors without TLS group(s) (REMARK 3): REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -448,19 +456,20 @@ def test_decide_refprog_refmac_notls_bexcept_anisou():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": "RESIDUAL B-FACTOR"}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "RESIDUAL B-FACTOR",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Possibly, residual or full B-factors (REMARK 3, "\
           "unrecognized format). No TLS groups. {}: REFMAC".format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUALS U-VALUES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = " SUM  AND U-VALUES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -468,19 +477,20 @@ def test_decide_refprog_refmac_notls_bexcept_noanisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False,
-                "other_refinement_remarks": "RESIDUAL B-FACTOR"}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "RESIDUAL B-FACTOR",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Possibly, residual or full B-factors (REMARK 3, "\
           "unrecognized format). No TLS groups: REFMAC"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUALS U-VALUES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = " SUM  AND U-VALUES "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -488,23 +498,23 @@ def test_decide_refprog_refmac_notls_nohints_anisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test", "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Probably full/mixed anisotropic refinement. {}: REFMAC".\
           format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUALS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUALS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = " SUM  "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -512,8 +522,8 @@ def test_decide_refprog_refmac_notls_nohints_noanisou():
     pdb_info = {"prog_last": ["REFMAC"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Probably full B-factors: REFMAC"
     expected = (True, True, False, msg)
     eq_(result, expected)
@@ -524,18 +534,18 @@ def test_decide_refprog_refmac_notls_nohints_noanisou():
 def test_decide_refprog_OTHER_remediation_residual():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": "residual",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "Residual B-factors (wwPDB remediation): OTHER"
     expected = (False, False, True, msg)
     eq_(result, expected)
 
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.40, "b_type": "residual",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2012, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "Residual B-factors (wwPDB remediation): OTHER"
     expected = (False, False, True, msg)
     eq_(result, expected)
@@ -544,9 +554,9 @@ def test_decide_refprog_OTHER_remediation_residual():
 def test_decide_refprog_OTHER_remediation_unverified():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.20, "b_type": "unverified",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2011, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "B-factor type could not be determined "\
           "(wwPDB remediation): OTHER"
     expected = (False, False, False, msg)
@@ -554,17 +564,17 @@ def test_decide_refprog_OTHER_remediation_unverified():
 
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.10, "b_type": "unverified",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2010, 7, 12)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.10, "b_type": "unverified",
-                "other_refinement_remarks": "",
+                "other_refinement_remarks": "", "tls_selections": [],
                 "dep_date": datetime(2010, 7, 13)}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
@@ -573,8 +583,8 @@ def test_decide_refprog_OTHER_remediation_unexpected():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.30, "b_type": "somethingunexpected",
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Unexpected B-factor type annotation (wwPDB remediation): OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -583,15 +593,15 @@ def test_decide_refprog_OTHER_remediation_unexpected():
                 "beq_identical": 0.9,
                 "format_vers": 3.30, "b_type": "something", "has_anisou": True,
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": 3.31, "b_type": "something",
                 "tls_residual": False, "tls_sum": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -599,8 +609,8 @@ def test_decide_refprog_OTHER_residual_and_full():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": None,
                 "tls_residual": True, "tls_sum": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Residual and full B-factors (REMARK 3): OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -611,8 +621,8 @@ def test_decide_refprog_OTHER_tls_residual_anisou():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": True, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), residual B-factors (REMARK 3) "\
           "and ANISOU records. {}: OTHER".format(BNEQ_MSG)
     expected = (False, False, False, msg)
@@ -623,8 +633,8 @@ def test_decide_refprog_OTHER_tls_residual_noanisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": True, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), residual B-factors (REMARK 3) "\
           "without ANISOU records: OTHER"
     expected = (False, False, True, msg)
@@ -636,8 +646,8 @@ def test_decide_refprog_OTHER_tls_sum_anisou():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": True, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), full B-factors (REMARK 3) "\
           "and ANISOU records. {}: OTHER".format(BNEQ_MSG)
     expected = (False, False, False, msg)
@@ -648,8 +658,8 @@ def test_decide_refprog_OTHER_tls_sum_noanisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": True, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), full B-factors (REMARK 3) "\
           "without ANISOU records: OTHER"
     expected = (False, True, False, msg)
@@ -660,19 +670,20 @@ def test_decide_refprog_OTHER_tls_bexcept_noanisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": False,
-                "other_refinement_remarks": "RESIDUAL U VALUES"}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "RESIDUAL U VALUES",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s) and, possibly, residual or full B-factors "\
           "(REMARK 3, unrecognized format): OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "B-FACTORS ARE RESIDUALS "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "B-FACTORS SUM  "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -680,19 +691,20 @@ def test_decide_refprog_OTHER_tls_bexcept_anisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": True,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": False, "beq_identical": 0.9,
-                "other_refinement_remarks": "RESIDUAL U VALUES"}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "RESIDUAL U VALUES",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s) and, possibly, residual or full B-factors "\
           "(REMARK 3, unrecognized format): OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "B-FACTORS ARE RESIDUALS "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "B-FACTORS SUM  "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -700,31 +712,31 @@ def test_decide_refprog_OTHER_tls_nohints_anisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": True,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": False, "beq_identical": 0.9,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), no B-factor type details (REMARK 3). {}: OTHER".\
           format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "MAXIMUM LIKELIHOOD RESIDUALS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL FEATURES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRONS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRON DENSITY"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL DENSITY "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -732,31 +744,31 @@ def test_decide_refprog_OTHER_tls_nohints_noanisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": 1,
                 "tls_residual": False, "tls_sum": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS group(s), no B-factor type details (REMARK 3) and no "\
           "ANISOU records: OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "MAXIMUM LIKELIHOOD RESIDUALS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL FEATURES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRONS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL ELECTRON DENSITY"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUAL DENSITY "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -764,8 +776,9 @@ def test_decide_refprog_OTHER_notls_tlsremark_noanisou_nohints():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s): OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -776,8 +789,9 @@ def test_decide_refprog_OTHER_notls_tlsremark_anisou():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). {}: OTHER".format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -787,8 +801,9 @@ def test_decide_refprog_OTHER_notls_tlsremark_noanisou_sum():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": True, "has_anisou": False,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). Full B-factors (REMARK 3): OTHER"
     expected = (False, True, False, msg)
     eq_(result, expected)
@@ -799,8 +814,9 @@ def test_decide_refprog_OTHER_notls_tlsremark_anisou_sum():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": True, "has_anisou": True,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). {}. Full B-factors "\
           "(REMARK 3): OTHER".format(BNEQ_MSG)
     expected = (False, True, False, msg)
@@ -811,8 +827,9 @@ def test_decide_refprog_OTHER_notls_tlsremark_noanisou_residual():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": True, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). Residual B-factors "\
           "(REMARK 3): OTHER"
     expected = (False, False, True, msg)
@@ -824,8 +841,9 @@ def test_decide_refprog_OTHER_notls_tlsremark_anisou_residual():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": True, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": "SOMETHING MENTIONING TLS..."}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "SOMETHING MENTIONING TLS...",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "TLS remark without TLS group(s). {}. Residual B-factors "\
           "(REMARK 3): OTHER".format(BNEQ_MSG)
     expected = (False, False, True, msg)
@@ -836,8 +854,8 @@ def test_decide_refprog_OTHER_notls_residual_anisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": True, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Residual B-factors without TLS group(s) (REMARK 3). {}: OTHER".\
           format(BNEQ_MSG)
     expected = (False, False, False, msg)
@@ -848,8 +866,8 @@ def test_decide_refprog_OTHER_notls_residual_noanisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": True, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Residual B-factors without TLS group(s) (REMARK 3): OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -859,8 +877,8 @@ def test_decide_refprog_OTHER_notls_sum_anisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": True, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Full B-factors without TLS group(s) (REMARK 3). {}: OTHER".format(
           BNEQ_MSG)
     expected = (False, False, False, msg)
@@ -871,8 +889,8 @@ def test_decide_refprog_OTHER_notls_sum_noanisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": True, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Full B-factors without TLS group(s) (REMARK 3): OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -883,19 +901,20 @@ def test_decide_refprog_OTHER_notls_bexcept_anisou():
                 "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": "RESIDUAL B-FACTOR"}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "RESIDUAL B-FACTOR",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Possibly, residual or full B-factors (REMARK 3, "\
           "unrecognized format). No TLS groups. {}: OTHER".format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUALS U-VALUES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = " SUM  AND U-VALUES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -903,19 +922,20 @@ def test_decide_refprog_OTHER_notls_bexcept_noanisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "has_anisou": False,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False,
-                "other_refinement_remarks": "RESIDUAL B-FACTOR"}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "RESIDUAL B-FACTOR",
+                "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Possibly, residual or full B-factors (REMARK 3, "\
           "unrecognized format). No TLS groups: OTHER"
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUALS U-VALUES"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = " SUM  AND U-VALUES "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -923,23 +943,23 @@ def test_decide_refprog_OTHER_notls_nohints_anisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test", "beq_identical": 0.9,
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": True,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Probably full/mixed anisotropic refinement. {}: OTHER".\
           format(BNEQ_MSG)
     expected = (False, False, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUALS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = "RESIDUALS"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = " SUM  "
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -947,14 +967,14 @@ def test_decide_refprog_OTHER_notls_nohints_noanisou():
     pdb_info = {"prog_last": ["OTHER"], "pdb_id": "test",
                 "format_vers": "not3.30", "b_type": None, "tls_groups": None,
                 "tls_residual": False, "tls_sum": False, "has_anisou": False,
-                "other_refinement_remarks": ""}
-    result = decide_refprog(pdb_info)
+                "other_refinement_remarks": "", "tls_selections": []}
+    result = decide_refprog(pdb_info, None)
     msg = "Probably full B-factors: OTHER"
     expected = (True, True, False, msg)
     eq_(result, expected)
 
     pdb_info["other_refinement_remarks"] = None
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     eq_(result, expected)
 
 
@@ -992,7 +1012,7 @@ def test_decide_refprog_restrain_uu_2():
                 "other_refinement_remarks": "", "has_anisou": False}
     msg = "B-factor field contains mean square atomic displacement "\
           "(REMARK 3): RESTRAIN"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     expected = (True, False, False, msg)
     eq_(result, expected)
 
@@ -1012,7 +1032,7 @@ def test_decide_refprog_prolsq_uu2():
                 "other_refinement_remarks": "", "has_anisou": False}
     msg = "B-factor field contains mean square atomic displacement "\
           "(REMARK 3): PROLSQ"
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     expected = (True, False, False, msg)
     eq_(result, expected)
 
@@ -1076,21 +1096,21 @@ def test_decide_refprog_restrain_useful():
 @raises(AssertionError)
 def test_decide_refprog_type_error_list():
     pdb_info = {"prog_last": "notalist", "has_anisou": False, "pdb_id": "test"}
-    decide_refprog(pdb_info)
+    decide_refprog(pdb_info, None)
 
     pdb_info = {"prog_last": 1}
-    decide_refprog(pdb_info)
+    decide_refprog(pdb_info, None)
 
 
 @raises(AssertionError)
 def test_decide_refprog_type_error_string():
     pdb_info = {"prog_last": [1], "has_anisou": False, "pdb_id": "test"}
-    decide_refprog(pdb_info)
+    decide_refprog(pdb_info, None)
 
 
 def test_decide_refprog_too_many():
     pdb_info = {"prog_last": ["1", "2"], "has_anisou": False, "pdb_id": "test"}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "Combination of refinement programs cannot (yet) be included "\
           "in the bdb: 1 and 2"
     expected = (False, False, False, msg)
@@ -1099,7 +1119,7 @@ def test_decide_refprog_too_many():
 
 def test_decide_refprog_too_few():
     pdb_info = {"prog_last": [], "has_anisou": False, "pdb_id": "test"}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "Program(s) in REMARK 3 not interpreted as refinement program(s)"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -1108,7 +1128,7 @@ def test_decide_refprog_too_few():
 @patch("pdbb.refprog.is_bdb_includable_refprog", return_value=False)
 def test_decide_refprog_nonincludable_refprog(*args):
     pdb_info = {"prog_last": ["A"], "has_anisou": False, "pdb_id": "test"}
-    result = decide_refprog(pdb_info)
+    result = decide_refprog(pdb_info, None)
     msg = "Program cannot (yet) be included: A"
     expected = (False, False, False, msg)
     eq_(result, expected)
@@ -1205,6 +1225,7 @@ def test_get_refi_data_1crn():
     eq_(pdb_info["tls_groups"], None)
     eq_(pdb_info["tls_residual"], False)
     eq_(pdb_info["tls_sum"], False)
+    eq_(pdb_info["tls_selections"], [])
 
 
 def test_get_refi_data_3zzw():
@@ -1237,6 +1258,7 @@ def test_get_refi_data_3zzw():
     eq_(pdb_info["tls_groups"], 8)
     eq_(pdb_info["tls_residual"], False)
     eq_(pdb_info["tls_sum"], False)
+    eq_(pdb_info["tls_selections"], [])
 
 
 def test_get_refi_data_2wnl():
@@ -1269,6 +1291,29 @@ def test_get_refi_data_2wnl():
     eq_(pdb_info["tls_groups"], 10)
     eq_(pdb_info["tls_residual"], False)
     eq_(pdb_info["tls_sum"], True)
+    eq_(pdb_info["tls_selections"],
+            [
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'A', 'chain_2': 'A',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'B', 'chain_2': 'B',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'C', 'chain_2': 'C',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'D', 'chain_2': 'D',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'E', 'chain_2': 'E',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'F', 'chain_2': 'F',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'G', 'chain_2': 'G',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'H', 'chain_2': 'H',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'I', 'chain_2': 'I',
+                    'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'J', 'chain_2': 'J',
+                    'num_1': -4, 'num_2': 207}
+                ])
 
 
 def test_get_refi_data_1p9i():
@@ -1300,6 +1345,7 @@ def test_get_refi_data_1p9i():
     eq_(pdb_info["tls_groups"], None)
     eq_(pdb_info["tls_residual"], False)
     eq_(pdb_info["tls_sum"], False)
+    eq_(pdb_info["tls_selections"], [])
 
 
 def test_last_used_empty():

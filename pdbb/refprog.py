@@ -23,12 +23,12 @@ import re
 
 from datetime import datetime
 
-from pdbb.pdb.parser import (parse_other_ref_remarks, is_bmsqav, parse_dep_date,
-                             parse_btype, parse_format_date_version,
-                             parse_num_tls_groups, parse_ref_prog,
-                             is_tls_residual, is_tls_sum)
+from pdbb.pdb.parser import (parse_other_ref_remarks, is_bmsqav,
+        parse_dep_date, parse_btype, parse_format_date_version,
+        parse_num_tls_groups, parse_tls_selection, parse_ref_prog,
+        is_tls_residual, is_tls_sum)
 from pdbb.bdb_utils import write_whynot
-from pdbb.check_beq import check_beq, report_beq
+from pdbb.check_beq import check_beq, check_tls_range, report_beq
 
 
 RE_BEXCEPT = re.compile(r"""
@@ -347,7 +347,7 @@ def decide_refprog_notls(pdb_info):
     return useful, assume_iso, req_tlsanl, msg
 
 
-def decide_refprog(pdb_info):
+def decide_refprog(pdb_info, structure):
     """Determine whether refinement program can be used in the bdb project.
 
     The decision is based on the refinement program interpreted from the
@@ -415,6 +415,9 @@ def decide_refprog(pdb_info):
         return decide_refprog_restrain(pdb_info)
 
     # REFMAC and other refprogs:
+    # Check TLS ranges first
+    if len(pdb_info["tls_selections"]) > 0:
+        check_tls_range(structure, pdb_info["tls_selections"])
 
     # We trust the wwPDB remediation decision
     # Remediations can have format_version 3.15, 3.20, 3.30
@@ -554,6 +557,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
         "b_msqav": is_bmsqav(other_refinement_remarks),
         "refprog": parse_ref_prog(pdb_records),
         "tls_groups": parse_num_tls_groups(pdb_records),
+        "tls_selections": parse_tls_selection(pdb_records),
         "tls_residual": is_tls_residual(pdb_records),
         "tls_sum": is_tls_sum(pdb_records)}
 
@@ -598,7 +602,7 @@ def get_refi_data(pdb_records, structure, pdb_id):
             if not assume_iso:
                 # interpret refinement data
                 is_bdb_includable, assume_iso, req_tlsanl, message = \
-                    decide_refprog(pdb_info)
+                    decide_refprog(pdb_info, structure)
             else:
                 _log.info("Probably full B-factors: {}".format(
                     " and ".join(prog_last)))

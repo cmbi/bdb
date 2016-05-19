@@ -114,6 +114,15 @@ def check_combinations(anisou, b, margin, check_first=False):
     return reproduced
 
 
+def check_tls_range(structure, tls_selections):
+    """Check that the residues included in TLS groups are in the structure.
+
+    Raise a ValueError if a range is not part of the structure.
+    """
+
+    raise ValueError("TLS residue range not in structure")
+
+
 def determine_b_group(structure):
     """Determine the most likely B-factor parameterization.
 

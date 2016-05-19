@@ -34,10 +34,10 @@ RE_TLS_GROUPS = re.compile(r"^  3   NUMBER OF TLS GROUPS  :\s*(\d+)\s*$")
 RE_TLS_SEL = re.compile(r"""
         ^\s+3\s+RESIDUE\sRANGE\s:\s+
         (?P<ch_1>[0-9a-zA-Z])\s+
-        (?P<rn_1>\d+)
+        (?P<rn_1>-?\d+)
         (?P<ic_1>[a-zA-Z]?)\s+
         (?P<ch_2>[0-9a-zA-Z])\s+
-        (?P<rn_2>\d+)
+        (?P<rn_2>-?\d+)
         (?P<ic_2>[a-zA-Z]?)\s*$
         """, re.VERBOSE)
 RE_TLS_RES = re.compile(r"^  3   ATOM RECORD CONTAINS RESIDUAL B FACTORS ONLY")
