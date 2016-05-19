@@ -48,7 +48,7 @@ def check_beq(structure):
     if not structure:
         msg = "Could not check Beq values in ANISOU records. No structure."
         _log.error(msg)
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     _log.info("Checking Beq values in ANISOU records...")
     margin = 0.015
@@ -117,10 +117,33 @@ def check_combinations(anisou, b, margin, check_first=False):
 def check_tls_range(structure, tls_selections):
     """Check that the residues included in TLS groups are in the structure.
 
-    Raise a ValueError if a range is not part of the structure.
-    """
+    This function currently only checks whether the first and last residues are
+    in the structure.
 
-    raise ValueError("TLS residue range not in structure")
+    Return False if the range is invalid. Return True if the range is valid.
+    """
+    if not structure:
+        msg = "Could not check TLS group residues. No structure."
+        _log.error(msg)
+        raise TypeError(msg)
+
+    _log.info("Checking TLS group residues...")
+    for group in tls_selections:
+        c1 = group["chain_1"]
+        c2 = group["chain_2"]
+        n1 = group["num_1"]
+        n2 = group["num_2"]
+        i1 = ' ' if group["ic_1"] is None else group["ic_1"]
+        i2 = ' ' if group["ic_2"] is None else group["ic_2"]
+        try:
+            structure[0][c1][(' ', n1, i1)]
+            structure[0][c2][(' ', n2, i2)]
+        except KeyError:
+            _log.error("TLS group not (entirely) in structure:" +
+                       "{} {}{} --- {} {}{}".format(c1, n1, i1,
+                                                    c2, n2, i2))
+            return False
+    return True
 
 
 def determine_b_group(structure):

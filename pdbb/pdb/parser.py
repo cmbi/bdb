@@ -270,11 +270,11 @@ def parse_tls_selection(pdb_records):
             num_2 = m.group("rn_2")
             ic_2 = m.group("ic_2")
             selection = {"chain_1": chain_1,
-                    "num_1": int(num_1),
-                    "ic_1": None if ic_1 == '' else ic_1,
-                    "chain_2": chain_2,
-                    "num_2": int(num_2),
-                    "ic_2": None if ic_2 == '' else ic_2}
+                         "num_1": int(num_1),
+                         "ic_1": None if ic_1 == '' else ic_1,
+                         "chain_2": chain_2,
+                         "num_2": int(num_2),
+                         "ic_2": None if ic_2 == '' else ic_2}
             selections.append(selection)
     return selections
 

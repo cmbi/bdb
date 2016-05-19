@@ -18,10 +18,11 @@ from datetime import datetime
 from nose.tools import eq_, raises
 
 from pdbb.pdb.parser import (parse_pdb_file, parse_dep_date, parse_exp_methods,
-        parse_btype, parse_other_ref_remarks, is_bmsqav,
-        parse_format_date_version, parse_num_tls_groups, parse_tls_selection,
-        parse_ref_prog, is_tls_residual, is_tls_sum,
-        get_pdb_header_and_trailer)
+                             parse_btype, parse_other_ref_remarks, is_bmsqav,
+                             parse_format_date_version, parse_num_tls_groups,
+                             parse_tls_selection, parse_ref_prog,
+                             is_tls_residual, is_tls_sum,
+                             get_pdb_header_and_trailer)
 
 
 @raises(ValueError)
@@ -345,28 +346,28 @@ def test_parse_tls_selection_no_selection():
 
 
 def test_parse_tls_selection_no_ic():
-    records = {"REMARK": ["   3    RESIDUE RANGE :   D    37        " +\
-        "D   108                          "]}
+    records = {"REMARK": ["   3    RESIDUE RANGE :   D    37        " +
+                          "D   108                          "]}
     tls_range = parse_tls_selection(records)
     expected = [{"chain_1": "D",
-            "num_1": 37,
-            "ic_1": None,
-            "chain_2": "D",
-            "num_2": 108,
-            "ic_2": None}]
+                 "num_1": 37,
+                 "ic_1": None,
+                 "chain_2": "D",
+                 "num_2": 108,
+                 "ic_2": None}]
     eq_(tls_range, expected)
 
 
 def test_parse_tls_selection_ic():
     records = {"REMARK": ["  3    RESIDUE RANGE :   A   210A       A   238 ",
-        ]}
+                          ]}
     tls_range = parse_tls_selection(records)
     expected = [{"chain_1": "A",
-            "num_1": 210,
-            "ic_1": "A",
-            "chain_2": "A",
-            "num_2": 238,
-            "ic_2": None}]
+                 "num_1": 210,
+                 "ic_1": "A",
+                 "chain_2": "A",
+                 "num_2": 238,
+                 "ic_2": None}]
     eq_(tls_range, expected)
 
 
@@ -374,26 +375,61 @@ def test_parse_tls_selections():
     records = {"REMARK": ["  3    RESIDUE RANGE :   C   463        C   511",
                           "  3    RESIDUE RANGE :   D    20        D    36",
                           "  3    RESIDUE RANGE :   D    37        D   108",
-        ]}
+                          ]}
     tls_range = parse_tls_selection(records)
     expected = [{"chain_1": "C",
-        "num_1": 463,
-        "ic_1": None,
-        "chain_2": "C",
-        "num_2": 511,
-        "ic_2": None},
-        {"chain_1": "D",
-            "num_1": 20,
-            "ic_1": None,
-            "chain_2": "D",
-            "num_2": 36,
-            "ic_2": None},
-        {"chain_1": "D",
-            "num_1": 37,
-            "ic_1": None,
-            "chain_2": "D",
-            "num_2": 108,
-            "ic_2": None}]
+                 "num_1": 463,
+                 "ic_1": None,
+                 "chain_2": "C",
+                 "num_2": 511,
+                 "ic_2": None},
+                {"chain_1": "D",
+                 "num_1": 20,
+                 "ic_1": None,
+                 "chain_2": "D",
+                 "num_2": 36,
+                 "ic_2": None},
+                {"chain_1": "D",
+                 "num_1": 37,
+                 "ic_1": None,
+                 "chain_2": "D",
+                 "num_2": 108,
+                 "ic_2": None}]
+    eq_(tls_range, expected)
+
+    records = {"REMARK": [
+        "   3    RESIDUE RANGE :   A    -4        A   207                  ",
+        "   3    RESIDUE RANGE :   B    -4        B   207                  ",
+        "   3    RESIDUE RANGE :   C    -4        C   207                  ",
+        "   3    RESIDUE RANGE :   D    -4        D   207                  ",
+        "   3    RESIDUE RANGE :   E    -4        E   207                  ",
+        "   3    RESIDUE RANGE :   F    -4        F   207                  ",
+        "   3    RESIDUE RANGE :   G    -4        G   207                  ",
+        "   3    RESIDUE RANGE :   H    -4        H   207                  ",
+        "   3    RESIDUE RANGE :   I    -4        I   207                  ",
+        "   3    RESIDUE RANGE :   J    -4        J   207                  ",
+    ]}
+    tls_range = parse_tls_selection(records)
+    expected = [{'ic_1': None, 'ic_2': None, 'chain_1': 'A', 'chain_2': 'A',
+                 'num_1': -4, 'num_2': 207}, {'ic_1': None, 'ic_2': None,
+                                              'chain_1': 'B', 'chain_2': 'B',
+                                              'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'C', 'chain_2': 'C',
+                 'num_1': -4, 'num_2': 207}, {'ic_1': None, 'ic_2': None,
+                                              'chain_1': 'D', 'chain_2': 'D',
+                                              'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'E', 'chain_2': 'E',
+                 'num_1': -4, 'num_2': 207}, {'ic_1': None, 'ic_2': None,
+                                              'chain_1': 'F', 'chain_2': 'F',
+                                              'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'G', 'chain_2': 'G',
+                 'num_1': -4, 'num_2': 207}, {'ic_1': None, 'ic_2': None,
+                                              'chain_1': 'H', 'chain_2': 'H',
+                                              'num_1': -4, 'num_2': 207},
+                {'ic_1': None, 'ic_2': None, 'chain_1': 'I', 'chain_2': 'I',
+                 'num_1': -4, 'num_2': 207}, {'ic_1': None, 'ic_2': None,
+                                              'chain_1': 'J', 'chain_2': 'J',
+                                              'num_1': -4, 'num_2': 207}]
     eq_(tls_range, expected)
 
 
