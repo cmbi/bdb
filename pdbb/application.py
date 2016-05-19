@@ -78,7 +78,7 @@ def create_bdb_entry(pdb_file_path, pdb_id, verbose=False):
         b_group = determine_b_group(structure)
         bdbd.update(b_group)
 
-        # Skittles outliers
+        # skttles outliers
         skttls = {"skttls_tot": None,
                   "skttls_95th": None,
                   "skttls_99th": None}

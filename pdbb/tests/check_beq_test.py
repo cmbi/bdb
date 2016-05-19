@@ -16,12 +16,12 @@
 #    If not, see <http://www.gnu.org/licenses/>.
 from nose.tools import eq_, ok_, raises
 
-from pdbb.check_beq import (check_beq, check_combinations, determine_b_group,
-                            get_structure, is_calpha_trace, is_phos_trace,
-                            has_amino_acid_backbone,
-                            has_sugar_phosphate_backbone,
-                            is_heavy_backbone, is_nucleic_chain,
-                            is_protein_chain, multiply_bfactors_8pipi)
+from pdbb.check_beq import (check_beq, check_combinations, check_tls_range,
+                            determine_b_group, get_structure, is_calpha_trace,
+                            is_phos_trace, has_amino_acid_backbone,
+                            has_sugar_phosphate_backbone, is_heavy_backbone,
+                            is_nucleic_chain, is_protein_chain,
+                            multiply_bfactors_8pipi)
 
 import numpy as np
 
@@ -69,9 +69,9 @@ def test_check_beq_not_identical():
     eq_(result["correct_uij"], True)
 
 
-@raises(ValueError)
+@raises(TypeError)
 def test_check_beq_structure_none():
-    """Tests that check_beq raises a value error if structure is None."""
+    """Tests that check_beq raises a type error if structure is None."""
     check_beq(None)
 
 
@@ -101,6 +101,56 @@ def test_check_combinations():
 
     reproduced = check_combinations(uij, beq, tol)
     eq_(reproduced, True)
+
+
+@raises(TypeError)
+def test_check_tls_range_structure_none():
+    """Tests that check_tls_range raises a type error if structure is None."""
+    check_tls_range(None, {})
+
+
+def test_check_tls_range_false():
+    """Tests that False is returned for an invalid residue range."""
+    pdb_file_path = "pdbb/tests/pdb/files/3gg8.pdb"
+    pdb_id = "3gg8"
+    structure = get_structure(pdb_file_path, pdb_id)
+    tls_selections = [
+        {"chain_1": "C",
+         "num_1": 463,
+         "ic_1": None,
+         "chain_2": "C",
+         "num_2": 511,
+         "ic_2": None},
+        {"chain_1": "D",
+         "num_1": 20,
+         "ic_1": None,
+         "chain_2": "D",
+         "num_2": 36,
+         "ic_2": None},
+        {"chain_1": "D",
+         "num_1": 37,
+         "ic_1": None,
+         "chain_2": "D",
+         "num_2": 108,
+         "ic_2": None}]
+    result = check_tls_range(structure, tls_selections)
+    eq_(result, False)
+
+
+def test_check_tls_range_true():
+    """Tests that True is returned for a valid residue range."""
+    pdb_file_path = "pdbb/tests/pdb/files/4aph.pdb"
+    pdb_id = "4aph"
+    structure = get_structure(pdb_file_path, pdb_id)
+    tls_selections = [
+        {"chain_1": "A",
+         "num_1": 40,
+         "ic_1": None,
+         "chain_2": "A",
+         "num_2": 625,
+         "ic_2": None}]
+    result = check_tls_range(structure, tls_selections)
+    eq_(result, True)
 
 
 def test_determine_b_group_protein_overall():
@@ -330,13 +380,6 @@ def test_get_structure_pdbid_none():
     pdb_file_path = "pdbb/tests/pdb/files/1crn.pdb"
     pdb_id = None
     ok_(get_structure(pdb_file_path, pdb_id, verbose=True))
-
-
-def test_get_structure_parse_error():
-    """Tests get_structure."""
-    pdb_file_path = "pdbb/tests/pdb/files/4aph.pdb"
-    pdb_id = "4aph"
-    eq_(get_structure(pdb_file_path, pdb_id, verbose=False), None)
 
 
 def test_is_calpha_trace_true():

@@ -31,6 +31,15 @@ RE_FORMAT = re.compile(r"^  4 [0-9A-Z]{4} COMPLIES WITH FORMAT V. "
                        "(?P<version>[\d.]+), "
                        "(?P<date>\d{2}-[A-Z]{3}-\d{2})")
 RE_TLS_GROUPS = re.compile(r"^  3   NUMBER OF TLS GROUPS  :\s*(\d+)\s*$")
+RE_TLS_SEL = re.compile(r"""
+        ^\s+3\s+RESIDUE\sRANGE\s:\s+
+        (?P<ch_1>[0-9a-zA-Z])\s+
+        (?P<rn_1>-?\d+)
+        (?P<ic_1>[a-zA-Z]?)\s+
+        (?P<ch_2>[0-9a-zA-Z])\s+
+        (?P<rn_2>-?\d+)
+        (?P<ic_2>[a-zA-Z]?)\s*$
+        """, re.VERBOSE)
 RE_TLS_RES = re.compile(r"^  3   ATOM RECORD CONTAINS RESIDUAL B FACTORS ONLY")
 RE_TLS_RES_1 = re.compile(r"RESIDUAL\s+([BU]-?\s*(FACTORS?|VALUES?)\s+)?ONLY")
 RE_TLS_RES_2 = re.compile(r"ATOMIC\s+[BU]-?\s*(FACTORS?|VALUES?)\s+(SHOWN\s+)?"
@@ -241,6 +250,33 @@ def parse_num_tls_groups(pdb_records):
             n_tls = m.group(1)
             return int(n_tls)
     return None
+
+
+def parse_tls_selection(pdb_records):
+    """
+    Parses the residue selection for a tls group, returning a
+    dict.
+
+    If the tls range selection is not found, an empty list is returned.
+    """
+    selections = []
+    for record in pdb_records["REMARK"]:
+        m = RE_TLS_SEL.search(record)
+        if m is not None:
+            chain_1 = m.group("ch_1")
+            num_1 = m.group("rn_1")
+            ic_1 = m.group("ic_1")
+            chain_2 = m.group("ch_2")
+            num_2 = m.group("rn_2")
+            ic_2 = m.group("ic_2")
+            selection = {"chain_1": chain_1,
+                         "num_1": int(num_1),
+                         "ic_1": None if ic_1 == '' else ic_1,
+                         "chain_2": chain_2,
+                         "num_2": int(num_2),
+                         "ic_2": None if ic_2 == '' else ic_2}
+            selections.append(selection)
+    return selections
 
 
 def parse_ref_prog(pdb_records):
